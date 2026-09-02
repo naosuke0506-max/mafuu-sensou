@@ -263,10 +263,13 @@
     <button class="act" id="btnSpawnArcherLeft">ゴブリン弓兵を出撃(敵軍/左, 45円)</button>
     <button class="act" id="btnSpawnCatapultRight">ゴブリンカタパルトを出撃(自軍/右, 120円)</button>
     <button class="act" id="btnSpawnCatapultLeft">ゴブリンカタパルトを出撃(敵軍/左, 120円)</button>
+    <button class="act" id="btnSpawnBruteRight">獰猛なゴブリンを出撃(自軍/右, 90円)</button>
+    <button class="act" id="btnSpawnBruteLeft">獰猛なゴブリンを出撃(敵軍/左, 90円)</button>
     <button class="act charge" id="btnDashSoldier">兵士 全員「突撃！」発動</button>
     <button class="act charge" id="btnDashKurowl">クロウル 全員「突進」発動</button>
     <button class="act charge" id="btnDashGoblin">ゴブリン 全員「突撃！」発動</button>
     <button class="act charge" id="btnDashArcher">ゴブリン弓兵 全員「突撃！」発動</button>
+    <button class="act charge" id="btnDashBrute">獰猛なゴブリン 全員「突撃！」発動</button>
     <button class="act reset" id="btnReset">編成に戻る</button>
   </div>
 
@@ -474,56 +477,56 @@ const ICON_BRUTE = "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@mai
 const ICON_ARCHER = "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/icons/archer.png";
 
 const CATAPULT_FRAMES = {
-  "atk_ready": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/catapult_repo_upload/atk_ready.png",
-  "atk_trigger": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/catapult_repo_upload/atk_trigger.png",
-  "atk_release1": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/catapult_repo_upload/atk_release1.png",
-  "atk_release2": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/catapult_repo_upload/atk_release2.png",
-  "atk_recoil": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/catapult_repo_upload/atk_recoil.png",
-  "atk_rest": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/catapult_repo_upload/atk_rest.png",
-  "atk_crouch": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/catapult_repo_upload/atk_crouch.png",
-  "atk_lift": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/catapult_repo_upload/atk_lift.png",
-  "atk_carry": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/catapult_repo_upload/atk_carry.png",
-  "atk_push": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/catapult_repo_upload/atk_push.png",
-  "atk_loaded": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/catapult_repo_upload/atk_loaded.png",
-  "rock_fly": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/catapult_repo_upload/rock_fly.png",
-  "impact_1": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/catapult_repo_upload/impact_1.png",
-  "impact_2": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/catapult_repo_upload/impact_2.png",
-  "dust_1": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/catapult_repo_upload/dust_1.png",
-  "dust_2": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/catapult_repo_upload/dust_2.png",
-  "dust_3": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/catapult_repo_upload/dust_3.png",
-  "dust_4": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/catapult_repo_upload/dust_4.png",
-  "dust_5": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/catapult_repo_upload/dust_5.png",
-  "dust_6": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/catapult_repo_upload/dust_6.png",
-  "walk_1": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/catapult_repo_upload/walk_1.png",
-  "walk_2": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/catapult_repo_upload/walk_2.png",
-  "walk_3": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/catapult_repo_upload/walk_3.png",
-  "walk_4": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/catapult_repo_upload/walk_4.png",
-  "destroy_01": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/catapult_repo_upload/destroy_01.png",
-  "destroy_02": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/catapult_repo_upload/destroy_02.png",
-  "destroy_03": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/catapult_repo_upload/destroy_03.png",
-  "destroy_04": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/catapult_repo_upload/destroy_04.png",
-  "destroy_05": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/catapult_repo_upload/destroy_05.png",
-  "destroy_06": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/catapult_repo_upload/destroy_06.png",
-  "destroy_07": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/catapult_repo_upload/destroy_07.png",
-  "destroy_08": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/catapult_repo_upload/destroy_08.png",
-  "destroy_09": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/catapult_repo_upload/destroy_09.png",
-  "destroy_10": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/catapult_repo_upload/destroy_10.png",
-  "destroy_11": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/catapult_repo_upload/destroy_11.png",
-  "destroy_12": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/catapult_repo_upload/destroy_12.png",
-  "destroy_13": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/catapult_repo_upload/destroy_13.png",
-  "flinch_1": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/catapult_repo_upload/flinch_1.png",
-  "flinch_2": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/catapult_repo_upload/flinch_2.png",
-  "flinch_3": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/catapult_repo_upload/flinch_3.png",
-  "flinch_4": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/catapult_repo_upload/flinch_4.png",
-  "down_1": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/catapult_repo_upload/down_1.png",
-  "down_2": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/catapult_repo_upload/down_2.png",
-  "down_3": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/catapult_repo_upload/down_3.png",
-  "down_4": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/catapult_repo_upload/down_4.png",
-  "down_5": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/catapult_repo_upload/down_5.png",
-  "down_6": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/catapult_repo_upload/down_6.png",
-  "down_7": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/catapult_repo_upload/down_7.png",
-  "down_8": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/catapult_repo_upload/down_8.png",
-  "down_9": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/catapult_repo_upload/down_9.png"
+  "atk_ready": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/catapult_repo_upload/IMG_2969.jpeg",
+  "atk_trigger": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/catapult_repo_upload/IMG_2978.jpeg",
+  "atk_release1": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/catapult_repo_upload/IMG_2967.jpeg",
+  "atk_release2": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/catapult_repo_upload/IMG_2970.jpeg",
+  "atk_recoil": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/catapult_repo_upload/IMG_2988.jpeg",
+  "atk_rest": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/catapult_repo_upload/IMG_2966.jpeg",
+  "atk_crouch": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/catapult_repo_upload/IMG_2968.jpeg",
+  "atk_lift": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/catapult_repo_upload/IMG_2972.jpeg",
+  "atk_carry": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/catapult_repo_upload/IMG_2973.jpeg",
+  "atk_push": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/catapult_repo_upload/IMG_2974.jpeg",
+  "atk_loaded": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/catapult_repo_upload/IMG_2971.jpeg",
+  "rock_fly": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/catapult_repo_upload/IMG_2964.jpeg",
+  "impact_1": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/catapult_repo_upload/IMG_2980.jpeg",
+  "impact_2": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/catapult_repo_upload/IMG_2981.jpeg",
+  "dust_1": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/catapult_repo_upload/IMG_2982.jpeg",
+  "dust_2": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/catapult_repo_upload/IMG_2983.jpeg",
+  "dust_3": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/catapult_repo_upload/IMG_2984.jpeg",
+  "dust_4": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/catapult_repo_upload/IMG_2985.jpeg",
+  "dust_5": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/catapult_repo_upload/IMG_2986.jpeg",
+  "dust_6": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/catapult_repo_upload/IMG_2987.jpeg",
+  "walk_1": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/catapult_repo_upload/IMG_2975.jpeg",
+  "walk_2": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/catapult_repo_upload/IMG_2976.jpeg",
+  "walk_3": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/catapult_repo_upload/IMG_2977.jpeg",
+  "walk_4": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/catapult_repo_upload/IMG_2989.jpeg",
+  "destroy_01": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/catapult_repo_upload/IMG_2965.jpeg",
+  "destroy_02": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/catapult_repo_upload/IMG_2994.jpeg",
+  "destroy_03": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/catapult_repo_upload/IMG_2995.jpeg",
+  "destroy_04": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/catapult_repo_upload/IMG_2996.jpeg",
+  "destroy_05": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/catapult_repo_upload/IMG_2997.jpeg",
+  "destroy_06": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/catapult_repo_upload/IMG_2998.jpeg",
+  "destroy_07": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/catapult_repo_upload/IMG_2999.jpeg",
+  "destroy_08": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/catapult_repo_upload/IMG_3002.jpeg",
+  "destroy_09": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/catapult_repo_upload/IMG_3003.jpeg",
+  "destroy_10": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/catapult_repo_upload/IMG_3004.jpeg",
+  "destroy_11": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/catapult_repo_upload/IMG_3005.jpeg",
+  "destroy_12": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/catapult_repo_upload/IMG_3006.jpeg",
+  "destroy_13": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/catapult_repo_upload/IMG_2993.jpeg",
+  "flinch_1": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/catapult_repo_upload/IMG_2990.jpeg",
+  "flinch_2": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/catapult_repo_upload/IMG_2991.jpeg",
+  "flinch_3": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/catapult_repo_upload/IMG_2992.jpeg",
+  "flinch_4": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/catapult_repo_upload/IMG_3011.jpeg",
+  "down_1": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/catapult_repo_upload/IMG_3007.jpeg",
+  "down_2": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/catapult_repo_upload/IMG_3008.jpeg",
+  "down_3": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/catapult_repo_upload/IMG_3009.jpeg",
+  "down_4": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/catapult_repo_upload/IMG_3013.jpeg",
+  "down_5": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/catapult_repo_upload/IMG_3014.jpeg",
+  "down_6": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/catapult_repo_upload/IMG_3016.jpeg",
+  "down_7": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/catapult_repo_upload/IMG_2999.jpeg",
+  "down_8": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/catapult_repo_upload/IMG_3002.jpeg",
+  "down_9": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/catapult_repo_upload/IMG_3016.jpeg"
 };
 
 const ICON_CATAPULT = "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/icons/catapult.png";
@@ -867,10 +870,13 @@ const els = {
   btnSpawnArcherRight: document.getElementById("btnSpawnArcherRight"),
   btnSpawnCatapultLeft: document.getElementById("btnSpawnCatapultLeft"),
   btnSpawnCatapultRight: document.getElementById("btnSpawnCatapultRight"),
+  btnSpawnBruteLeft: document.getElementById("btnSpawnBruteLeft"),
+  btnSpawnBruteRight: document.getElementById("btnSpawnBruteRight"),
   btnDashSoldier: document.getElementById("btnDashSoldier"),
   btnDashKurowl: document.getElementById("btnDashKurowl"),
   btnDashGoblin: document.getElementById("btnDashGoblin"),
   btnDashArcher: document.getElementById("btnDashArcher"),
+  btnDashBrute: document.getElementById("btnDashBrute"),
   btnReset: document.getElementById("btnReset"),
   enemyCastleHpFill: document.getElementById("enemyCastleHpFill"),
   enemyCastleHpText: document.getElementById("enemyCastleHpText"),
@@ -898,7 +904,7 @@ let effectIdSeq = 0;
 let enemyCastle = null;
 let allyCastle = null;
 let money = 0;
-let loadout = { soldier: true, kurowl: true, goblin: true, archer: true, catapult: true }; // 出撃可能なユニット種別(スロットから導出)
+let loadout = { soldier: true, kurowl: true, goblin: true, archer: true, catapult: true, brute: true }; // 出撃可能なユニット種別(スロットから導出)
 
 const SOLDIER_QUEUE_GAP = 0; // 味方同士は重なって密集できる(間合いに入れるユニット数を制限しないため)
 const CASTLE_CONFIG = { maxHp: 150 }; // 魔の平原の城HP仕様
@@ -1988,19 +1994,23 @@ function applyLoadoutToButtons() {
   els.btnSpawnArcherLeft.style.display = loadout.archer ? "" : "none";
   els.btnSpawnCatapultRight.style.display = loadout.catapult ? "" : "none";
   els.btnSpawnCatapultLeft.style.display = loadout.catapult ? "" : "none";
+  els.btnSpawnBruteRight.style.display = loadout.brute ? "" : "none";
+  els.btnSpawnBruteLeft.style.display = loadout.brute ? "" : "none";
   els.btnDashSoldier.style.display = loadout.soldier ? "" : "none";
   els.btnDashKurowl.style.display = loadout.kurowl ? "" : "none";
   els.btnDashGoblin.style.display = loadout.goblin ? "" : "none";
   els.btnDashArcher.style.display = loadout.archer ? "" : "none";
+  els.btnDashBrute.style.display = loadout.brute ? "" : "none";
 }
 
 function startBattle() {
   loadout.soldier = formationSlots.includes("soldier");
   loadout.kurowl = formationSlots.includes("kurowl");
   loadout.goblin = formationSlots.includes("goblin");
+  loadout.brute = formationSlots.includes("brute");
   loadout.archer = formationSlots.includes("archer");
   loadout.catapult = formationSlots.includes("catapult");
-  if (!loadout.soldier && !loadout.kurowl && !loadout.goblin && !loadout.archer && !loadout.catapult) {
+  if (!loadout.soldier && !loadout.kurowl && !loadout.goblin && !loadout.archer && !loadout.catapult && !loadout.brute) {
     els.formationWarning.style.display = "block";
     return;
   }
@@ -2030,10 +2040,13 @@ els.btnSpawnArcherLeft.addEventListener("click", () => spawnUnit("archer", "left
 els.btnSpawnArcherRight.addEventListener("click", () => spawnUnit("archer", "right"));
 els.btnSpawnCatapultLeft.addEventListener("click", () => spawnUnit("catapult", "left"));
 els.btnSpawnCatapultRight.addEventListener("click", () => spawnUnit("catapult", "right"));
+els.btnSpawnBruteLeft.addEventListener("click", () => spawnUnit("brute", "left"));
+els.btnSpawnBruteRight.addEventListener("click", () => spawnUnit("brute", "right"));
 els.btnDashSoldier.addEventListener("click", () => dashAll("soldier"));
 els.btnDashKurowl.addEventListener("click", () => dashAll("kurowl"));
 els.btnDashGoblin.addEventListener("click", () => dashAll("goblin"));
 els.btnDashArcher.addEventListener("click", () => dashAll("archer"));
+els.btnDashBrute.addEventListener("click", () => dashAll("brute"));
 els.btnReset.addEventListener("click", reset);
 els.btnStartBattle.addEventListener("click", startBattle);
 
@@ -2042,6 +2055,7 @@ formationSlots[1] = "kurowl";
 formationSlots[2] = "goblin";
 formationSlots[3] = "archer";
 formationSlots[4] = "catapult";
+formationSlots[5] = "brute";
 renderRoster();
 renderSlots();
 initCastles();

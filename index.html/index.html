@@ -703,7 +703,8 @@ const GOBLIN_CONFIG = {
 
 // =====================================================================
 // 獰猛なゴブリン(ブルート)の定義:重量級の近接アタッカー
-// 素早い一撃(atk1)→咆哮(roar)→大振りの叩きつけ(atk2)の2段攻撃コンボ
+// 近接攻撃:素早い一撃(atk1)→大振りの叩きつけ(atk2)。着地後の余韻を長めに取る
+// 中距離攻撃:咆哮で威嚇→赤目のコマで溜め→跳躍して叩きつける
 // 吹き飛ばされる際はjump(宙を舞う)→down(倒れる)の順で表現
 // =====================================================================
 const BRUTE_MOTIONS = {
@@ -713,16 +714,25 @@ const BRUTE_MOTIONS = {
   attack: {
     frames: [
       "atk1_guard", "atk1_swing", "atk1_end",
-      "roar_1", "roar_2", "roar_3",
       "atk2_windup1", "atk2_windup2", "atk2_windup3",
       "atk2_slam1", "atk2_slam2", "atk2_slam3",
       "atk2_impact1", "atk2_impact2", "atk2_impact3",
       "atk2_recover1", "atk2_recover2"
     ],
     loop: false,
-    // 前半(atk1)は速い一撃、咆哮は溜め、後半(atk2)は叩きつけの大振り
-    frameDurations: [150, 150, 150, 250, 250, 250, 180, 180, 180, 120, 120, 120, 200, 200, 200, 300, 300],
-    hitFrames: [1, 11]
+    // 前半(atk1)は速い一撃、後半(atk2)は叩きつけの大振り。2段目のヒット後(impact〜recover)は余韻を長めに
+    frameDurations: [150, 150, 150, 180, 180, 180, 120, 120, 120, 280, 280, 280, 420, 420],
+    hitFrames: [1, 8]
+  },
+  // 中距離攻撃:roar(威嚇)→roar_3(赤目)→jump_1〜4(跳躍して叩きつけ)
+  midrange: {
+    frames: ["roar_1", "roar_2", "roar_3", "jump_1", "jump_2", "jump_3", "jump_4"],
+    loop: false,
+    frameDurations: [220, 220, 260, 160, 200, 180, 260],
+    // 咆哮中(index0〜2)は移動しない。跳躍(index3〜6)で前進する
+    moveProgressByFrame: [0, 0, 0, 0.15, 0.55, 0.9, 1],
+    jumpHeightByFrame: [0, 0, 0, 8, 30, 20, 0],
+    hitFrames: [6]
   },
   flinch: { frames: ["flinch_1", "flinch_2"], frameDurations: [100, 300], loop: false },
   knockback: {
@@ -742,7 +752,11 @@ const BRUTE_CONFIG = {
   weight: 90,
   maxHp: 16,
   attackLabel: "叩きつけ",
-  voiceCategory: "brute"
+  voiceCategory: "brute",
+  midRangeMin: 70,
+  midRangeMax: 170,
+  midrangeLeapAdvance: 130,
+  midrangeDamage: 10
 };
 
 // =====================================================================
@@ -1040,6 +1054,7 @@ function motionLabel(kind, key) {
 
 function isEngagedMotion(kind, key) {
   if (kind === "kurowl") return key === "melee" || key === "midrange";
+  if (kind === "brute") return key === "attack" || key === "midrange";
   return key === "attack"; // soldier / goblin など近接攻撃タイプ共通
 }
 
@@ -1263,6 +1278,7 @@ function setUnitMotion(u, key) {
   u.hitAppliedFrames = new Set();
   u.el.stateLabel.textContent = motionLabel(u.kind, key);
   if (u.kind === "kurowl" && key === "midrange") u.midrangeStartX = u.xPx;
+  if (u.kind === "brute" && key === "midrange") u.midrangeStartX = u.xPx;
   if (u.kind === "kurowl" && key === "melee") playUnitVoice(u, "attack");
   if (u.kind === "kurowl" && key === "walk") {
     // 歩行に切り替わるたびに鳴らすと煩いので、間隔を空けて再生する
@@ -1289,6 +1305,16 @@ function evaluateUnitState(u, now) {
     if (inMelee) {
       setUnitMotion(u, "melee");
     } else if (d >= KUROWL_CONFIG.midRangeMin && d <= KUROWL_CONFIG.midRangeMax) {
+      setUnitMotion(u, "midrange");
+    } else {
+      setUnitMotion(u, "walk");
+    }
+  } else if (u.kind === "brute") {
+    const cfg = CONFIG_BY_KIND[u.kind];
+    const inMelee = d <= cfg.meleeRange || isChainEngaged(u, u.facing);
+    if (inMelee) {
+      setUnitMotion(u, "attack");
+    } else if (d >= cfg.midRangeMin && d <= cfg.midRangeMax) {
       setUnitMotion(u, "midrange");
     } else {
       setUnitMotion(u, "walk");
@@ -1701,13 +1727,13 @@ function tickUnit(u, now) {
   // 兵士/ゴブリンなど近接タイプは攻撃中でも継続的に再評価してよい(自身は移動しないため)が、
   // クロウルの中距離/近接攻撃は自ら移動・演出するモーションなので、
   // walk中のみ再評価し、攻撃モーションは最後まで中断せず再生し切る
-  if (u.kind !== "kurowl" || u.motionKey === "walk") {
+  if ((u.kind !== "kurowl" || u.motionKey === "walk") && !(u.kind === "brute" && u.motionKey === "midrange")) {
     evaluateUnitState(u, now);
   }
 
   let motion = MOTIONS_BY_KIND[u.kind][u.motionKey];
 
-  if (u.kind === "kurowl" && u.motionKey === "midrange" && motion.moveProgressByFrame) {
+  if ((u.kind === "kurowl" || u.kind === "brute") && u.motionKey === "midrange" && motion.moveProgressByFrame) {
     const i = Math.min(u.frameIndex, motion.moveProgressByFrame.length - 1);
     const prevProgress = i > 0 ? motion.moveProgressByFrame[i - 1] : 0;
     const nextProgress = motion.moveProgressByFrame[i];
@@ -1717,14 +1743,14 @@ function tickUnit(u, now) {
     const progress = prevProgress + (nextProgress - prevProgress) * withinFrameFrac;
     if (Number.isFinite(progress)) {
       const bounds = target ? movementBounds(u, target, u.facing) : { min: 0, max: FIELD.length };
-      const raw = u.midrangeStartX + u.facing * progress * KUROWL_CONFIG.midrangeLeapAdvance;
+      const raw = u.midrangeStartX + u.facing * progress * CONFIG_BY_KIND[u.kind].midrangeLeapAdvance;
       u.xPx = Math.min(bounds.max, Math.max(bounds.min, raw));
     }
     const heights = motion.jumpHeightByFrame || [];
     const prevH = i > 0 ? (heights[i - 1] || 0) : 0;
     const nextH = heights[i] || 0;
     u.jumpHeightPx = prevH + (nextH - prevH) * withinFrameFrac;
-  } else if (u.kind === "kurowl") {
+  } else if (u.kind === "kurowl" || u.kind === "brute") {
     u.jumpHeightPx = 0;
   }
 
@@ -1741,6 +1767,9 @@ function tickUnit(u, now) {
       if (u.kind === "kurowl") {
         dmg = u.motionKey === "melee" ? KUROWL_CONFIG.meleeHitDamage : KUROWL_CONFIG.midrangeDamage;
         label = u.motionKey === "melee" ? `クロウル#${u.id}の引っ掻き` : `クロウル#${u.id}の中距離攻撃`;
+      } else if (u.kind === "brute" && u.motionKey === "midrange") {
+        dmg = BRUTE_CONFIG.midrangeDamage;
+        label = `獰猛なゴブリン#${u.id}の跳躍叩きつけ`;
       } else {
         dmg = cfg.meleeHitDamage;
         label = `${UNIT_LABEL_BY_KIND[u.kind]}#${u.id}の${cfg.attackLabel}`;
@@ -1775,6 +1804,14 @@ function tickUnit(u, now) {
             u.lastFrameTime = now;
             u.hitAppliedFrames = new Set();
             if (finishedKey === "midrange") u.midrangeStartX = u.xPx;
+          }
+        } else if (u.kind === "brute" && finishedKey === "midrange") {
+          evaluateUnitState(u, now);
+          if (u.motionKey === finishedKey) {
+            u.frameIndex = 0;
+            u.lastFrameTime = now;
+            u.hitAppliedFrames = new Set();
+            u.midrangeStartX = u.xPx;
           }
         } else {
           evaluateUnitState(u, now);

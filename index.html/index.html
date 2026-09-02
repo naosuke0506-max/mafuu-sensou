@@ -140,6 +140,19 @@
     font-size: 9px; color: var(--claw-glow); letter-spacing: 0.05em; white-space: nowrap;
   }
 
+  /* 獰猛なゴブリンの咆哮バフを受けているゴブリン族に纏わせる赤いオーラ */
+  .goblin-buffed img {
+    filter: drop-shadow(0 0 6px #ff2b2b) drop-shadow(0 0 14px rgba(255, 30, 30, 0.85));
+  }
+  @keyframes buffPulse { 0%, 100% { opacity: 0.75; } 50% { opacity: 1; } }
+  .goblin-buffed::after {
+    content: ""; position: absolute; inset: -6px;
+    border-radius: 50%;
+    box-shadow: 0 0 16px 4px rgba(255, 20, 20, 0.55);
+    animation: buffPulse 1s ease-in-out infinite;
+    pointer-events: none;
+  }
+
   .controls {
     margin-top: 14px; display: grid;
     grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px;
@@ -724,7 +737,14 @@ const BRUTE_MOTIONS = {
     frameDurations: [150, 150, 150, 180, 180, 180, 120, 120, 120, 280, 280, 280, 420, 420],
     hitFrames: [1, 8]
   },
-  // 中距離攻撃:roar(威嚇)→roar_3(赤目)→jump_1〜4(跳躍して叩きつけ)
+  // 出撃時に必ず1回行う咆哮(ゴブリン族へのバフ判定あり・スーパーアーマー)
+  roar: {
+    frames: ["roar_1", "roar_2", "roar_3"],
+    loop: false,
+    frameDurations: [220, 220, 260],
+    buffFrames: [2] // roar_3(赤目)のタイミングでバフを発生させる
+  },
+  // 中距離攻撃:roar(威嚇)→roar_3(赤目・バフ判定)→jump_1〜4(跳躍して叩きつけ)
   midrange: {
     frames: ["roar_1", "roar_2", "roar_3", "jump_1", "jump_2", "jump_3", "jump_4"],
     loop: false,
@@ -732,7 +752,8 @@ const BRUTE_MOTIONS = {
     // 咆哮中(index0〜2)は移動しない。跳躍(index3〜6)で前進する
     moveProgressByFrame: [0, 0, 0, 0.15, 0.55, 0.9, 1],
     jumpHeightByFrame: [0, 0, 0, 8, 30, 20, 0],
-    hitFrames: [6]
+    hitFrames: [6],
+    buffFrames: [2]
   },
   flinch: { frames: ["flinch_1", "flinch_2"], frameDurations: [100, 300], loop: false },
   knockback: {
@@ -756,8 +777,14 @@ const BRUTE_CONFIG = {
   midRangeMin: 70,
   midRangeMax: 170,
   midrangeLeapAdvance: 130,
-  midrangeDamage: 10
+  midrangeDamage: 10,
+  roarBuffRadius: 170, // 咆哮のバフ範囲(中距離攻撃の射程と同じ)
+  roarBuffDurationMs: 15000,
+  roarBuffMultiplier: 1.4 // 攻撃力+40%
 };
+
+// ゴブリン族としてバフを受けられる種別(獰猛なゴブリン自身も含む)
+const GOBLIN_KIN_KINDS = new Set(["goblin", "archer", "catapult", "brute", "goblinChief", "goblinQueen"]);
 
 // =====================================================================
 // ゴブリン弓兵の定義(射程250まで歩いて、その場に留まり弓を撃つ遠隔タイプ)
@@ -910,6 +937,7 @@ let kurowls = [];
 let goblins = [];
 let archers = [];
 let catapults = [];
+let brutes = [];
 let projectiles = [];    // カタパルトの岩(飛翔中)
 let impactEffects = [];  // 着弾エフェクト(スパーク・砂煙)
 let unitIdSeq = 0;
@@ -1049,6 +1077,9 @@ function motionLabel(kind, key) {
   if (kind === "soldier") {
     return { idle: "待機", walk: "歩行", attack: "攻撃(刺突)", flinch: "怯み", dash: "突撃！", knockback: "吹き飛ばし" }[key] || key;
   }
+  if (kind === "brute") {
+    return { idle: "待機", walk: "歩行", attack: "叩きつけ", flinch: "怯み", dash: "突撃！", knockback: "吹き飛ばし", midrange: "中距離攻撃", roar: "咆哮" }[key] || key;
+  }
   return { idle: "待機", walk: "歩行", flinch: "怯み", knockback: "吹き飛ばし", melee: "近接攻撃", midrange: "中距離攻撃", charge: "突進" }[key] || key;
 }
 
@@ -1117,6 +1148,9 @@ function createUnit(kind, side) {
     lastFrameTime: 0,
     lastMoveTime: performance.now(),
     hitAppliedFrames: new Set(),
+    buffAppliedFrames: new Set(),
+    buffUntil: 0,
+    buffMultiplier: 1,
     spawned: true,
     dead: false,
     deadAt: 0,
@@ -1131,7 +1165,7 @@ function createUnit(kind, side) {
     jumpHeightPx: 0,
     el
   };
-  const targetArr = kind === "kurowl" ? kurowls : kind === "goblin" ? goblins : kind === "archer" ? archers : kind === "catapult" ? catapults : soldiers;
+  const targetArr = kind === "kurowl" ? kurowls : kind === "goblin" ? goblins : kind === "archer" ? archers : kind === "catapult" ? catapults : kind === "brute" ? brutes : soldiers;
   targetArr.push(u);
   el.unit.style.display = "block";
   setUnitMotion(u, "walk");
@@ -1160,7 +1194,7 @@ function updateCastleUI(castle, fillEl, textEl) {
 // 共通ヘルパー
 // =====================================================================
 function allUnits() {
-  return soldiers.concat(kurowls, goblins, archers, catapults);
+  return soldiers.concat(kurowls, goblins, archers, catapults, brutes);
 }
 
 function dist(a, b) {
@@ -1276,6 +1310,7 @@ function setUnitMotion(u, key) {
   u.lastFrameTime = now;
   u.lastMoveTime = now;
   u.hitAppliedFrames = new Set();
+  u.buffAppliedFrames = new Set();
   u.el.stateLabel.textContent = motionLabel(u.kind, key);
   if (u.kind === "kurowl" && key === "midrange") u.midrangeStartX = u.xPx;
   if (u.kind === "brute" && key === "midrange") u.midrangeStartX = u.xPx;
@@ -1422,6 +1457,37 @@ function damageUnit(u, dmg, sourceLabel) {
     return;
   }
 
+  // 獰猛なゴブリン(ブルート): 咆哮中(単独roar・中距離の咆哮部分)はスーパーアーマーで怯まない
+  if (u.kind === "brute") {
+    if (u.motionKey === "dash") {
+      logMsg(`${sourceLabel} → ${label}は突撃中のため無敵、ダメージを無効化した。`);
+      return;
+    }
+    const superArmor = u.motionKey === "roar" || (u.motionKey === "midrange" && u.frameIndex < 3);
+    u.hp = Math.max(0, u.hp - dmg);
+    logMsg(`${sourceLabel} → ${label}に<b>${dmg}</b>ダメージ(残り${u.hp.toFixed(0)})${superArmor ? "(咆哮中のためスーパーアーマーで怯まず)" : ""}`);
+    if (u.hp <= 0) {
+      u.dead = true;
+      u.isDown = false;
+      u.deadAt = performance.now();
+      u.lockedMotion = null;
+      setUnitMotion(u, "knockback");
+      u.removeAt = u.deadAt + motionDuration(BRUTE_MOTIONS.knockback);
+      playUnitVoice(u, "death");
+      logMsg(`${label}が倒れた。`);
+    } else if (u.isDown) {
+      logMsg(`${label}はダウン中のため怯まず、そのまま倒れ続けている。`);
+    } else if (superArmor) {
+      // スーパーアーマー: 怯まずモーションを継続する
+    } else {
+      u.lockedMotion = "flinch";
+      u.lockedUntil = performance.now() + motionDuration(BRUTE_MOTIONS.flinch);
+      setUnitMotion(u, "flinch");
+      playUnitVoice(u, "pain");
+    }
+    return;
+  }
+
   // kurowl
   if (u.motionKey === "charge") {
     logMsg(`${sourceLabel} → ${label}は突進中のため無敵、ダメージを無効化した。`);
@@ -1449,6 +1515,23 @@ function damageUnit(u, dmg, sourceLabel) {
     u.lockedUntil = performance.now() + motionDuration(KUROWL_MOTIONS.flinch);
     setUnitMotion(u, "flinch");
     playUnitVoice(u, "pain");
+  }
+}
+
+// =====================================================================
+// 獰猛なゴブリンの咆哮バフ:範囲内の味方ゴブリン族の攻撃力を一定時間強化する
+// 重複せず、既にバフ中の対象には効果時間を更新するだけ
+// =====================================================================
+function applyBruteRoarBuff(u) {
+  const now = performance.now();
+  const radius = BRUTE_CONFIG.roarBuffRadius;
+  logMsg(`${UNIT_LABEL_BY_KIND[u.kind]}#${u.id}の咆哮!周囲のゴブリン族の攻撃力が強化された。`);
+  for (const t of allUnits()) {
+    if (t.dead || t.team !== u.team) continue;
+    if (!GOBLIN_KIN_KINDS.has(t.kind)) continue;
+    if (dist(u, t) > radius) continue;
+    t.buffUntil = now + BRUTE_CONFIG.roarBuffDurationMs;
+    t.buffMultiplier = BRUTE_CONFIG.roarBuffMultiplier;
   }
 }
 
@@ -1551,6 +1634,7 @@ function fieldScreenX(xPx) {
 
 function spawnProjectile(u, target, label) {
   const cfg = CONFIG_BY_KIND.catapult;
+  const buffMultiplier = (u.buffUntil && performance.now() < u.buffUntil) ? (u.buffMultiplier || 1) : 1;
   const el = document.createElement("div");
   el.className = "projectile-unit";
   const img = document.createElement("img");
@@ -1567,19 +1651,21 @@ function spawnProjectile(u, target, label) {
     duration: cfg.projectileFlightMs,
     arcHeight: cfg.projectileArcHeight,
     label,
+    buffMultiplier,
     resolved: false,
     el
   });
 }
 
-function resolveSplashDamage(xImpact, attackerTeam, label) {
+function resolveSplashDamage(xImpact, attackerTeam, label, buffMultiplier) {
+  const mult = buffMultiplier || 1;
   const cfg = CONFIG_BY_KIND.catapult;
   for (const unit of allUnits()) {
     if (unit.dead || unit.team === attackerTeam) continue;
     const d = Math.abs(unit.xPx - xImpact);
     if (d > cfg.splashRadius) continue;
     const frac = d / cfg.splashRadius;
-    const dmg = Math.round(cfg.meleeHitDamage - (cfg.meleeHitDamage - cfg.splashMinDamage) * frac);
+    const dmg = Math.round((cfg.meleeHitDamage - (cfg.meleeHitDamage - cfg.splashMinDamage) * frac) * mult);
     applyDamageTo(unit, dmg, label);
   }
   for (const castle of [enemyCastle, allyCastle]) {
@@ -1587,7 +1673,7 @@ function resolveSplashDamage(xImpact, attackerTeam, label) {
     const d = Math.abs(castle.xPx - xImpact);
     if (d > cfg.splashRadius) continue;
     const frac = d / cfg.splashRadius;
-    const dmg = Math.round(cfg.meleeHitDamage - (cfg.meleeHitDamage - cfg.splashMinDamage) * frac);
+    const dmg = Math.round((cfg.meleeHitDamage - (cfg.meleeHitDamage - cfg.splashMinDamage) * frac) * mult);
     damageCastle(castle, dmg, label);
   }
 }
@@ -1624,7 +1710,7 @@ function tickProjectiles(now) {
     p.el.style.transform = `translateX(-50%) translateY(${-arc}px)`;
     if (t >= 1 && !p.resolved) {
       p.resolved = true;
-      resolveSplashDamage(p.xTarget, p.team, p.label);
+      resolveSplashDamage(p.xTarget, p.team, p.label, p.buffMultiplier);
       spawnImpactEffect(p.xTarget);
       p.el.remove();
     }
@@ -1761,6 +1847,11 @@ function tickUnit(u, now) {
     u.frameIndex++;
     u.lastFrameTime = now;
 
+    if (motion.buffFrames && motion.buffFrames.includes(u.frameIndex) && !u.buffAppliedFrames.has(u.frameIndex)) {
+      u.buffAppliedFrames.add(u.frameIndex);
+      if (u.kind === "brute") applyBruteRoarBuff(u);
+    }
+
     if (motion.hitFrames && motion.hitFrames.includes(u.frameIndex) && !u.hitAppliedFrames.has(u.frameIndex)) {
       u.hitAppliedFrames.add(u.frameIndex);
       let dmg, label;
@@ -1773,6 +1864,10 @@ function tickUnit(u, now) {
       } else {
         dmg = cfg.meleeHitDamage;
         label = `${UNIT_LABEL_BY_KIND[u.kind]}#${u.id}の${cfg.attackLabel}`;
+      }
+      if (u.buffUntil && now < u.buffUntil) {
+        dmg = Math.round(dmg * (u.buffMultiplier || 1));
+        label += "(バフ強化)";
       }
       const hitTarget = findNearestTarget(u);
       if (hitTarget) {
@@ -1844,6 +1939,8 @@ function render() {
   for (const u of allUnits()) {
     if (u.spawned && !u.removed) {
       u.el.unit.style.left = `${FIELD.leftMargin + u.xPx * scale}px`;
+      const isBuffed = u.buffUntil && performance.now() < u.buffUntil;
+      u.el.unit.classList.toggle("goblin-buffed", !!isBuffed);
     }
   }
 
@@ -1925,10 +2022,17 @@ function spawnUnit(kind, side) {
   logMsg(`${UNIT_LABEL_BY_KIND[kind]}#${u.id}が${teamLabel}の城から出撃した。(-${cost}円)`);
   if (kind === "goblin") playUnitVoice(u, "taunt");
   if (kind === "catapult") playUnitVoice(u, "warCry");
+  if (kind === "brute") {
+    // 出撃時は必ず咆哮する(スーパーアーマー・周囲のゴブリン族にバフ)
+    u.lockedMotion = "roar";
+    u.lockedUntil = performance.now() + motionDuration(BRUTE_MOTIONS.roar);
+    setUnitMotion(u, "roar");
+    playUnitVoice(u, "warCry");
+  }
 }
 
 function dashAll(kind) {
-  const list = kind === "kurowl" ? kurowls : kind === "goblin" ? goblins : kind === "archer" ? archers : soldiers;
+  const list = kind === "kurowl" ? kurowls : kind === "goblin" ? goblins : kind === "archer" ? archers : kind === "brute" ? brutes : soldiers;
   const targets = list.filter(u => u.spawned && !u.dead && !u.isDown);
   if (!targets.length) return;
   const cfg = CONFIG_BY_KIND[kind];
@@ -1955,6 +2059,7 @@ function clearAllUnits() {
   goblins = [];
   archers = [];
   catapults = [];
+  brutes = [];
   for (const p of projectiles) p.el.remove();
   projectiles = [];
   for (const e of impactEffects) e.el.remove();

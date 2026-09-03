@@ -642,6 +642,15 @@ const SOUNDS = {
   "brute_dash": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/audio/brute_dash.mp3",
   "brute_pain": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/audio/brute_pain.mp3",
   "brute_icon": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/audio/brute_icon.mp3",
+  "queen_warcry": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/audio/queen_warcry.mp3",
+  "queen_icon": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/audio/queen_icon.mp3",
+  "queen_dash": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/audio/queen_dash.mp3",
+  "queen_attack": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/audio/queen_attack.mp3",
+  "queen_midrange": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/audio/queen_midrange.mp3",
+  "queen_roar": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/audio/queen_roar.mp3",
+  "queen_summon": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/audio/queen_summon.mp3",
+  "queen_pain": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/audio/queen_pain.mp3",
+  "queen_death": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/audio/queen_death.mp3",
   "catapult_destroy_1": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/audio/catapult_destroy_1.mp3",
   "catapult_destroy_2": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/audio/catapult_destroy_2.mp3",
   "catapult_destroy_3": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/audio/catapult_destroy_3.mp3",
@@ -1337,6 +1346,17 @@ const VOICE_SETS = {
     shieldbreak: SOUNDS.chief_pain,        // 盾破壊時。専用音ができるまで怯みと共用
     pain: SOUNDS.chief_pain,               // 被弾・怯み時
     death: SOUNDS.chief_death              // 死亡時
+  },
+  queen: {
+    warCry: SOUNDS.queen_warcry,           // 出撃時の雄叫び
+    iconPreview: SOUNDS.queen_icon,        // 編成画面でアイコンをタップした時
+    dash: SOUNDS.queen_dash,               // 「突進」発動時
+    attack: SOUNDS.queen_attack,           // 近接攻撃(杖の叩きつけ)ヒット時
+    midrangeAttack: SOUNDS.queen_midrange, // 中距離攻撃(魔砲弾)発射時
+    roar: SOUNDS.queen_roar,               // デバフ咆哮発動時
+    summon: SOUNDS.queen_summon,           // 召喚(魔法陣)発動時
+    pain: SOUNDS.queen_pain,               // 被弾時(通常はスーパーアーマーで鳴らないが、将来の演出用に用意)
+    death: SOUNDS.queen_death              // 死亡時
   },
   brute: {
     warCry: SOUNDS.brute_warcry,         // 出撃時の咆哮(バフ発動)・編成選択プレビュー以外
@@ -2635,10 +2655,10 @@ function tickUnit(u, now) {
         playUnitVoice(u, "warCry"); // 赤目のコマ(咆哮のクライマックス)で吠え声を鳴らす
       } else if (u.kind === "queen" && u.motionKey === "roar") {
         applyQueenRoarDebuff(u);
-        playUnitVoice(u, "warCry");
+        playUnitVoice(u, "roar");
       } else if (u.kind === "queen" && u.motionKey === "summon") {
         executeQueenSummon(u);
-        playUnitVoice(u, "warCry");
+        playUnitVoice(u, "summon");
       }
     }
 
@@ -2696,6 +2716,8 @@ function tickUnit(u, now) {
       } else if (u.kind === "chief" && u.motionKey === "midrange") {
         // hitFrames: [6, 11] → index6が回転斬り、index11が突き刺し
         playUnitVoice(u, u.frameIndex === 6 ? "midrangeAttack1" : "midrangeAttack2");
+      } else if (u.kind === "queen" && u.motionKey === "midrange") {
+        playUnitVoice(u, "midrangeAttack");
       } else {
         playUnitVoice(u, "attack");
       }

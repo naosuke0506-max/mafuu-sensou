@@ -153,6 +153,24 @@
     pointer-events: none;
   }
 
+  /* ゴブリンの女王のデバフ咆哮を受けている敵に纏わせる紫のオーラ */
+  .enemy-debuffed img {
+    filter: drop-shadow(0 0 6px #b23aff) drop-shadow(0 0 14px rgba(178, 58, 255, 0.85));
+  }
+  @keyframes debuffPulse { 0%, 100% { opacity: 0.75; } 50% { opacity: 1; } }
+  .enemy-debuffed::after {
+    content: ""; position: absolute; inset: -6px;
+    border-radius: 50%;
+    box-shadow: 0 0 16px 4px rgba(178, 58, 255, 0.55);
+    animation: debuffPulse 1s ease-in-out infinite;
+    pointer-events: none;
+  }
+
+  /* ゴブリンの女王は軍団最大の体格のため、表示を一回り大きくする */
+  .queen-unit img {
+    max-height: 78px;
+  }
+
   .controls {
     margin-top: 14px; display: grid;
     grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px;
@@ -280,12 +298,15 @@
     <button class="act" id="btnSpawnBruteLeft">獰猛なゴブリンを出撃(敵軍/左, 125円)</button>
     <button class="act" id="btnSpawnChiefRight">ゴブリン長を出撃(自軍/右, 155円)</button>
     <button class="act" id="btnSpawnChiefLeft">ゴブリン長を出撃(敵軍/左, 155円)</button>
+    <button class="act" id="btnSpawnQueenRight">ゴブリンの女王を出撃(自軍/右, 280円)</button>
+    <button class="act" id="btnSpawnQueenLeft">ゴブリンの女王を出撃(敵軍/左, 280円)</button>
     <button class="act charge" id="btnDashSoldier">兵士 全員「突撃！」発動</button>
     <button class="act charge" id="btnDashKurowl">クロウル 全員「突進」発動</button>
     <button class="act charge" id="btnDashGoblin">ゴブリン 全員「突撃！」発動</button>
     <button class="act charge" id="btnDashArcher">ゴブリン弓兵 全員「突撃！」発動</button>
     <button class="act charge" id="btnDashChief">ゴブリン長 全員「突撃！」発動</button>
     <button class="act charge" id="btnDashBrute">獰猛なゴブリン 全員「突撃！」発動</button>
+    <button class="act charge" id="btnDashQueen">ゴブリンの女王 全員「突進」発動</button>
     <button class="act reset" id="btnReset">編成に戻る</button>
   </div>
 
@@ -1011,6 +1032,144 @@ const CATAPULT_CONFIG = {
   projectileArcHeight: 90    // 放物線の高さ(見た目)
 };
 
+// =====================================================================
+// ゴブリンの女王の定義:ゴブリン軍団の最終ボス格
+// 常にスーパーアーマー(突進中を除き一切怯まない)。
+// 近接攻撃(杖の叩きつけ)・中距離攻撃(魔砲弾・範囲ダメージ)・突進の3種の攻撃に加え、
+// 敵が射程内に入ると発動するデバフ咆哮(怯み延長+攻撃力ダウン)、
+// 出現時と45秒毎に発動する召喚(ゴブリン5体+ゴブリン弓兵2体を無償で呼び出す)を持つ。
+// =====================================================================
+const QUEEN_FRAMES = {
+  "walk_1": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/queen_repo_upload/walk_1.png",
+  "walk_2": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/queen_repo_upload/walk_2.png",
+  "walk_3": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/queen_repo_upload/walk_3.png",
+  "walk_4": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/queen_repo_upload/walk_4.png",
+  "walk_5": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/queen_repo_upload/walk_5.png",
+  "roar_1": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/queen_repo_upload/roar_1.png",
+  "roar_2": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/queen_repo_upload/roar_2.png",
+  "roar_3": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/queen_repo_upload/roar_3.png",
+  "roarfx_1": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/queen_repo_upload/roarfx_1.png",
+  "roarfx_2": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/queen_repo_upload/roarfx_2.png",
+  "roarfx_3": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/queen_repo_upload/roarfx_3.png",
+  "roarfx_4": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/queen_repo_upload/roarfx_4.png",
+  "roarfx_5": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/queen_repo_upload/roarfx_5.png",
+  "summon_1": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/queen_repo_upload/summon_1.png",
+  "summon_2": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/queen_repo_upload/summon_2.png",
+  "summonfx_1": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/queen_repo_upload/summonfx_1.png",
+  "summonfx_2": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/queen_repo_upload/summonfx_2.png",
+  "summonfx_3": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/queen_repo_upload/summonfx_3.png",
+  "summonfx_4": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/queen_repo_upload/summonfx_4.png",
+  "summonfx_5": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/queen_repo_upload/summonfx_5.png",
+  "summonfx_6": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/queen_repo_upload/summonfx_6.png",
+  "summonfx_7": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/queen_repo_upload/summonfx_7.png",
+  "summonfx_8": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/queen_repo_upload/summonfx_8.png",
+  "attack_1": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/queen_repo_upload/attack_1.png",
+  "attack_2": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/queen_repo_upload/attack_2.png",
+  "attack_3": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/queen_repo_upload/attack_3.png",
+  "attack_4": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/queen_repo_upload/attack_4.png",
+  "attack_5": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/queen_repo_upload/attack_5.png",
+  "attack_6": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/queen_repo_upload/attack_6.png",
+  "attack_7": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/queen_repo_upload/attack_7.png",
+  "attack_8": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/queen_repo_upload/attack_8.png",
+  "attack_9": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/queen_repo_upload/attack_9.png",
+  "midrange_1": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/queen_repo_upload/midrange_1.png",
+  "midrange_2": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/queen_repo_upload/midrange_2.png",
+  "midrange_3": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/queen_repo_upload/midrange_3.png",
+  "midrange_4": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/queen_repo_upload/midrange_4.png",
+  "midrange_5": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/queen_repo_upload/midrange_5.png",
+  "midrangefx_1": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/queen_repo_upload/midrangefx_1.png",
+  "midrangefx_2": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/queen_repo_upload/midrangefx_2.png",
+  "midrangefx_3": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/queen_repo_upload/midrangefx_3.png",
+  "midrangefx_4": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/queen_repo_upload/midrangefx_4.png",
+  "midrangefx_5": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/queen_repo_upload/midrangefx_5.png",
+  "midrangefx_6": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/queen_repo_upload/midrangefx_6.png",
+  "midrangefx_7": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/queen_repo_upload/midrangefx_7.png",
+  "midrangefx_8": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/queen_repo_upload/midrangefx_8.png",
+  "midrangefx_9": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/queen_repo_upload/midrangefx_9.png",
+  "midrangefx_10": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/queen_repo_upload/midrangefx_10.png",
+  "dash_1": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/queen_repo_upload/dash_1.png",
+  "dash_2": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/queen_repo_upload/dash_2.png",
+  "dash_3": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/queen_repo_upload/dash_3.png",
+  "flinch_1": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/queen_repo_upload/flinch_1.png",
+  "flinch_2": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/queen_repo_upload/flinch_2.png",
+  "down_1": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/queen_repo_upload/down_1.png",
+  "down_2": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/queen_repo_upload/down_2.png",
+  "down_3": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/queen_repo_upload/down_3.png",
+  "down_4": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/queen_repo_upload/down_4.png"
+};
+const ICON_QUEEN = "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/icons/queen_icon.png";
+
+const QUEEN_MOTIONS = {
+  idle: { frames: ["walk_1"], loop: true, msPerFrame: 700 },
+  walk: { frames: ["walk_1", "walk_2", "walk_3", "walk_4", "walk_5"], loop: true, msPerFrame: 250 },
+  flinch: { frames: ["flinch_1", "flinch_2"], frameDurations: [100, 300], loop: false },
+  // 近接攻撃:杖の振り上げ(4fps)→叩きつけ〜着地(6fps)
+  attack: {
+    frames: ["attack_1", "attack_2", "attack_3", "attack_4", "attack_5", "attack_6", "attack_7", "attack_8", "attack_9"],
+    loop: false,
+    frameDurations: [250, 250, 250, 250, 166, 166, 166, 166, 320],
+    hitFrames: [5]
+  },
+  // 突進:全身が紫のオーラで覆われる(6fps)
+  dash: { frames: ["dash_1", "dash_2", "dash_3"], loop: true, msPerFrame: 166 },
+  // ダウン(ダッシュ衝突での転倒/死亡演出兼用):基本4fps、最後のコマは5秒保持
+  down: {
+    frames: ["down_1", "down_2", "down_3", "down_4"],
+    frameDurations: [250, 250, 250, 5000],
+    loop: false
+  },
+  // 中距離攻撃(魔砲弾):溜め(2fps)→発射(5fps、hitFrameで魔砲弾を発射)→後隙(3fps)
+  midrange: {
+    frames: ["midrange_1", "midrange_2", "midrange_3", "midrange_4", "midrange_5"],
+    loop: false,
+    frameDurations: [500, 500, 200, 333, 333],
+    hitFrames: [2]
+  },
+  // デバフ咆哮:敵が射程内に入ると発動。溜め(2fps)から最後の一声だけ長め保持。
+  // buffFrames(最終コマ)のタイミングで範囲内の敵にデバフを適用する
+  roar: {
+    frames: ["roar_1", "roar_2", "roar_3"],
+    loop: false,
+    frameDurations: [500, 500, 700],
+    buffFrames: [2]
+  },
+  // 召喚:杖を掲げて発動。2枚目のコマを長く(3秒)保持してから召喚を実行する
+  summon: {
+    frames: ["summon_1", "summon_2"],
+    loop: false,
+    frameDurations: [400, 3000],
+    buffFrames: [1]
+  }
+};
+
+const QUEEN_CONFIG = {
+  walkSpeed: 35,
+  dashSpeedMultiplier: 2,
+  dashDurationMs: 2500,
+  dashHitDamage: 20,
+  meleeRange: 65,
+  meleeHitDamage: 14,
+  weight: 115,
+  maxHp: 38,
+  attackLabel: "杖の叩きつけ",
+  voiceCategory: "queen",
+  midRangeMin: 100,
+  midRangeMax: 320,
+  midrangeDamage: 18,
+  midrangeSplashRadius: 90,
+  midrangeSplashMinDamage: 6,
+  midrangeProjectileFlightMs: 550,
+  roarRadius: 300,          // デバフ咆哮の発動半径・効果範囲
+  roarCooldownMs: 30000,    // デバフ咆哮の再発動クールタイム
+  roarFlinchMultiplier: 2,  // 通常の何倍の時間怯ませるか
+  roarDebuffDurationMs: 10000,
+  roarDebuffMultiplier: 0.7, // 攻撃力-30%
+  summonIntervalMs: 45000,   // 召喚の再発動間隔
+  summonGoblinCount: 5,
+  summonArcherCount: 2,
+  summonSpacing: 55          // 召喚したゴブリンたちを並べる間隔
+};
+
 function motionDuration(m) {
   if (m.frameDurations) return m.frameDurations.reduce((a, b) => a + b, 0);
   return m.frames.length * m.msPerFrame;
@@ -1046,12 +1205,15 @@ const els = {
   btnSpawnBruteRight: document.getElementById("btnSpawnBruteRight"),
   btnSpawnChiefLeft: document.getElementById("btnSpawnChiefLeft"),
   btnSpawnChiefRight: document.getElementById("btnSpawnChiefRight"),
+  btnSpawnQueenLeft: document.getElementById("btnSpawnQueenLeft"),
+  btnSpawnQueenRight: document.getElementById("btnSpawnQueenRight"),
   btnDashSoldier: document.getElementById("btnDashSoldier"),
   btnDashKurowl: document.getElementById("btnDashKurowl"),
   btnDashGoblin: document.getElementById("btnDashGoblin"),
   btnDashArcher: document.getElementById("btnDashArcher"),
   btnDashBrute: document.getElementById("btnDashBrute"),
   btnDashChief: document.getElementById("btnDashChief"),
+  btnDashQueen: document.getElementById("btnDashQueen"),
   btnReset: document.getElementById("btnReset"),
   enemyCastleHpFill: document.getElementById("enemyCastleHpFill"),
   enemyCastleHpText: document.getElementById("enemyCastleHpText"),
@@ -1073,15 +1235,20 @@ let archers = [];
 let catapults = [];
 let brutes = [];
 let chiefs = [];
+let queens = [];
 let projectiles = [];    // カタパルトの岩(飛翔中)
 let impactEffects = [];  // 着弾エフェクト(スパーク・砂煙)
+let queenBolts = [];        // 女王の魔砲弾(飛翔中)
+let queenBoltEffects = [];  // 魔砲弾の着弾エフェクト
+let queenSummonFx = [];     // 女王の召喚魔法陣エフェクト
+let queenRoarFx = [];       // 女王のデバフ咆哮エフェクト
 let unitIdSeq = 0;
 let projectileIdSeq = 0;
 let effectIdSeq = 0;
 let enemyCastle = null;
 let allyCastle = null;
 let money = 0;
-let loadout = { soldier: true, kurowl: true, goblin: true, archer: true, catapult: true, brute: true, chief: true }; // 出撃可能なユニット種別(スロットから導出)
+let loadout = { soldier: true, kurowl: true, goblin: true, archer: true, catapult: true, brute: true, chief: true, queen: true }; // 出撃可能なユニット種別(スロットから導出)
 
 const SOLDIER_QUEUE_GAP = 0; // 味方同士は重なって密集できる(間合いに入れるユニット数を制限しないため)
 const CASTLE_CONFIG = { maxHp: 150 }; // 魔の平原の城HP仕様
@@ -1093,7 +1260,8 @@ const ECONOMY_CONFIG = {
   archerCost: 55,
   catapultCost: 135, // カタパルト90円 + 搭乗ゴブリン30円 の合計
   bruteCost: 125,
-  chiefCost: 155
+  chiefCost: 155,
+  queenCost: 280
 };
 
 const MAX_SLOTS = 8;
@@ -1104,17 +1272,18 @@ const ROSTER = [
   { kind: "brute", name: "獰猛なゴブリン", cost: ECONOMY_CONFIG.bruteCost, statsLine: "HP19 / 一撃目5・叩きつけ8 / 体重90 / 重量級近接", icon: ICON_BRUTE },
   { kind: "chief", name: "ゴブリン長", cost: ECONOMY_CONFIG.chiefCost, statsLine: "HP15 / 小盾HP26 / 斬撃7 / 体重70 / ガード持ち", icon: ICON_CHIEF },
   { kind: "archer", name: "ゴブリン弓兵", cost: ECONOMY_CONFIG.archerCost, statsLine: "HP6 / 矢4 / 体重40 / 射程250(その場で射撃)", icon: ICON_ARCHER },
-  { kind: "catapult", name: "ゴブリンカタパルト", cost: ECONOMY_CONFIG.catapultCost, statsLine: "カタパルトHP25 / 岩15(範囲) / 体重300 / 射程250〜400・破壊後は搭乗ゴブリンが継戦", icon: ICON_CATAPULT }
+  { kind: "catapult", name: "ゴブリンカタパルト", cost: ECONOMY_CONFIG.catapultCost, statsLine: "カタパルトHP25 / 岩15(範囲) / 体重300 / 射程250〜400・破壊後は搭乗ゴブリンが継戦", icon: ICON_CATAPULT },
+  { kind: "queen", name: "ゴブリンの女王", cost: ECONOMY_CONFIG.queenCost, statsLine: "HP38 / 杖14・魔砲弾18(範囲) / 体重115 / 常時スーパーアーマー・デバフ咆哮・召喚持ち", icon: ICON_QUEEN }
 ];
 let formationSlots = new Array(MAX_SLOTS).fill(null); // 各要素: null | "soldier" | "kurowl" | "goblin" | "archer" | "catapult"
 let selectedRosterKind = null;
 let lastMoneyTick = 0;
 let battleActive = false;
 
-const MOTIONS_BY_KIND = { soldier: SOLDIER_MOTIONS, kurowl: KUROWL_MOTIONS, goblin: GOBLIN_MOTIONS, archer: ARCHER_MOTIONS, catapult: CATAPULT_MOTIONS, brute: BRUTE_MOTIONS, chief: CHIEF_MOTIONS };
-const CONFIG_BY_KIND = { soldier: SOLDIER_CONFIG, kurowl: KUROWL_CONFIG, goblin: GOBLIN_CONFIG, archer: ARCHER_CONFIG, catapult: CATAPULT_CONFIG, brute: BRUTE_CONFIG, chief: CHIEF_CONFIG };
-const FRAMES_BY_KIND = { soldier: SOLDIER_FRAMES, kurowl: KUROWL_FRAMES, goblin: GOBLIN_FRAMES, archer: ARCHER_FRAMES, catapult: CATAPULT_FRAMES, brute: BRUTE_FRAMES, chief: CHIEF_FRAMES };
-const UNIT_LABEL_BY_KIND = { soldier: "兵士", kurowl: "クロウル", goblin: "ゴブリン", archer: "ゴブリン弓兵", catapult: "ゴブリンカタパルト", brute: "獰猛なゴブリン", chief: "ゴブリン長" };
+const MOTIONS_BY_KIND = { soldier: SOLDIER_MOTIONS, kurowl: KUROWL_MOTIONS, goblin: GOBLIN_MOTIONS, archer: ARCHER_MOTIONS, catapult: CATAPULT_MOTIONS, brute: BRUTE_MOTIONS, chief: CHIEF_MOTIONS, queen: QUEEN_MOTIONS };
+const CONFIG_BY_KIND = { soldier: SOLDIER_CONFIG, kurowl: KUROWL_CONFIG, goblin: GOBLIN_CONFIG, archer: ARCHER_CONFIG, catapult: CATAPULT_CONFIG, brute: BRUTE_CONFIG, chief: CHIEF_CONFIG, queen: QUEEN_CONFIG };
+const FRAMES_BY_KIND = { soldier: SOLDIER_FRAMES, kurowl: KUROWL_FRAMES, goblin: GOBLIN_FRAMES, archer: ARCHER_FRAMES, catapult: CATAPULT_FRAMES, brute: BRUTE_FRAMES, chief: CHIEF_FRAMES, queen: QUEEN_FRAMES };
+const UNIT_LABEL_BY_KIND = { soldier: "兵士", kurowl: "クロウル", goblin: "ゴブリン", archer: "ゴブリン弓兵", catapult: "ゴブリンカタパルト", brute: "獰猛なゴブリン", chief: "ゴブリン長", queen: "ゴブリンの女王" };
 
 // =====================================================================
 // 突撃システム(新):ダウン/起き上がりモーションの補完
@@ -1242,6 +1411,9 @@ function motionLabel(kind, key) {
   if (kind === "chief") {
     return { idle: "待機", walk: "歩行", attack: "斬撃", flinch: "怯み", dash: "突撃！", knockback: "吹き飛ばし", midrange: "中距離攻撃", guard: "ガード", shieldbreak: "盾破壊" }[key] || key;
   }
+  if (kind === "queen") {
+    return { idle: "待機", walk: "歩行", attack: "杖の叩きつけ", flinch: "怯み", dash: "突進", down: "ダウン", midrange: "魔砲弾", roar: "デバフ咆哮", summon: "召喚" }[key] || key;
+  }
   return { idle: "待機", walk: "歩行", flinch: "怯み", knockback: "吹き飛ばし", melee: "近接攻撃", midrange: "中距離攻撃", charge: "突進" }[key] || key;
 }
 
@@ -1249,6 +1421,7 @@ function isEngagedMotion(kind, key) {
   if (kind === "kurowl") return key === "melee" || key === "midrange";
   if (kind === "brute") return key === "attack" || key === "midrange";
   if (kind === "chief") return key === "attack" || key === "midrange";
+  if (kind === "queen") return key === "attack" || key === "midrange";
   return key === "attack"; // soldier / goblin など近接攻撃タイプ共通
 }
 
@@ -1256,7 +1429,7 @@ function isEngagedMotion(kind, key) {
 // ユニット(兵士・クロウル共通)のDOM生成
 // =====================================================================
 function createUnitDom(kind) {
-  const unitClass = kind === "kurowl" ? "kurowl-unit" : kind === "catapult" ? "catapult-unit" : "soldier-unit";
+  const unitClass = kind === "kurowl" ? "kurowl-unit" : kind === "catapult" ? "catapult-unit" : kind === "queen" ? "soldier-unit queen-unit" : "soldier-unit";
   const hpWrapClass = kind === "kurowl" ? "kurowl-hp" : kind === "catapult" ? "catapult-hp" : "soldier-hp";
   const hpFillClass = kind === "kurowl" ? "kurowl-hp-fill" : kind === "catapult" ? "catapult-hp-fill" : "soldier-hp-fill";
 
@@ -1288,9 +1461,9 @@ function createUnitDom(kind) {
 // =====================================================================
 // ユニット生成
 // =====================================================================
-function createUnit(kind, side) {
+function createUnit(kind, side, startXOverride) {
   const cfg = CONFIG_BY_KIND[kind];
-  const startX = side === "left" ? 0 : FIELD.length;
+  const startX = (startXOverride !== null && startXOverride !== undefined) ? startXOverride : (side === "left" ? 0 : FIELD.length);
   const team = side === "left" ? "enemy" : "ally";
   const defaultFacing = side === "left" ? 1 : -1;
   const el = createUnitDom(kind);
@@ -1329,9 +1502,13 @@ function createUnit(kind, side) {
     shieldHp: kind === "chief" ? cfg.shieldMaxHp : 0,
     shieldMaxHp: kind === "chief" ? cfg.shieldMaxHp : 0,
     shieldBroken: false,
+    roarCooldownUntil: 0,   // 女王:デバフ咆哮の次回発動可能時刻
+    nextSummonAt: 0,        // 女王:次回召喚予定時刻
+    debuffUntil: 0,         // 女王のデバフ咆哮を受けている場合の解除時刻
+    debuffMultiplier: 1,
     el
   };
-  const targetArr = kind === "kurowl" ? kurowls : kind === "goblin" ? goblins : kind === "archer" ? archers : kind === "catapult" ? catapults : kind === "brute" ? brutes : kind === "chief" ? chiefs : soldiers;
+  const targetArr = kind === "kurowl" ? kurowls : kind === "goblin" ? goblins : kind === "archer" ? archers : kind === "catapult" ? catapults : kind === "brute" ? brutes : kind === "chief" ? chiefs : kind === "queen" ? queens : soldiers;
   targetArr.push(u);
   el.unit.style.display = "block";
   setUnitMotion(u, "walk");
@@ -1360,7 +1537,7 @@ function updateCastleUI(castle, fillEl, textEl) {
 // 共通ヘルパー
 // =====================================================================
 function allUnits() {
-  return soldiers.concat(kurowls, goblins, archers, catapults, brutes, chiefs);
+  return soldiers.concat(kurowls, goblins, archers, catapults, brutes, chiefs, queens);
 }
 
 function dist(a, b) {
@@ -1522,6 +1699,16 @@ function evaluateUnitState(u, now) {
       setUnitMotion(u, "walk");
     }
   } else if (u.kind === "chief") {
+    const cfg = CONFIG_BY_KIND[u.kind];
+    const inMelee = d <= cfg.meleeRange || isChainEngaged(u, u.facing);
+    if (inMelee) {
+      setUnitMotion(u, "attack");
+    } else if (d >= cfg.midRangeMin && d <= cfg.midRangeMax) {
+      setUnitMotion(u, "midrange");
+    } else {
+      setUnitMotion(u, "walk");
+    }
+  } else if (u.kind === "queen") {
     const cfg = CONFIG_BY_KIND[u.kind];
     const inMelee = d <= cfg.meleeRange || isChainEngaged(u, u.facing);
     if (inMelee) {
@@ -1736,6 +1923,29 @@ function damageUnit(u, dmg, sourceLabel, attacker) {
     return;
   }
 
+  // ゴブリンの女王:突進中のみ完全無敵。それ以外は常にスーパーアーマーで一切怯まない
+  if (u.kind === "queen") {
+    if (u.motionKey === "dash") {
+      logMsg(`${sourceLabel} → ${label}は突進中のため無敵、ダメージを無効化した。`);
+      return;
+    }
+    u.hp = Math.max(0, u.hp - dmg);
+    logMsg(`${sourceLabel} → ${label}に<b>${dmg}</b>ダメージ(残り${u.hp.toFixed(0)})(常時スーパーアーマーで怯まず)`);
+    if (u.hp <= 0) {
+      u.dead = true;
+      u.isDown = false;
+      u.deadAt = performance.now();
+      u.lockedMotion = null;
+      setUnitMotion(u, "down");
+      u.removeAt = u.deadAt + motionDuration(QUEEN_MOTIONS.down);
+      playUnitVoice(u, "death");
+      logMsg(`${label}が倒れた。`);
+    } else if (u.isDown) {
+      logMsg(`${label}はダウン中のため怯まず、そのまま倒れ続けている。`);
+    }
+    return;
+  }
+
   // kurowl
   if (u.motionKey === "charge") {
     logMsg(`${sourceLabel} → ${label}は突進中のため無敵、ダメージを無効化した。`);
@@ -1811,6 +2021,45 @@ function applyBruteRoarBuff(u) {
     t.buffUntil = now + BRUTE_CONFIG.roarBuffDurationMs;
     t.buffMultiplier = BRUTE_CONFIG.roarBuffMultiplier;
   }
+}
+
+// ゴブリンの女王のデバフ咆哮:射程内の敵を通常の2倍怯ませ、攻撃力を一定時間ダウンさせる(紫オーラ)
+function applyQueenRoarDebuff(u) {
+  const now = performance.now();
+  const cfg = QUEEN_CONFIG;
+  logMsg(`${UNIT_LABEL_BY_KIND[u.kind]}#${u.id}のデバフ咆哮!周囲の敵が怯み、攻撃力が下がった。`);
+  for (const t of allUnits()) {
+    if (t === u || t.dead || t.isDown || !isOpponent(u, t)) continue;
+    if (dist(u, t) > cfg.roarRadius) continue;
+    t.debuffUntil = now + cfg.roarDebuffDurationMs;
+    t.debuffMultiplier = cfg.roarDebuffMultiplier;
+    const motions = MOTIONS_BY_KIND[t.kind];
+    t.lockedMotion = "flinch";
+    t.lockedUntil = now + motionDuration(motions.flinch) * cfg.roarFlinchMultiplier;
+    setUnitMotion(t, "flinch");
+    playUnitVoice(t, "pain");
+  }
+  spawnQueenRoarEffect(u);
+}
+
+// ゴブリンの女王の召喚:女王を中心とした魔法陣の外縁に沿って、味方ゴブリン族を等間隔で無償召喚する
+function executeQueenSummon(u) {
+  const cfg = QUEEN_CONFIG;
+  logMsg(`${UNIT_LABEL_BY_KIND[u.kind]}#${u.id}が召喚魔法陣を展開!ゴブリンたちが呼び出された。`);
+  const plan = [];
+  for (let i = 0; i < cfg.summonGoblinCount; i++) plan.push("goblin");
+  for (let i = 0; i < cfg.summonArcherCount; i++) plan.push("archer");
+  plan.forEach((kind, i) => {
+    const step = Math.ceil((i + 1) / 2);
+    const dir = (i % 2 === 0) ? 1 : -1;
+    const offset = dir * step * cfg.summonSpacing;
+    const xPx = Math.min(FIELD.length, Math.max(0, u.xPx + offset));
+    const g = createUnit(kind, u.side, xPx);
+    g.facing = u.facing;
+    playUnitVoice(g, "taunt");
+  });
+  u.nextSummonAt = performance.now() + cfg.summonIntervalMs;
+  spawnQueenSummonFx(u);
 }
 
 function applyDamageTo(target, dmg, sourceLabel, attacker) {
@@ -1913,6 +2162,7 @@ function fieldScreenX(xPx) {
 function spawnProjectile(u, target, label) {
   const cfg = CONFIG_BY_KIND.catapult;
   const buffMultiplier = (u.buffUntil && performance.now() < u.buffUntil) ? (u.buffMultiplier || 1) : 1;
+  const debuffMultiplier = (u.debuffUntil && performance.now() < u.debuffUntil) ? (u.debuffMultiplier || 1) : 1;
   const el = document.createElement("div");
   el.className = "projectile-unit";
   const img = document.createElement("img");
@@ -1929,7 +2179,7 @@ function spawnProjectile(u, target, label) {
     duration: cfg.projectileFlightMs,
     arcHeight: cfg.projectileArcHeight,
     label,
-    buffMultiplier,
+    buffMultiplier: buffMultiplier * debuffMultiplier,
     resolved: false,
     el
   });
@@ -2017,13 +2267,205 @@ function tickImpactEffects(now) {
 }
 
 // =====================================================================
+// ゴブリンの女王の魔砲弾(中距離攻撃の投擲物)・着弾エフェクト・咆哮エフェクト・召喚魔法陣エフェクト
+// =====================================================================
+function spawnQueenBolt(u, target, label) {
+  const cfg = QUEEN_CONFIG;
+  const debuffMultiplier = (u.debuffUntil && performance.now() < u.debuffUntil) ? (u.debuffMultiplier || 1) : 1;
+  const buffMultiplier = (u.buffUntil && performance.now() < u.buffUntil) ? (u.buffMultiplier || 1) : 1;
+  const el = document.createElement("div");
+  el.className = "projectile-unit";
+  const img = document.createElement("img");
+  img.src = QUEEN_FRAMES.midrangefx_1;
+  el.appendChild(img);
+  els.field.appendChild(el);
+
+  queenBolts.push({
+    id: ++projectileIdSeq,
+    team: u.team,
+    xStart: u.xPx,
+    xTarget: target.xPx,
+    startTime: performance.now(),
+    duration: cfg.midrangeProjectileFlightMs,
+    frames: ["midrangefx_1", "midrangefx_2", "midrangefx_3", "midrangefx_4", "midrangefx_5"],
+    frameIndex: 0,
+    lastFrameTime: performance.now(),
+    label,
+    mult: debuffMultiplier * buffMultiplier,
+    resolved: false,
+    el,
+    img
+  });
+}
+
+function resolveQueenSplashDamage(xImpact, attackerTeam, label, mult) {
+  const cfg = QUEEN_CONFIG;
+  for (const unit of allUnits()) {
+    if (unit.dead || unit.team === attackerTeam) continue;
+    const d = Math.abs(unit.xPx - xImpact);
+    if (d > cfg.midrangeSplashRadius) continue;
+    const frac = d / cfg.midrangeSplashRadius;
+    const dmg = Math.round((cfg.midrangeDamage - (cfg.midrangeDamage - cfg.midrangeSplashMinDamage) * frac) * (mult || 1));
+    const guardian = findGuardianChief(unit, attackerTeam);
+    if (guardian) {
+      applyDamageTo(guardian, dmg, label + "(範囲攻撃を肩代わり)");
+    } else {
+      applyDamageTo(unit, dmg, label);
+    }
+  }
+  for (const castle of [enemyCastle, allyCastle]) {
+    if (!castle || castle.dead || castle.team === attackerTeam) continue;
+    const d = Math.abs(castle.xPx - xImpact);
+    if (d > cfg.midrangeSplashRadius) continue;
+    const frac = d / cfg.midrangeSplashRadius;
+    const dmg = Math.round((cfg.midrangeDamage - (cfg.midrangeDamage - cfg.midrangeSplashMinDamage) * frac) * (mult || 1));
+    damageCastle(castle, dmg, label);
+  }
+}
+
+function spawnQueenBoltImpact(xImpact) {
+  const frames = ["midrangefx_6", "midrangefx_7", "midrangefx_8", "midrangefx_9", "midrangefx_10"];
+  const frameDurations = [90, 110, 130, 150, 180];
+  const el = document.createElement("div");
+  el.className = "impact-unit";
+  const img = document.createElement("img");
+  img.src = QUEEN_FRAMES[frames[0]];
+  el.appendChild(img);
+  els.field.appendChild(el);
+  el.style.left = `${fieldScreenX(xImpact)}px`;
+
+  queenBoltEffects.push({
+    id: ++effectIdSeq,
+    xImpact,
+    frames,
+    frameDurations,
+    frameIndex: 0,
+    lastFrameTime: performance.now(),
+    el,
+    img
+  });
+}
+
+function tickQueenBolts(now) {
+  for (const p of queenBolts) {
+    const t = Math.min(1, (now - p.startTime) / p.duration);
+    const curX = p.xStart + (p.xTarget - p.xStart) * t;
+    p.el.style.left = `${fieldScreenX(curX)}px`;
+    const frameDt = now - p.lastFrameTime;
+    if (frameDt >= 60 && p.frameIndex < p.frames.length - 1) {
+      p.frameIndex++;
+      p.lastFrameTime = now;
+      p.img.src = QUEEN_FRAMES[p.frames[p.frameIndex]];
+    }
+    if (t >= 1 && !p.resolved) {
+      p.resolved = true;
+      resolveQueenSplashDamage(p.xTarget, p.team, p.label, p.mult);
+      spawnQueenBoltImpact(p.xTarget);
+      p.el.remove();
+    }
+  }
+  queenBolts = queenBolts.filter(p => !p.resolved);
+}
+
+function tickQueenBoltEffects(now) {
+  for (const e of queenBoltEffects) {
+    const frameDt = now - e.lastFrameTime;
+    if (frameDt >= e.frameDurations[e.frameIndex] && e.frameIndex < e.frames.length - 1) {
+      e.frameIndex++;
+      e.lastFrameTime = now;
+      e.img.src = QUEEN_FRAMES[e.frames[e.frameIndex]];
+    }
+    e.el.style.left = `${fieldScreenX(e.xImpact)}px`;
+    e.done = e.frameIndex >= e.frames.length - 1 && (now - e.lastFrameTime) >= e.frameDurations[e.frameIndex];
+    if (e.done) e.el.remove();
+  }
+  queenBoltEffects = queenBoltEffects.filter(e => !e.done);
+}
+
+function spawnQueenRoarEffect(u) {
+  const frames = ["roarfx_1", "roarfx_2", "roarfx_3", "roarfx_4", "roarfx_5"];
+  const frameDurations = [166, 166, 166, 166, 166];
+  const el = document.createElement("div");
+  el.className = "impact-unit";
+  const img = document.createElement("img");
+  img.src = QUEEN_FRAMES[frames[0]];
+  el.appendChild(img);
+  els.field.appendChild(el);
+  el.style.left = `${fieldScreenX(u.xPx)}px`;
+
+  queenRoarFx.push({
+    id: ++effectIdSeq,
+    xImpact: u.xPx,
+    frames,
+    frameDurations,
+    frameIndex: 0,
+    lastFrameTime: performance.now(),
+    el,
+    img
+  });
+}
+
+function tickQueenRoarFx(now) {
+  for (const e of queenRoarFx) {
+    const frameDt = now - e.lastFrameTime;
+    if (frameDt >= e.frameDurations[e.frameIndex] && e.frameIndex < e.frames.length - 1) {
+      e.frameIndex++;
+      e.lastFrameTime = now;
+      e.img.src = QUEEN_FRAMES[e.frames[e.frameIndex]];
+    }
+    e.el.style.left = `${fieldScreenX(e.xImpact)}px`;
+    e.done = e.frameIndex >= e.frames.length - 1 && (now - e.lastFrameTime) >= e.frameDurations[e.frameIndex];
+    if (e.done) e.el.remove();
+  }
+  queenRoarFx = queenRoarFx.filter(e => !e.done);
+}
+
+function spawnQueenSummonFx(u) {
+  const frames = ["summonfx_1", "summonfx_2", "summonfx_3", "summonfx_4", "summonfx_5", "summonfx_6", "summonfx_7", "summonfx_8"];
+  const frameDurations = [280, 280, 280, 280, 280, 280, 280, 280];
+  const el = document.createElement("div");
+  el.className = "impact-unit";
+  const img = document.createElement("img");
+  img.src = QUEEN_FRAMES[frames[0]];
+  el.appendChild(img);
+  els.field.appendChild(el);
+  el.style.left = `${fieldScreenX(u.xPx)}px`;
+
+  queenSummonFx.push({
+    id: ++effectIdSeq,
+    xImpact: u.xPx,
+    frames,
+    frameDurations,
+    frameIndex: 0,
+    lastFrameTime: performance.now(),
+    el,
+    img
+  });
+}
+
+function tickQueenSummonFx(now) {
+  for (const e of queenSummonFx) {
+    const frameDt = now - e.lastFrameTime;
+    if (frameDt >= e.frameDurations[e.frameIndex] && e.frameIndex < e.frames.length - 1) {
+      e.frameIndex++;
+      e.lastFrameTime = now;
+      e.img.src = QUEEN_FRAMES[e.frames[e.frameIndex]];
+    }
+    e.el.style.left = `${fieldScreenX(e.xImpact)}px`;
+    e.done = e.frameIndex >= e.frames.length - 1 && (now - e.lastFrameTime) >= e.frameDurations[e.frameIndex];
+    if (e.done) e.el.remove();
+  }
+  queenSummonFx = queenSummonFx.filter(e => !e.done);
+}
+
+// =====================================================================
 // ユニット(1体分)の更新
 // =====================================================================
 // =====================================================================
 // 死亡後のユニット(当たり判定・移動・攻撃は行わず、吹き飛ばしモーションのコマ送りと描画だけ継続する)
 // =====================================================================
 function tickDeadUnitAnimation(u, now) {
-  const motion = u.kind === "catapult" ? MOTIONS_BY_KIND[u.kind].destroy : MOTIONS_BY_KIND[u.kind].knockback;
+  const motion = u.kind === "catapult" ? MOTIONS_BY_KIND[u.kind].destroy : u.kind === "queen" ? MOTIONS_BY_KIND[u.kind].down : MOTIONS_BY_KIND[u.kind].knockback;
   const frameDt = Math.max(0, now - u.lastFrameTime);
   const curDuration = (motion.frameDurations ? motion.frameDurations[u.frameIndex] : null) || motion.msPerFrame;
 
@@ -2071,6 +2513,23 @@ function tickUnit(u, now) {
     } else {
       u.lockedMotion = null;
       evaluateUnitState(u, now);
+    }
+  }
+
+  // ゴブリンの女王:召喚(定期タイマー)とデバフ咆哮(敵接近+クールタイム)の発動判定
+  if (u.kind === "queen" && !u.lockedMotion && !u.isDown) {
+    if (now >= (u.nextSummonAt || 0)) {
+      u.lockedMotion = "summon";
+      u.lockedUntil = now + motionDuration(QUEEN_MOTIONS.summon);
+      setUnitMotion(u, "summon");
+    } else {
+      const nearestFoe = findNearestTarget(u);
+      if (nearestFoe && now >= (u.roarCooldownUntil || 0) && dist(u, nearestFoe) <= QUEEN_CONFIG.roarRadius) {
+        u.roarCooldownUntil = now + QUEEN_CONFIG.roarCooldownMs;
+        u.lockedMotion = "roar";
+        u.lockedUntil = now + motionDuration(QUEEN_MOTIONS.roar);
+        setUnitMotion(u, "roar");
+      }
     }
   }
 
@@ -2150,6 +2609,12 @@ function tickUnit(u, now) {
       if (u.kind === "brute") {
         applyBruteRoarBuff(u);
         playUnitVoice(u, "warCry"); // 赤目のコマ(咆哮のクライマックス)で吠え声を鳴らす
+      } else if (u.kind === "queen" && u.motionKey === "roar") {
+        applyQueenRoarDebuff(u);
+        playUnitVoice(u, "warCry");
+      } else if (u.kind === "queen" && u.motionKey === "summon") {
+        executeQueenSummon(u);
+        playUnitVoice(u, "warCry");
       }
     }
 
@@ -2169,6 +2634,12 @@ function tickUnit(u, now) {
       } else if (u.kind === "chief" && u.motionKey === "midrange") {
         dmg = u.frameIndex === 6 ? CHIEF_CONFIG.midrangeDamage1 : CHIEF_CONFIG.midrangeDamage2;
         label = u.frameIndex === 6 ? `ゴブリン長#${u.id}の回転斬り` : `ゴブリン長#${u.id}の突き刺し`;
+      } else if (u.kind === "queen" && u.motionKey === "midrange") {
+        dmg = QUEEN_CONFIG.midrangeDamage;
+        label = `ゴブリンの女王#${u.id}の魔砲弾`;
+      } else if (u.kind === "queen" && u.motionKey === "attack") {
+        dmg = QUEEN_CONFIG.meleeHitDamage;
+        label = `ゴブリンの女王#${u.id}の${QUEEN_CONFIG.attackLabel}`;
       } else {
         dmg = cfg.meleeHitDamage;
         label = `${UNIT_LABEL_BY_KIND[u.kind]}#${u.id}の${cfg.attackLabel}`;
@@ -2177,10 +2648,16 @@ function tickUnit(u, now) {
         dmg = Math.round(dmg * (u.buffMultiplier || 1));
         label += "(バフ強化)";
       }
+      if (u.debuffUntil && now < u.debuffUntil) {
+        dmg = Math.round(dmg * (u.debuffMultiplier || 1));
+        label += "(デバフで攻撃力低下)";
+      }
       const hitTarget = findNearestTarget(u);
       if (hitTarget) {
         if (u.kind === "catapult") {
           spawnProjectile(u, hitTarget, label);
+        } else if (u.kind === "queen" && u.motionKey === "midrange") {
+          spawnQueenBolt(u, hitTarget, label);
         } else {
           applyDamageTo(hitTarget, dmg, label, u);
         }
@@ -2235,6 +2712,13 @@ function tickUnit(u, now) {
             u.hitAppliedFrames = new Set();
             u.midrangeStartX = u.xPx;
           }
+        } else if (u.kind === "queen" && finishedKey === "midrange") {
+          evaluateUnitState(u, now);
+          if (u.motionKey === finishedKey) {
+            u.frameIndex = 0;
+            u.lastFrameTime = now;
+            u.hitAppliedFrames = new Set();
+          }
         } else {
           evaluateUnitState(u, now);
         }
@@ -2268,6 +2752,8 @@ function render() {
       u.el.unit.style.left = `${FIELD.leftMargin + u.xPx * scale}px`;
       const isBuffed = u.buffUntil && performance.now() < u.buffUntil;
       u.el.unit.classList.toggle("goblin-buffed", !!isBuffed);
+      const isDebuffed = u.debuffUntil && performance.now() < u.debuffUntil;
+      u.el.unit.classList.toggle("enemy-debuffed", !!isDebuffed);
     }
   }
 
@@ -2305,6 +2791,10 @@ function tick(now) {
       for (const u of allUnits()) tickUnit(u, now);
       tickProjectiles(now);
       tickImpactEffects(now);
+      tickQueenBolts(now);
+      tickQueenBoltEffects(now);
+      tickQueenRoarFx(now);
+      tickQueenSummonFx(now);
       render();
 
       for (const u of allUnits()) {
@@ -2327,6 +2817,9 @@ function tick(now) {
       goblins = goblins.filter(g => !g.removed);
       archers = archers.filter(a => !a.removed);
       catapults = catapults.filter(c => !c.removed);
+      brutes = brutes.filter(b => !b.removed);
+      chiefs = chiefs.filter(c => !c.removed);
+      queens = queens.filter(q => !q.removed);
     }
   } catch (err) {
     logMsg(`⚠ 内部エラーを検出したため今フレームをスキップしました: ${err.message}`);
@@ -2357,10 +2850,18 @@ function spawnUnit(kind, side) {
     u.lockedUntil = performance.now() + motionDuration(BRUTE_MOTIONS.roar);
     setUnitMotion(u, "roar");
   }
+  if (kind === "queen") {
+    // 出撃時は必ず召喚を発動する(以後45秒毎に再発動)。実際の召喚処理はsummonモーションの
+    // buffFrames(2枚目のコマ)経由でexecuteQueenSummonが呼ばれ、その中でnextSummonAtが更新される。
+    playUnitVoice(u, "warCry");
+    u.lockedMotion = "summon";
+    u.lockedUntil = performance.now() + motionDuration(QUEEN_MOTIONS.summon);
+    setUnitMotion(u, "summon");
+  }
 }
 
 function dashAll(kind) {
-  const list = kind === "kurowl" ? kurowls : kind === "goblin" ? goblins : kind === "archer" ? archers : kind === "brute" ? brutes : kind === "chief" ? chiefs : soldiers;
+  const list = kind === "kurowl" ? kurowls : kind === "goblin" ? goblins : kind === "archer" ? archers : kind === "brute" ? brutes : kind === "chief" ? chiefs : kind === "queen" ? queens : soldiers;
   const targets = list.filter(u => u.spawned && !u.dead && !u.isDown);
   if (!targets.length) return;
   const cfg = CONFIG_BY_KIND[kind];
@@ -2376,7 +2877,7 @@ function dashAll(kind) {
     setUnitMotion(u, dashKey);
     // 複数体が一斉に叫ぶことで声が重なるよう、わずかにタイミングをずらして再生
     const delay = Math.floor(Math.random() * 150);
-    const dashVoiceKey = (kind === "brute" || kind === "chief") ? "dash" : "warCry";
+    const dashVoiceKey = (kind === "brute" || kind === "chief" || kind === "queen") ? "dash" : "warCry";
     setTimeout(() => playUnitVoice(u, dashVoiceKey), delay);
   }
 }
@@ -2390,10 +2891,19 @@ function clearAllUnits() {
   catapults = [];
   brutes = [];
   chiefs = [];
+  queens = [];
   for (const p of projectiles) p.el.remove();
   projectiles = [];
   for (const e of impactEffects) e.el.remove();
   impactEffects = [];
+  for (const p of queenBolts) p.el.remove();
+  queenBolts = [];
+  for (const e of queenBoltEffects) e.el.remove();
+  queenBoltEffects = [];
+  for (const e of queenSummonFx) e.el.remove();
+  queenSummonFx = [];
+  for (const e of queenRoarFx) e.el.remove();
+  queenRoarFx = [];
   unitIdSeq = 0;
 }
 
@@ -2427,7 +2937,7 @@ function renderRoster() {
       selectedRosterKind = wasSelected ? null : item.kind;
       renderRoster();
       if (!wasSelected) {
-        const previewKey = (item.kind === "brute" || item.kind === "chief") ? "iconPreview" : "warCry";
+        const previewKey = (item.kind === "brute" || item.kind === "chief" || item.kind === "queen") ? "iconPreview" : "warCry";
         playVoice(CONFIG_BY_KIND[item.kind].voiceCategory, previewKey);
       }
     });
@@ -2473,12 +2983,15 @@ function applyLoadoutToButtons() {
   els.btnSpawnBruteLeft.style.display = loadout.brute ? "" : "none";
   els.btnSpawnChiefRight.style.display = loadout.chief ? "" : "none";
   els.btnSpawnChiefLeft.style.display = loadout.chief ? "" : "none";
+  els.btnSpawnQueenRight.style.display = loadout.queen ? "" : "none";
+  els.btnSpawnQueenLeft.style.display = loadout.queen ? "" : "none";
   els.btnDashSoldier.style.display = loadout.soldier ? "" : "none";
   els.btnDashKurowl.style.display = loadout.kurowl ? "" : "none";
   els.btnDashGoblin.style.display = loadout.goblin ? "" : "none";
   els.btnDashArcher.style.display = loadout.archer ? "" : "none";
   els.btnDashBrute.style.display = loadout.brute ? "" : "none";
   els.btnDashChief.style.display = loadout.chief ? "" : "none";
+  els.btnDashQueen.style.display = loadout.queen ? "" : "none";
 }
 
 function startBattle() {
@@ -2489,7 +3002,8 @@ function startBattle() {
   loadout.chief = formationSlots.includes("chief");
   loadout.archer = formationSlots.includes("archer");
   loadout.catapult = formationSlots.includes("catapult");
-  if (!loadout.soldier && !loadout.kurowl && !loadout.goblin && !loadout.archer && !loadout.catapult && !loadout.brute && !loadout.chief) {
+  loadout.queen = formationSlots.includes("queen");
+  if (!loadout.soldier && !loadout.kurowl && !loadout.goblin && !loadout.archer && !loadout.catapult && !loadout.brute && !loadout.chief && !loadout.queen) {
     els.formationWarning.style.display = "block";
     return;
   }
@@ -2523,12 +3037,15 @@ els.btnSpawnBruteLeft.addEventListener("click", () => spawnUnit("brute", "left")
 els.btnSpawnBruteRight.addEventListener("click", () => spawnUnit("brute", "right"));
 els.btnSpawnChiefLeft.addEventListener("click", () => spawnUnit("chief", "left"));
 els.btnSpawnChiefRight.addEventListener("click", () => spawnUnit("chief", "right"));
+els.btnSpawnQueenLeft.addEventListener("click", () => spawnUnit("queen", "left"));
+els.btnSpawnQueenRight.addEventListener("click", () => spawnUnit("queen", "right"));
 els.btnDashSoldier.addEventListener("click", () => dashAll("soldier"));
 els.btnDashKurowl.addEventListener("click", () => dashAll("kurowl"));
 els.btnDashGoblin.addEventListener("click", () => dashAll("goblin"));
 els.btnDashArcher.addEventListener("click", () => dashAll("archer"));
 els.btnDashChief.addEventListener("click", () => dashAll("chief"));
 els.btnDashBrute.addEventListener("click", () => dashAll("brute"));
+els.btnDashQueen.addEventListener("click", () => dashAll("queen"));
 els.btnReset.addEventListener("click", reset);
 els.btnStartBattle.addEventListener("click", startBattle);
 
@@ -2539,6 +3056,7 @@ formationSlots[3] = "archer";
 formationSlots[4] = "catapult";
 formationSlots[5] = "brute";
 formationSlots[6] = "chief";
+formationSlots[7] = "queen";
 renderRoster();
 renderSlots();
 initCastles();

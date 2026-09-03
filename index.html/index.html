@@ -1877,8 +1877,13 @@ function tickUnit(u, now) {
           applyDamageTo(hitTarget, dmg, label);
         }
       }
-      if (u.kind !== "kurowl") playUnitVoice(u, "attack");
-      else if (u.motionKey === "midrange") playUnitVoice(u, "midrangeAttack");
+      if (u.kind === "kurowl") {
+        if (u.motionKey === "midrange") playUnitVoice(u, "midrangeAttack");
+      } else if (u.kind === "brute" && u.motionKey === "midrange") {
+        playUnitVoice(u, "midrangeAttack");
+      } else {
+        playUnitVoice(u, "attack");
+      }
     }
 
     if (u.frameIndex >= motion.frames.length) {

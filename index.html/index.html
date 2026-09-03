@@ -171,6 +171,16 @@
     max-height: 78px;
   }
 
+  /* 女王の召喚魔法陣:通常のimpact-unitの3倍サイズ、位置を低めに表示 */
+  .queen-summonfx-unit {
+    position: absolute; bottom: 10px; width: 360px; height: 270px;
+    transform: translateX(-50%); z-index: 3; pointer-events: none;
+  }
+  .queen-summonfx-unit img {
+    position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
+    max-height: 240px; max-width: none;
+  }
+
   .controls {
     margin-top: 14px; display: grid;
     grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px;
@@ -1118,19 +1128,19 @@ const QUEEN_MOTIONS = {
     frameDurations: [250, 250, 250, 5000],
     loop: false
   },
-  // 中距離攻撃(魔砲弾):溜め(2fps)→発射(5fps、hitFrameで魔砲弾を発射)→後隙(3fps)
+  // 中距離攻撃(魔砲弾):溜め(2fps)→発射(5fps、hitFrameで魔砲弾を発射)→後隙を長めに
   midrange: {
     frames: ["midrange_1", "midrange_2", "midrange_3", "midrange_4", "midrange_5"],
     loop: false,
-    frameDurations: [500, 500, 200, 333, 333],
+    frameDurations: [500, 500, 200, 500, 900],
     hitFrames: [2]
   },
-  // デバフ咆哮:敵が射程内に入ると発動。溜め(2fps)から最後の一声だけ長め保持。
+  // デバフ咆哮:敵が射程内に入ると発動。全体的に長めに、後隙も多めに取る
   // buffFrames(最終コマ)のタイミングで範囲内の敵にデバフを適用する
   roar: {
     frames: ["roar_1", "roar_2", "roar_3"],
     loop: false,
-    frameDurations: [500, 500, 700],
+    frameDurations: [700, 700, 1400],
     buffFrames: [2]
   },
   // 召喚:杖を掲げて発動。2枚目のコマを長く(3秒)保持してから召喚を実行する
@@ -1154,18 +1164,20 @@ const QUEEN_CONFIG = {
   attackLabel: "杖の叩きつけ",
   voiceCategory: "queen",
   midRangeMin: 100,
-  midRangeMax: 320,
+  midRangeMax: 220,
   midrangeDamage: 18,
   midrangeSplashRadius: 90,
   midrangeSplashMinDamage: 6,
   midrangeProjectileFlightMs: 550,
+  midrangeProjectileArcHeight: 70,   // 放物線の高さ(見た目)
+  midrangeLaunchHeightPx: 55,        // 杖の先端の高さ(見た目)
   roarRadius: 300,          // デバフ咆哮の発動半径・効果範囲
-  roarCooldownMs: 30000,    // デバフ咆哮の再発動クールタイム
+  roarCooldownMs: 40000,    // デバフ咆哮の再発動クールタイム
   roarFlinchMultiplier: 2,  // 通常の何倍の時間怯ませるか
   roarDebuffDurationMs: 10000,
   roarDebuffMultiplier: 0.7, // 攻撃力-30%
-  summonIntervalMs: 45000,   // 召喚の再発動間隔
-  summonGoblinCount: 5,
+  summonIntervalMs: 100000,  // 召喚の再発動間隔
+  summonGoblinCount: 3,
   summonArcherCount: 2,
   summonSpacing: 55          // 召喚したゴブリンたちを並べる間隔
 };
@@ -2280,13 +2292,18 @@ function spawnQueenBolt(u, target, label) {
   el.appendChild(img);
   els.field.appendChild(el);
 
+  // 杖の先端(体の少し前方・高い位置)から発射させる
+  const launchX = u.xPx + u.facing * 20;
+
   queenBolts.push({
     id: ++projectileIdSeq,
     team: u.team,
-    xStart: u.xPx,
+    xStart: launchX,
     xTarget: target.xPx,
     startTime: performance.now(),
     duration: cfg.midrangeProjectileFlightMs,
+    arcHeight: cfg.midrangeProjectileArcHeight,
+    launchHeight: cfg.midrangeLaunchHeightPx,
     frames: ["midrangefx_1", "midrangefx_2", "midrangefx_3", "midrangefx_4", "midrangefx_5"],
     frameIndex: 0,
     lastFrameTime: performance.now(),
@@ -2350,7 +2367,10 @@ function tickQueenBolts(now) {
   for (const p of queenBolts) {
     const t = Math.min(1, (now - p.startTime) / p.duration);
     const curX = p.xStart + (p.xTarget - p.xStart) * t;
+    // 杖の高さから放物線を描いて着弾する(発射直後は高く、着弾時は地面付近まで下りる)
+    const height = p.launchHeight * (1 - t) + 4 * p.arcHeight * t * (1 - t);
     p.el.style.left = `${fieldScreenX(curX)}px`;
+    p.el.style.transform = `translateX(-50%) translateY(${-height}px)`;
     const frameDt = now - p.lastFrameTime;
     if (frameDt >= 60 && p.frameIndex < p.frames.length - 1) {
       p.frameIndex++;
@@ -2389,6 +2409,9 @@ function spawnQueenRoarEffect(u) {
   el.className = "impact-unit";
   const img = document.createElement("img");
   img.src = QUEEN_FRAMES[frames[0]];
+  // 素材が右向きに広がる絵柄のため、女王が左を向いている(facing=-1)場合は反転させて
+  // 咆哮と同じ方向にエフェクトが広がるようにする
+  img.style.transform = `translateX(-50%) scaleX(${u.facing === -1 ? -1 : 1})`;
   el.appendChild(img);
   els.field.appendChild(el);
   el.style.left = `${fieldScreenX(u.xPx)}px`;
@@ -2396,6 +2419,7 @@ function spawnQueenRoarEffect(u) {
   queenRoarFx.push({
     id: ++effectIdSeq,
     xImpact: u.xPx,
+    facing: u.facing,
     frames,
     frameDurations,
     frameIndex: 0,
@@ -2424,7 +2448,7 @@ function spawnQueenSummonFx(u) {
   const frames = ["summonfx_1", "summonfx_2", "summonfx_3", "summonfx_4", "summonfx_5", "summonfx_6", "summonfx_7", "summonfx_8"];
   const frameDurations = [280, 280, 280, 280, 280, 280, 280, 280];
   const el = document.createElement("div");
-  el.className = "impact-unit";
+  el.className = "queen-summonfx-unit"; // 通常のimpact-unitより大きく・低い位置に表示する専用クラス
   const img = document.createElement("img");
   img.src = QUEEN_FRAMES[frames[0]];
   el.appendChild(img);

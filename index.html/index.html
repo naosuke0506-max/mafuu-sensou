@@ -268,18 +268,18 @@
   <div class="controls">
     <button class="act" id="btnSpawnSoldierRight">兵士を出撃(自軍/右, 50円)</button>
     <button class="act" id="btnSpawnSoldierLeft">兵士を出撃(敵軍/左, 50円)</button>
-    <button class="act" id="btnSpawnKurowlLeft">クロウルを出撃(敵軍/左, 140円)</button>
-    <button class="act" id="btnSpawnKurowlRight">クロウルを出撃(自軍/右, 140円)</button>
-    <button class="act" id="btnSpawnGoblinRight">ゴブリンを出撃(自軍/右, 30円)</button>
-    <button class="act" id="btnSpawnGoblinLeft">ゴブリンを出撃(敵軍/左, 30円)</button>
-    <button class="act" id="btnSpawnArcherRight">ゴブリン弓兵を出撃(自軍/右, 45円)</button>
-    <button class="act" id="btnSpawnArcherLeft">ゴブリン弓兵を出撃(敵軍/左, 45円)</button>
-    <button class="act" id="btnSpawnCatapultRight">ゴブリンカタパルトを出撃(自軍/右, 120円)</button>
-    <button class="act" id="btnSpawnCatapultLeft">ゴブリンカタパルトを出撃(敵軍/左, 120円)</button>
-    <button class="act" id="btnSpawnBruteRight">獰猛なゴブリンを出撃(自軍/右, 90円)</button>
-    <button class="act" id="btnSpawnBruteLeft">獰猛なゴブリンを出撃(敵軍/左, 90円)</button>
-    <button class="act" id="btnSpawnChiefRight">ゴブリン長を出撃(自軍/右, 80円)</button>
-    <button class="act" id="btnSpawnChiefLeft">ゴブリン長を出撃(敵軍/左, 80円)</button>
+    <button class="act" id="btnSpawnKurowlLeft">クロウルを出撃(敵軍/左, 110円)</button>
+    <button class="act" id="btnSpawnKurowlRight">クロウルを出撃(自軍/右, 110円)</button>
+    <button class="act" id="btnSpawnGoblinRight">ゴブリンを出撃(自軍/右, 40円)</button>
+    <button class="act" id="btnSpawnGoblinLeft">ゴブリンを出撃(敵軍/左, 40円)</button>
+    <button class="act" id="btnSpawnArcherRight">ゴブリン弓兵を出撃(自軍/右, 55円)</button>
+    <button class="act" id="btnSpawnArcherLeft">ゴブリン弓兵を出撃(敵軍/左, 55円)</button>
+    <button class="act" id="btnSpawnCatapultRight">ゴブリンカタパルトを出撃(自軍/右, 135円)</button>
+    <button class="act" id="btnSpawnCatapultLeft">ゴブリンカタパルトを出撃(敵軍/左, 135円)</button>
+    <button class="act" id="btnSpawnBruteRight">獰猛なゴブリンを出撃(自軍/右, 125円)</button>
+    <button class="act" id="btnSpawnBruteLeft">獰猛なゴブリンを出撃(敵軍/左, 125円)</button>
+    <button class="act" id="btnSpawnChiefRight">ゴブリン長を出撃(自軍/右, 155円)</button>
+    <button class="act" id="btnSpawnChiefLeft">ゴブリン長を出撃(敵軍/左, 155円)</button>
     <button class="act charge" id="btnDashSoldier">兵士 全員「突撃！」発動</button>
     <button class="act charge" id="btnDashKurowl">クロウル 全員「突進」発動</button>
     <button class="act charge" id="btnDashGoblin">ゴブリン 全員「突撃！」発動</button>
@@ -719,12 +719,12 @@ const KUROWL_CONFIG = {
   bodyLength: 90,
   kurowlSpeed: 62,
   walkSpeed: 62, // 汎用の速度参照用エイリアス
-  kurowlHp: 12,
-  maxHp: 12,
+  kurowlHp: 16,
+  maxHp: 16,
   meleeRange: 72,
   midRangeMin: 180,        // 体長2.0体分(これより近づいたら中距離攻撃はせず接近する)
   midRangeMax: 270,        // 体長3.0体分
-  meleeHitDamage: 2,
+  meleeHitDamage: 3,
   meleeHitFrames: [6, 8, 9, 10, 11, 13],
   midrangeDamage: 15,
   midrangeLeapAdvance: 270, // 最大射程(体長3.0体分)まで跳びかかって移動する
@@ -825,14 +825,15 @@ const BRUTE_MOTIONS = {
 };
 
 const BRUTE_CONFIG = {
-  walkSpeed: 50,
+  walkSpeed: 42,
   dashSpeedMultiplier: 2.5,
   dashDurationMs: 2500,
   meleeRange: 55,
-  meleeHitDamage: 5,
+  meleeHitDamage1: 5, // 1段目(素早い一撃)
+  meleeHitDamage2: 8, // 2段目(叩きつけ)
   dashHitDamage: 15,
   weight: 90,
-  maxHp: 16,
+  maxHp: 19,
   attackLabel: "叩きつけ",
   voiceCategory: "brute",
   midRangeMin: 70,
@@ -840,7 +841,7 @@ const BRUTE_CONFIG = {
   midrangeLeapAdvance: 130,
   midrangeDamage: 10,
   roarBuffRadius: 170, // 咆哮のバフ範囲(中距離攻撃の射程と同じ)
-  roarBuffDurationMs: 15000,
+  roarBuffDurationMs: 5000,
   roarBuffMultiplier: 1.4 // 攻撃力+40%
 };
 
@@ -902,17 +903,17 @@ const CHIEF_CONFIG = {
   dashDurationMs: 2000,
   dashHitDamage: 6,
   meleeRange: 55,
-  meleeHitDamage: 4,
-  weight: 55,
-  maxHp: 10,
-  shieldMaxHp: 8,
+  meleeHitDamage: 7,
+  weight: 70,
+  maxHp: 15,
+  shieldMaxHp: 26,
   attackLabel: "斬撃",
   voiceCategory: "chief",
   midRangeMin: 60,
   midRangeMax: 160,
   midrangeLeapAdvance: 110,
-  midrangeDamage1: 3, // 回転斬り
-  midrangeDamage2: 4, // 突き刺し
+  midrangeDamage1: 9, // 回転斬り
+  midrangeDamage2: 12, // 突き刺し
   guardFootstepRange: 45 // 範囲攻撃を肩代わりする「歩幅分」の距離
 };
 
@@ -996,7 +997,7 @@ const CATAPULT_MOTIONS = {
 };
 
 const CATAPULT_CONFIG = {
-  walkSpeed: 45,             // 重量物のため歩行はやや遅め
+  walkSpeed: 38,             // 重量物のため歩行はやや遅め
   meleeRange: 400,           // 最大射程400(歩いてこの距離まで近づいたらその場に留まり射撃する)
   minRange: 250,             // 最小射程250(これより敵が近いと攻撃できず待機する)
   meleeHitDamage: 15,        // 着弾中心の最大ダメージ(範囲減衰の起点)
@@ -1087,21 +1088,21 @@ const CASTLE_CONFIG = { maxHp: 150 }; // 魔の平原の城HP仕様
 const ECONOMY_CONFIG = {
   moneyPerSecond: 15,
   soldierCost: 50,
-  kurowlCost: 140,
-  goblinCost: 30,
-  archerCost: 45,
-  catapultCost: 120, // カタパルト90円 + 搭乗ゴブリン30円 の合計
-  bruteCost: 90,
-  chiefCost: 80
+  kurowlCost: 110,
+  goblinCost: 40,
+  archerCost: 55,
+  catapultCost: 135, // カタパルト90円 + 搭乗ゴブリン30円 の合計
+  bruteCost: 125,
+  chiefCost: 155
 };
 
 const MAX_SLOTS = 8;
 const ROSTER = [
   { kind: "soldier", name: "兵士", cost: ECONOMY_CONFIG.soldierCost, statsLine: "HP10 / 攻撃力5(刺突) / 体重60", icon: ICON_SOLDIER },
-  { kind: "kurowl", name: "クロウル", cost: ECONOMY_CONFIG.kurowlCost, statsLine: "HP12 / 引っ掻き2×6・中距離15 / 体重70", icon: ICON_KUROWL },
+  { kind: "kurowl", name: "クロウル", cost: ECONOMY_CONFIG.kurowlCost, statsLine: "HP16 / 引っ掻き3×6・中距離15 / 体重70", icon: ICON_KUROWL },
   { kind: "goblin", name: "ゴブリン", cost: ECONOMY_CONFIG.goblinCost, statsLine: "HP6 / 打撃3 / 体重40 / 初撃を確定回避", icon: ICON_GOBLIN },
-  { kind: "brute", name: "獰猛なゴブリン", cost: ECONOMY_CONFIG.bruteCost, statsLine: "HP16 / 叩きつけ5×2 / 体重90 / 重量級近接", icon: ICON_BRUTE },
-  { kind: "chief", name: "ゴブリン長", cost: ECONOMY_CONFIG.chiefCost, statsLine: "HP10 / 小盾HP8 / 斬撃4 / 体重55 / ガード持ち", icon: ICON_CHIEF },
+  { kind: "brute", name: "獰猛なゴブリン", cost: ECONOMY_CONFIG.bruteCost, statsLine: "HP19 / 一撃目5・叩きつけ8 / 体重90 / 重量級近接", icon: ICON_BRUTE },
+  { kind: "chief", name: "ゴブリン長", cost: ECONOMY_CONFIG.chiefCost, statsLine: "HP15 / 小盾HP26 / 斬撃7 / 体重70 / ガード持ち", icon: ICON_CHIEF },
   { kind: "archer", name: "ゴブリン弓兵", cost: ECONOMY_CONFIG.archerCost, statsLine: "HP6 / 矢4 / 体重40 / 射程250(その場で射撃)", icon: ICON_ARCHER },
   { kind: "catapult", name: "ゴブリンカタパルト", cost: ECONOMY_CONFIG.catapultCost, statsLine: "カタパルトHP25 / 岩15(範囲) / 体重300 / 射程250〜400・破壊後は搭乗ゴブリンが継戦", icon: ICON_CATAPULT }
 ];
@@ -2161,6 +2162,10 @@ function tickUnit(u, now) {
       } else if (u.kind === "brute" && u.motionKey === "midrange") {
         dmg = BRUTE_CONFIG.midrangeDamage;
         label = `獰猛なゴブリン#${u.id}の跳躍叩きつけ`;
+      } else if (u.kind === "brute" && u.motionKey === "attack") {
+        // hitFrames: [1, 8] → index1が1段目(素早い一撃)、index8が2段目(叩きつけ)
+        dmg = u.frameIndex === 1 ? BRUTE_CONFIG.meleeHitDamage1 : BRUTE_CONFIG.meleeHitDamage2;
+        label = `獰猛なゴブリン#${u.id}の${u.frameIndex === 1 ? "一撃目" : "叩きつけ"}`;
       } else if (u.kind === "chief" && u.motionKey === "midrange") {
         dmg = u.frameIndex === 6 ? CHIEF_CONFIG.midrangeDamage1 : CHIEF_CONFIG.midrangeDamage2;
         label = u.frameIndex === 6 ? `ゴブリン長#${u.id}の回転斬り` : `ゴブリン長#${u.id}の突き刺し`;

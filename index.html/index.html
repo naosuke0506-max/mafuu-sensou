@@ -278,10 +278,13 @@
     <button class="act" id="btnSpawnCatapultLeft">ゴブリンカタパルトを出撃(敵軍/左, 120円)</button>
     <button class="act" id="btnSpawnBruteRight">獰猛なゴブリンを出撃(自軍/右, 90円)</button>
     <button class="act" id="btnSpawnBruteLeft">獰猛なゴブリンを出撃(敵軍/左, 90円)</button>
+    <button class="act" id="btnSpawnChiefRight">ゴブリン長を出撃(自軍/右, 80円)</button>
+    <button class="act" id="btnSpawnChiefLeft">ゴブリン長を出撃(敵軍/左, 80円)</button>
     <button class="act charge" id="btnDashSoldier">兵士 全員「突撃！」発動</button>
     <button class="act charge" id="btnDashKurowl">クロウル 全員「突進」発動</button>
     <button class="act charge" id="btnDashGoblin">ゴブリン 全員「突撃！」発動</button>
     <button class="act charge" id="btnDashArcher">ゴブリン弓兵 全員「突撃！」発動</button>
+    <button class="act charge" id="btnDashChief">ゴブリン長 全員「突撃！」発動</button>
     <button class="act charge" id="btnDashBrute">獰猛なゴブリン 全員「突撃！」発動</button>
     <button class="act reset" id="btnReset">編成に戻る</button>
   </div>
@@ -1031,11 +1034,14 @@ const els = {
   btnSpawnCatapultRight: document.getElementById("btnSpawnCatapultRight"),
   btnSpawnBruteLeft: document.getElementById("btnSpawnBruteLeft"),
   btnSpawnBruteRight: document.getElementById("btnSpawnBruteRight"),
+  btnSpawnChiefLeft: document.getElementById("btnSpawnChiefLeft"),
+  btnSpawnChiefRight: document.getElementById("btnSpawnChiefRight"),
   btnDashSoldier: document.getElementById("btnDashSoldier"),
   btnDashKurowl: document.getElementById("btnDashKurowl"),
   btnDashGoblin: document.getElementById("btnDashGoblin"),
   btnDashArcher: document.getElementById("btnDashArcher"),
   btnDashBrute: document.getElementById("btnDashBrute"),
+  btnDashChief: document.getElementById("btnDashChief"),
   btnReset: document.getElementById("btnReset"),
   enemyCastleHpFill: document.getElementById("enemyCastleHpFill"),
   enemyCastleHpText: document.getElementById("enemyCastleHpText"),
@@ -1065,7 +1071,7 @@ let effectIdSeq = 0;
 let enemyCastle = null;
 let allyCastle = null;
 let money = 0;
-let loadout = { soldier: true, kurowl: true, goblin: true, archer: true, catapult: true, brute: true }; // 出撃可能なユニット種別(スロットから導出)
+let loadout = { soldier: true, kurowl: true, goblin: true, archer: true, catapult: true, brute: true, chief: true }; // 出撃可能なユニット種別(スロットから導出)
 
 const SOLDIER_QUEUE_GAP = 0; // 味方同士は重なって密集できる(間合いに入れるユニット数を制限しないため)
 const CASTLE_CONFIG = { maxHp: 150 }; // 魔の平原の城HP仕様
@@ -2432,11 +2438,14 @@ function applyLoadoutToButtons() {
   els.btnSpawnCatapultLeft.style.display = loadout.catapult ? "" : "none";
   els.btnSpawnBruteRight.style.display = loadout.brute ? "" : "none";
   els.btnSpawnBruteLeft.style.display = loadout.brute ? "" : "none";
+  els.btnSpawnChiefRight.style.display = loadout.chief ? "" : "none";
+  els.btnSpawnChiefLeft.style.display = loadout.chief ? "" : "none";
   els.btnDashSoldier.style.display = loadout.soldier ? "" : "none";
   els.btnDashKurowl.style.display = loadout.kurowl ? "" : "none";
   els.btnDashGoblin.style.display = loadout.goblin ? "" : "none";
   els.btnDashArcher.style.display = loadout.archer ? "" : "none";
   els.btnDashBrute.style.display = loadout.brute ? "" : "none";
+  els.btnDashChief.style.display = loadout.chief ? "" : "none";
 }
 
 function startBattle() {
@@ -2444,9 +2453,10 @@ function startBattle() {
   loadout.kurowl = formationSlots.includes("kurowl");
   loadout.goblin = formationSlots.includes("goblin");
   loadout.brute = formationSlots.includes("brute");
+  loadout.chief = formationSlots.includes("chief");
   loadout.archer = formationSlots.includes("archer");
   loadout.catapult = formationSlots.includes("catapult");
-  if (!loadout.soldier && !loadout.kurowl && !loadout.goblin && !loadout.archer && !loadout.catapult && !loadout.brute) {
+  if (!loadout.soldier && !loadout.kurowl && !loadout.goblin && !loadout.archer && !loadout.catapult && !loadout.brute && !loadout.chief) {
     els.formationWarning.style.display = "block";
     return;
   }
@@ -2478,10 +2488,13 @@ els.btnSpawnCatapultLeft.addEventListener("click", () => spawnUnit("catapult", "
 els.btnSpawnCatapultRight.addEventListener("click", () => spawnUnit("catapult", "right"));
 els.btnSpawnBruteLeft.addEventListener("click", () => spawnUnit("brute", "left"));
 els.btnSpawnBruteRight.addEventListener("click", () => spawnUnit("brute", "right"));
+els.btnSpawnChiefLeft.addEventListener("click", () => spawnUnit("chief", "left"));
+els.btnSpawnChiefRight.addEventListener("click", () => spawnUnit("chief", "right"));
 els.btnDashSoldier.addEventListener("click", () => dashAll("soldier"));
 els.btnDashKurowl.addEventListener("click", () => dashAll("kurowl"));
 els.btnDashGoblin.addEventListener("click", () => dashAll("goblin"));
 els.btnDashArcher.addEventListener("click", () => dashAll("archer"));
+els.btnDashChief.addEventListener("click", () => dashAll("chief"));
 els.btnDashBrute.addEventListener("click", () => dashAll("brute"));
 els.btnReset.addEventListener("click", reset);
 els.btnStartBattle.addEventListener("click", startBattle);
@@ -2492,6 +2505,7 @@ formationSlots[2] = "goblin";
 formationSlots[3] = "archer";
 formationSlots[4] = "catapult";
 formationSlots[5] = "brute";
+formationSlots[6] = "chief";
 renderRoster();
 renderSlots();
 initCastles();

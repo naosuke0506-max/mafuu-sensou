@@ -596,6 +596,15 @@ const ICON_KUROWL = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKAAAACgCAYAA
 
 
 const SOUNDS = {
+  "chief_death": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/audio/chief_death.mp3",
+  "chief_attack": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/audio/chief_attack.mp3",
+  "chief_warcry": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/audio/chief_warcry.mp3",
+  "chief_guard": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/audio/chief_guard.mp3",
+  "chief_midrange2": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/audio/chief_midrange2.mp3",
+  "chief_dash": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/audio/chief_dash.mp3",
+  "chief_midrange1": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/audio/chief_midrange1.mp3",
+  "chief_icon": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/audio/chief_icon.mp3",
+  "chief_pain": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/audio/chief_pain.mp3",
   "brute_warcry": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/audio/brute_warcry.mp3",
   "brute_attack1": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/audio/brute_attack1.mp3",
   "brute_attack2": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/audio/brute_attack2.mp3",
@@ -1135,6 +1144,18 @@ for (const kind of Object.keys(MOTIONS_BY_KIND)) {
 // 音声(カテゴリ単位で管理し、同カテゴリの将来の別キャラにも流用できるようにする)
 // =====================================================================
 const VOICE_SETS = {
+  chief: {
+    warCry: SOUNDS.chief_warcry,           // 出撃時(気合い2)
+    iconPreview: SOUNDS.chief_icon,        // 編成画面でアイコンをタップした時
+    dash: SOUNDS.chief_dash,               // 「突撃！」発動時
+    attack: SOUNDS.chief_attack,           // 近接攻撃ヒット時
+    midrangeAttack1: SOUNDS.chief_midrange1, // 中距離攻撃1段目(回転斬り)ヒット時
+    midrangeAttack2: SOUNDS.chief_midrange2, // 中距離攻撃2段目(突き刺し)ヒット時
+    guard: SOUNDS.chief_guard,             // ガード成功時
+    shieldbreak: SOUNDS.chief_pain,        // 盾破壊時。専用音ができるまで怯みと共用
+    pain: SOUNDS.chief_pain,               // 被弾・怯み時
+    death: SOUNDS.chief_death              // 死亡時
+  },
   brute: {
     warCry: SOUNDS.brute_warcry,         // 出撃時の咆哮(バフ発動)・編成選択プレビュー以外
     iconPreview: SOUNDS.brute_icon,      // 編成画面でアイコンをタップした時のプレビュー専用
@@ -1622,7 +1643,7 @@ function damageUnit(u, dmg, sourceLabel, attacker) {
       logMsg(`${sourceLabel} → ${label}は側転中で無敵、ダメージを無効化した。`);
       return;
     }
-    const guardable = !u.shieldBroken && (u.motionKey === "idle" || u.motionKey === "walk");
+    const guardable = !u.shieldBroken && (u.motionKey === "idle" || u.motionKey === "walk" || u.motionKey === "attack" || u.motionKey === "midrange");
     if (guardable) {
       const piercing = isShieldPiercingAttacker(attacker);
       const breaker = isGuardBreakerAttacker(attacker);
@@ -1634,11 +1655,13 @@ function damageUnit(u, dmg, sourceLabel, attacker) {
         u.lockedMotion = "shieldbreak";
         u.lockedUntil = performance.now() + motionDuration(CHIEF_MOTIONS.shieldbreak);
         setUnitMotion(u, "shieldbreak");
+        playUnitVoice(u, "shieldbreak");
         return;
       }
       setUnitMotion(u, "guard");
       u.lockedMotion = "guard";
       u.lockedUntil = performance.now() + 350; // ガードポーズを少し保持してから通常状態に戻す
+      playUnitVoice(u, "guard");
       const shieldDmg = breaker ? dmg * 2 : dmg;
       u.shieldHp = Math.max(0, u.shieldHp - shieldDmg);
       logMsg(`${sourceLabel} → ${label}が小盾でガード!盾に<b>${shieldDmg}</b>ダメージ(盾残り${u.shieldHp}/${u.shieldMaxHp})`);
@@ -1654,6 +1677,7 @@ function damageUnit(u, dmg, sourceLabel, attacker) {
         u.lockedMotion = "shieldbreak";
         u.lockedUntil = performance.now() + motionDuration(CHIEF_MOTIONS.shieldbreak);
         setUnitMotion(u, "shieldbreak");
+        playUnitVoice(u, "shieldbreak");
       }
       return;
     }
@@ -2163,6 +2187,9 @@ function tickUnit(u, now) {
       } else if (u.kind === "brute" && u.motionKey === "attack") {
         // hitFrames: [1, 8] → index1が1段目(素早い一撃)、index8が2段目(叩きつけ)
         playUnitVoice(u, u.frameIndex === 1 ? "attack" : "attack2");
+      } else if (u.kind === "chief" && u.motionKey === "midrange") {
+        // hitFrames: [6, 11] → index6が回転斬り、index11が突き刺し
+        playUnitVoice(u, u.frameIndex === 6 ? "midrangeAttack1" : "midrangeAttack2");
       } else {
         playUnitVoice(u, "attack");
       }
@@ -2317,6 +2344,7 @@ function spawnUnit(kind, side) {
   logMsg(`${UNIT_LABEL_BY_KIND[kind]}#${u.id}が${teamLabel}の城から出撃した。(-${cost}円)`);
   if (kind === "goblin") playUnitVoice(u, "taunt");
   if (kind === "catapult") playUnitVoice(u, "warCry");
+  if (kind === "chief") playUnitVoice(u, "warCry");
   if (kind === "brute") {
     // 出撃時は必ず咆哮する(スーパーアーマー・周囲のゴブリン族にバフ)。
     // 吠え声は roar_3(赤目)のコマでbuffFrames経由で再生される。
@@ -2343,7 +2371,7 @@ function dashAll(kind) {
     setUnitMotion(u, dashKey);
     // 複数体が一斉に叫ぶことで声が重なるよう、わずかにタイミングをずらして再生
     const delay = Math.floor(Math.random() * 150);
-    const dashVoiceKey = kind === "brute" ? "dash" : "warCry";
+    const dashVoiceKey = (kind === "brute" || kind === "chief") ? "dash" : "warCry";
     setTimeout(() => playUnitVoice(u, dashVoiceKey), delay);
   }
 }
@@ -2394,7 +2422,7 @@ function renderRoster() {
       selectedRosterKind = wasSelected ? null : item.kind;
       renderRoster();
       if (!wasSelected) {
-        const previewKey = item.kind === "brute" ? "iconPreview" : "warCry";
+        const previewKey = (item.kind === "brute" || item.kind === "chief") ? "iconPreview" : "warCry";
         playVoice(CONFIG_BY_KIND[item.kind].voiceCategory, previewKey);
       }
     });

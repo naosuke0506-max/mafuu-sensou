@@ -181,6 +181,11 @@
     max-height: 240px; max-width: none;
   }
 
+  /* 亡者はアイコン素材が他キャラと左右逆に描かれているため、表示時に反転する */
+  .icon-flip {
+    transform: scaleX(-1);
+  }
+
   .controls {
     margin-top: 14px; display: grid;
     grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px;
@@ -2774,12 +2779,7 @@ function tickDeadUnitAnimation(u, now) {
   const key = motion.frames[idx];
   const frames = FRAMES_BY_KIND[u.kind];
   if (key && frames[key]) u.el.img.src = frames[key];
-  if (u.kind === "revenant") {
-    // 亡者の素材は他キャラと左右が逆に描かれているため、反転条件を逆にする
-    u.el.img.style.transform = `translateX(-50%) scaleX(${u.facing === -1 ? 1 : -1})`;
-  } else {
-    u.el.img.style.transform = `translateX(-50%) scaleX(${u.facing === -1 ? -1 : 1})`;
-  }
+  u.el.img.style.transform = `translateX(-50%) scaleX(${u.facing === -1 ? -1 : 1})`;
   u.el.hpFill.style.width = "0%";
 }
 
@@ -3057,9 +3057,6 @@ function tickUnit(u, now) {
   if (key && frames[key]) u.el.img.src = frames[key];
   if (u.kind === "kurowl" || u.kind === "brute" || u.kind === "chief") {
     u.el.img.style.transform = `translateX(-50%) scaleX(${u.facing === -1 ? -1 : 1}) translateY(${-(u.jumpHeightPx || 0)}px)`;
-  } else if (u.kind === "revenant") {
-    // 亡者の素材は他キャラと左右が逆に描かれているため、反転条件を逆にする
-    u.el.img.style.transform = `translateX(-50%) scaleX(${u.facing === -1 ? 1 : -1})`;
   } else {
     u.el.img.style.transform = `translateX(-50%) scaleX(${u.facing === -1 ? -1 : 1})`;
   }
@@ -3254,7 +3251,7 @@ function renderRoster() {
     const el = document.createElement("div");
     el.className = "roster-item" + (selectedRosterKind === item.kind ? " selected" : "");
     el.innerHTML = `
-      <img class="roster-icon" src="${item.icon}" alt="${item.name}" onerror="this.onerror=null; window.__iconFallback && window.__iconFallback(this, '${item.icon}');">
+      <img class="roster-icon${item.kind === "revenant" ? " icon-flip" : ""}" src="${item.icon}" alt="${item.name}" onerror="this.onerror=null; window.__iconFallback && window.__iconFallback(this, '${item.icon}');">
       <div class="roster-body">
         <div class="r-name">${item.name}</div>
         <div class="r-cost">コスト ${item.cost}円</div>
@@ -3281,7 +3278,7 @@ function renderSlots() {
     el.className = "slot" + (kind ? " filled" : "");
     if (kind) {
       const item = ROSTER.find(r => r.kind === kind);
-      el.innerHTML = `<img class="slot-icon" src="${item.icon}" alt="${item.name}" onerror="this.onerror=null; window.__iconFallback && window.__iconFallback(this, '${item.icon}');"><div class="slot-cost">${item.cost}円</div>`;
+      el.innerHTML = `<img class="slot-icon${item.kind === "revenant" ? " icon-flip" : ""}" src="${item.icon}" alt="${item.name}" onerror="this.onerror=null; window.__iconFallback && window.__iconFallback(this, '${item.icon}');"><div class="slot-cost">${item.cost}円</div>`;
     } else {
       el.innerHTML = `<div class="slot-plus">＋</div>`;
     }

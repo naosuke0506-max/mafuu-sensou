@@ -317,6 +317,8 @@
     <button class="act" id="btnSpawnQueenLeft">ゴブリンの女王を出撃(敵軍/左, 320円)</button>
     <button class="act" id="btnSpawnRevenantRight">亡者を出撃(自軍/右, 75円)</button>
     <button class="act" id="btnSpawnRevenantLeft">亡者を出撃(敵軍/左, 75円)</button>
+    <button class="act" id="btnSpawnSpearRight">槍兵を出撃(自軍/右, 70円)</button>
+    <button class="act" id="btnSpawnSpearLeft">槍兵を出撃(敵軍/左, 70円)</button>
     <button class="act charge" id="btnDashSoldier">兵士 全員「突撃！」発動</button>
     <button class="act charge" id="btnDashKurowl">クロウル 全員「突進」発動</button>
     <button class="act charge" id="btnDashGoblin">ゴブリン 全員「突撃！」発動</button>
@@ -325,6 +327,7 @@
     <button class="act charge" id="btnDashBrute">獰猛なゴブリン 全員「突撃！」発動</button>
     <button class="act charge" id="btnDashQueen">ゴブリンの女王 全員「突進」発動</button>
     <button class="act charge" id="btnDashRevenant">亡者 全員「突進」発動</button>
+    <button class="act charge" id="btnDashSpear">槍兵 全員「突撃！」発動</button>
     <button class="act reset" id="btnReset">編成に戻る</button>
   </div>
 
@@ -1399,6 +1402,8 @@ const els = {
   btnSpawnQueenRight: document.getElementById("btnSpawnQueenRight"),
   btnSpawnRevenantLeft: document.getElementById("btnSpawnRevenantLeft"),
   btnSpawnRevenantRight: document.getElementById("btnSpawnRevenantRight"),
+  btnSpawnSpearLeft: document.getElementById("btnSpawnSpearLeft"),
+  btnSpawnSpearRight: document.getElementById("btnSpawnSpearRight"),
   btnDashSoldier: document.getElementById("btnDashSoldier"),
   btnDashKurowl: document.getElementById("btnDashKurowl"),
   btnDashGoblin: document.getElementById("btnDashGoblin"),
@@ -1407,6 +1412,7 @@ const els = {
   btnDashChief: document.getElementById("btnDashChief"),
   btnDashQueen: document.getElementById("btnDashQueen"),
   btnDashRevenant: document.getElementById("btnDashRevenant"),
+  btnDashSpear: document.getElementById("btnDashSpear"),
   btnReset: document.getElementById("btnReset"),
   enemyCastleHpFill: document.getElementById("enemyCastleHpFill"),
   enemyCastleHpText: document.getElementById("enemyCastleHpText"),
@@ -1430,6 +1436,7 @@ let brutes = [];
 let chiefs = [];
 let queens = [];
 let revenants = [];
+let spears = [];
 let projectiles = [];    // カタパルトの岩(飛翔中)
 let impactEffects = [];  // 着弾エフェクト(スパーク・砂煙)
 let queenBolts = [];        // 女王の魔砲弾(飛翔中)
@@ -1732,7 +1739,7 @@ function createUnit(kind, side, startXOverride) {
     debuffMultiplier: 1,
     el
   };
-  const targetArr = kind === "kurowl" ? kurowls : kind === "goblin" ? goblins : kind === "archer" ? archers : kind === "catapult" ? catapults : kind === "brute" ? brutes : kind === "chief" ? chiefs : kind === "queen" ? queens : kind === "revenant" ? revenants : soldiers;
+  const targetArr = kind === "kurowl" ? kurowls : kind === "goblin" ? goblins : kind === "archer" ? archers : kind === "catapult" ? catapults : kind === "brute" ? brutes : kind === "chief" ? chiefs : kind === "queen" ? queens : kind === "revenant" ? revenants : kind === "spear" ? spears : soldiers;
   targetArr.push(u);
   el.unit.style.display = "block";
   setUnitMotion(u, "walk");
@@ -1761,7 +1768,7 @@ function updateCastleUI(castle, fillEl, textEl) {
 // 共通ヘルパー
 // =====================================================================
 function allUnits() {
-  return soldiers.concat(kurowls, goblins, archers, catapults, brutes, chiefs, queens, revenants);
+  return soldiers.concat(kurowls, goblins, archers, catapults, brutes, chiefs, queens, revenants, spears);
 }
 
 function dist(a, b) {
@@ -3223,6 +3230,7 @@ function tick(now) {
       chiefs = chiefs.filter(c => !c.removed);
       queens = queens.filter(q => !q.removed);
       revenants = revenants.filter(r => !r.removed);
+      spears = spears.filter(s => !s.removed);
     }
   } catch (err) {
     logMsg(`⚠ 内部エラーを検出したため今フレームをスキップしました: ${err.message}`);
@@ -3262,10 +3270,11 @@ function spawnUnit(kind, side) {
     setUnitMotion(u, "summon");
   }
   if (kind === "revenant") playUnitVoice(u, "warCry");
+  if (kind === "spear") playUnitVoice(u, "warCry");
 }
 
 function dashAll(kind) {
-  const list = kind === "kurowl" ? kurowls : kind === "goblin" ? goblins : kind === "archer" ? archers : kind === "brute" ? brutes : kind === "chief" ? chiefs : kind === "queen" ? queens : kind === "revenant" ? revenants : soldiers;
+  const list = kind === "kurowl" ? kurowls : kind === "goblin" ? goblins : kind === "archer" ? archers : kind === "brute" ? brutes : kind === "chief" ? chiefs : kind === "queen" ? queens : kind === "revenant" ? revenants : kind === "spear" ? spears : soldiers;
   const targets = list.filter(u => u.spawned && !u.dead && !u.isDown);
   if (!targets.length) return;
   const cfg = CONFIG_BY_KIND[kind];
@@ -3297,6 +3306,7 @@ function clearAllUnits() {
   chiefs = [];
   queens = [];
   revenants = [];
+  spears = [];
   for (const p of projectiles) p.el.remove();
   projectiles = [];
   for (const e of impactEffects) e.el.remove();
@@ -3400,6 +3410,9 @@ function applyLoadoutToButtons() {
   els.btnSpawnRevenantLeft.style.display = loadout.revenant ? "" : "none";
   els.btnSpawnRevenantRight.style.display = loadout.revenant ? "" : "none";
   els.btnDashRevenant.style.display = loadout.revenant ? "" : "none";
+  els.btnSpawnSpearLeft.style.display = loadout.spear ? "" : "none";
+  els.btnSpawnSpearRight.style.display = loadout.spear ? "" : "none";
+  els.btnDashSpear.style.display = loadout.spear ? "" : "none";
 }
 
 function startBattle() {
@@ -3412,7 +3425,8 @@ function startBattle() {
   loadout.catapult = formationSlots.includes("catapult");
   loadout.queen = formationSlots.includes("queen");
   loadout.revenant = formationSlots.includes("revenant");
-  if (!loadout.soldier && !loadout.kurowl && !loadout.goblin && !loadout.archer && !loadout.catapult && !loadout.brute && !loadout.chief && !loadout.queen && !loadout.revenant) {
+  loadout.spear = formationSlots.includes("spear");
+  if (!loadout.soldier && !loadout.kurowl && !loadout.goblin && !loadout.archer && !loadout.catapult && !loadout.brute && !loadout.chief && !loadout.queen && !loadout.revenant && !loadout.spear) {
     els.formationWarning.style.display = "block";
     return;
   }
@@ -3450,6 +3464,8 @@ els.btnSpawnQueenLeft.addEventListener("click", () => spawnUnit("queen", "left")
 els.btnSpawnQueenRight.addEventListener("click", () => spawnUnit("queen", "right"));
 els.btnSpawnRevenantLeft.addEventListener("click", () => spawnUnit("revenant", "left"));
 els.btnSpawnRevenantRight.addEventListener("click", () => spawnUnit("revenant", "right"));
+els.btnSpawnSpearLeft.addEventListener("click", () => spawnUnit("spear", "left"));
+els.btnSpawnSpearRight.addEventListener("click", () => spawnUnit("spear", "right"));
 els.btnDashSoldier.addEventListener("click", () => dashAll("soldier"));
 els.btnDashKurowl.addEventListener("click", () => dashAll("kurowl"));
 els.btnDashGoblin.addEventListener("click", () => dashAll("goblin"));
@@ -3458,6 +3474,7 @@ els.btnDashChief.addEventListener("click", () => dashAll("chief"));
 els.btnDashBrute.addEventListener("click", () => dashAll("brute"));
 els.btnDashQueen.addEventListener("click", () => dashAll("queen"));
 els.btnDashRevenant.addEventListener("click", () => dashAll("revenant"));
+els.btnDashSpear.addEventListener("click", () => dashAll("spear"));
 els.btnReset.addEventListener("click", reset);
 els.btnStartBattle.addEventListener("click", startBattle);
 

@@ -1877,7 +1877,12 @@ function damageUnit(u, dmg, sourceLabel, attacker) {
       logMsg(`${sourceLabel} → ${label}は側転中で無敵、ダメージを無効化した。`);
       return;
     }
-    const guardable = !u.shieldBroken && (u.motionKey === "idle" || u.motionKey === "walk");
+    if (u.motionKey === "attack" && u.frameIndex >= 3) {
+      logMsg(`${sourceLabel} → ${label}はバックステップ中で無敵、ダメージを無効化した。`);
+      return;
+    }
+    // 無敵時間以外に攻撃を受けた場合は、近接・中距離攻撃中でも動作を中断してガードする
+    const guardable = !u.shieldBroken && (u.motionKey === "idle" || u.motionKey === "walk" || u.motionKey === "attack" || u.motionKey === "midrange");
     if (guardable) {
       const piercing = isShieldPiercingAttacker(attacker);
       const breaker = isGuardBreakerAttacker(attacker);
@@ -1915,11 +1920,9 @@ function damageUnit(u, dmg, sourceLabel, attacker) {
       }
       return;
     }
-    // ガード不可(盾破壊済み、または待機・歩行以外の行動モーション中)はそのままダメージを受ける。
-    // 近接攻撃・中距離攻撃モーション中はスーパーアーマーで怯まず、動作を継続する
-    const superArmor = u.motionKey === "attack" || u.motionKey === "midrange";
+    // ガード不可(盾破壊済み)はそのままダメージを受けて怯む
     u.hp = Math.max(0, u.hp - dmg);
-    logMsg(`${sourceLabel} → ${label}に<b>${dmg}</b>ダメージ(残り${u.hp.toFixed(0)})${superArmor ? "(攻撃中はスーパーアーマーで怯まず)" : ""}`);
+    logMsg(`${sourceLabel} → ${label}に<b>${dmg}</b>ダメージ(残り${u.hp.toFixed(0)})`);
     if (u.hp <= 0) {
       u.dead = true;
       u.isDown = false;
@@ -1931,8 +1934,6 @@ function damageUnit(u, dmg, sourceLabel, attacker) {
       logMsg(`${label}が倒れた。`);
     } else if (u.isDown) {
       logMsg(`${label}はダウン中のため怯まず、そのまま倒れ続けている。`);
-    } else if (superArmor) {
-      // スーパーアーマー: 怯まずモーションを継続する
     } else {
       u.lockedMotion = "flinch";
       u.lockedUntil = performance.now() + motionDuration(CHIEF_MOTIONS.flinch);
@@ -1949,8 +1950,12 @@ function damageUnit(u, dmg, sourceLabel, attacker) {
       return;
     }
     const superArmor = u.motionKey === "roar" || u.motionKey === "attack" || u.motionKey === "midrange";
-    u.hp = Math.max(0, u.hp - dmg);
-    logMsg(`${sourceLabel} → ${label}に<b>${dmg}</b>ダメージ(残り${u.hp.toFixed(0)})${superArmor ? "(スーパーアーマーで怯まず)" : ""}`);
+    // 近接攻撃・中距離攻撃モーション中は、受けるダメージも半減する
+    const damageHalved = u.motionKey === "attack" || u.motionKey === "midrange";
+    const actualDmg = damageHalved ? Math.round(dmg * 0.5) : dmg;
+    u.hp = Math.max(0, u.hp - actualDmg);
+    const suffix = damageHalved ? "(攻撃中でダメージ半減・スーパーアーマーで怯まず)" : (superArmor ? "(スーパーアーマーで怯まず)" : "");
+    logMsg(`${sourceLabel} → ${label}に<b>${actualDmg}</b>ダメージ(残り${u.hp.toFixed(0)})${suffix}`);
     if (u.hp <= 0) {
       u.dead = true;
       u.isDown = false;
@@ -2047,9 +2052,6 @@ function isSuperArmoredAttacker(attacker) {
   if (!attacker) return false;
   if (attacker.kind === "brute") {
     return attacker.motionKey === "roar" || attacker.motionKey === "attack" || attacker.motionKey === "midrange";
-  }
-  if (attacker.kind === "chief") {
-    return attacker.motionKey === "attack" || attacker.motionKey === "midrange";
   }
   if (attacker.kind === "queen") {
     return attacker.motionKey === "attack" || attacker.motionKey === "midrange";

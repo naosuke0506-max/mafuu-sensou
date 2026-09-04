@@ -1892,7 +1892,9 @@ function evaluateUnitState(u, now) {
     }
   } else if (u.kind === "revenant") {
     const cfg = CONFIG_BY_KIND[u.kind];
-    const inMelee = d <= cfg.meleeRange || isChainEngaged(u, u.facing);
+    // 亡者は移動が最も遅く、味方の後ろで詰まりやすいため、将棋倒し判定(isChainEngaged)は使わず
+    // 実際の間合いのみで近接攻撃の可否を判定する(遠くから近接攻撃してしまう不具合の対策)
+    const inMelee = d <= cfg.meleeRange;
     const inMidRange = d >= cfg.midRangeMin && d <= cfg.midRangeMax;
     if (inMelee) {
       if (u.weaponMode !== "sword") {
@@ -2195,12 +2197,13 @@ function damageUnit(u, dmg, sourceLabel, attacker) {
     logMsg(`${sourceLabel} → ${label}は突進中のため無敵、ダメージを無効化した。`);
     return;
   }
-  const superArmor = u.motionKey === "midrange";
+  if (u.motionKey === "midrange") {
+    logMsg(`${sourceLabel} → ${label}は中距離攻撃中のため無敵、ダメージを無効化した。`);
+    return;
+  }
   const meleeArmored = u.motionKey === "melee"; // 近接攻撃モーション全体を通してアーマー(怯まない)
-  const finalDmg = superArmor ? dmg / 2 : dmg;
-  u.hp = Math.max(0, u.hp - finalDmg);
-  const noFlinch = superArmor || meleeArmored;
-  logMsg(`${sourceLabel} → ${label}に<b>${finalDmg}</b>ダメージ(残り${u.hp.toFixed(0)})${superArmor ? "(中距離攻撃中のため半減・怯まず)" : meleeArmored ? "(近接攻撃中のためアーマーで怯まず)" : ""}`);
+  u.hp = Math.max(0, u.hp - dmg);
+  logMsg(`${sourceLabel} → ${label}に<b>${dmg}</b>ダメージ(残り${u.hp.toFixed(0)})${meleeArmored ? "(近接攻撃中のためアーマーで怯まず)" : ""}`);
   if (u.hp <= 0) {
     u.dead = true;
     u.isDown = false;
@@ -2212,7 +2215,7 @@ function damageUnit(u, dmg, sourceLabel, attacker) {
   } else if (u.isDown) {
     // ダウン中は絶対に怯まない
     logMsg(`${label}はダウン中のため怯まず、そのまま倒れ続けている。`);
-  } else if (!noFlinch) {
+  } else if (!meleeArmored) {
     u.lockedMotion = "flinch";
     u.lockedUntil = performance.now() + motionDuration(KUROWL_MOTIONS.flinch);
     setUnitMotion(u, "flinch");
@@ -2779,7 +2782,9 @@ function tickDeadUnitAnimation(u, now) {
   const key = motion.frames[idx];
   const frames = FRAMES_BY_KIND[u.kind];
   if (key && frames[key]) u.el.img.src = frames[key];
-  u.el.img.style.transform = `translateX(-50%) scaleX(${u.facing === -1 ? -1 : 1})`;
+  u.el.img.style.transform = u.kind === "revenant"
+    ? `translateX(-50%) scaleX(${u.facing === -1 ? 1 : -1})`  // 亡者の素材は左向きが基準のため反転条件が逆
+    : `translateX(-50%) scaleX(${u.facing === -1 ? -1 : 1})`;
   u.el.hpFill.style.width = "0%";
 }
 
@@ -2970,6 +2975,9 @@ function tickUnit(u, now) {
           for (const t of findNearestTargetsWithin(u, 2, CHIEF_CONFIG.midrangeMultiRadius)) applyDamageTo(t, dmg, label, u);
         } else if (u.kind === "brute" && u.motionKey === "attack" && u.frameIndex === 8) {
           for (const t of findNearestTargetsWithin(u, 2, BRUTE_CONFIG.attack2MultiRadius)) applyDamageTo(t, dmg, label, u);
+        } else if (u.kind === "revenant" && u.motionKey === "attack") {
+          // コンボ中に元の対象が倒れて遠くの敵に切り替わっていた場合、間合い外なら空振りにする
+          if (dist(u, hitTarget) <= REVENANT_CONFIG.meleeRange + 15) applyDamageTo(hitTarget, dmg, label, u);
         } else {
           applyDamageTo(hitTarget, dmg, label, u);
         }
@@ -2998,10 +3006,18 @@ function tickUnit(u, now) {
         u.frameIndex = 0;
       } else {
         const finishedKey = u.motionKey;
-        if (u.kind !== "kurowl" && u.kind !== "chief" && finishedKey === "attack") {
+        if (u.kind !== "kurowl" && u.kind !== "chief" && u.kind !== "revenant" && finishedKey === "attack") {
           u.frameIndex = 0;
           u.lastFrameTime = now;
           u.hitAppliedFrames = new Set();
+        } else if (u.kind === "revenant" && finishedKey === "attack") {
+          // 近接コンボ終了後は距離を再評価してから継続する(対象が離れていれば射撃や歩行に切り替える)
+          evaluateUnitState(u, now);
+          if (u.motionKey === finishedKey) {
+            u.frameIndex = 0;
+            u.lastFrameTime = now;
+            u.hitAppliedFrames = new Set();
+          }
         } else if (finishedKey === "knockback" || finishedKey === "down" || finishedKey === "getup") {
           u.frameIndex = motion.frames.length - 1;
         } else if (u.kind === "kurowl" && (finishedKey === "melee" || finishedKey === "midrange")) {
@@ -3057,6 +3073,9 @@ function tickUnit(u, now) {
   if (key && frames[key]) u.el.img.src = frames[key];
   if (u.kind === "kurowl" || u.kind === "brute" || u.kind === "chief") {
     u.el.img.style.transform = `translateX(-50%) scaleX(${u.facing === -1 ? -1 : 1}) translateY(${-(u.jumpHeightPx || 0)}px)`;
+  } else if (u.kind === "revenant") {
+    // 亡者の素材は左向きが基準(他キャラは右向き基準)のため、反転条件が逆になる
+    u.el.img.style.transform = `translateX(-50%) scaleX(${u.facing === -1 ? 1 : -1})`;
   } else {
     u.el.img.style.transform = `translateX(-50%) scaleX(${u.facing === -1 ? -1 : 1})`;
   }

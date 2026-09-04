@@ -1270,11 +1270,11 @@ const REVENANT_MOTIONS = {
     frameDurations: [130, 150, 150, 160, 140, 140, 160, 150, 150, 220],
     hitFrames: [3, 6, 9]
   },
-  // 中距離攻撃(クロスボウ):しゃがみ→構え→発射(hitFrameはindex3)→反動
+  // 中距離攻撃(クロスボウ):しゃがみ→構え→発射(hitFrameはindex3)→反動を長めに取る
   xbowAttack: {
     frames: ["xbow_attack_1", "xbow_attack_2", "xbow_attack_3", "xbow_attack_4", "xbow_attack_5", "xbow_attack_6"],
     loop: false,
-    frameDurations: [180, 220, 150, 130, 220, 260],
+    frameDurations: [220, 260, 200, 160, 400, 600],
     hitFrames: [3]
   }
 };
@@ -2774,8 +2774,9 @@ function tickDeadUnitAnimation(u, now) {
   const key = motion.frames[idx];
   const frames = FRAMES_BY_KIND[u.kind];
   if (key && frames[key]) u.el.img.src = frames[key];
-  if (u.kind === "kurowl") {
-    u.el.img.style.transform = `translateX(-50%) scaleX(${u.facing === -1 ? -1 : 1})`;
+  if (u.kind === "revenant") {
+    // 亡者の素材は他キャラと左右が逆に描かれているため、反転条件を逆にする
+    u.el.img.style.transform = `translateX(-50%) scaleX(${u.facing === -1 ? 1 : -1})`;
   } else {
     u.el.img.style.transform = `translateX(-50%) scaleX(${u.facing === -1 ? -1 : 1})`;
   }
@@ -3056,6 +3057,9 @@ function tickUnit(u, now) {
   if (key && frames[key]) u.el.img.src = frames[key];
   if (u.kind === "kurowl" || u.kind === "brute" || u.kind === "chief") {
     u.el.img.style.transform = `translateX(-50%) scaleX(${u.facing === -1 ? -1 : 1}) translateY(${-(u.jumpHeightPx || 0)}px)`;
+  } else if (u.kind === "revenant") {
+    // 亡者の素材は他キャラと左右が逆に描かれているため、反転条件を逆にする
+    u.el.img.style.transform = `translateX(-50%) scaleX(${u.facing === -1 ? 1 : -1})`;
   } else {
     u.el.img.style.transform = `translateX(-50%) scaleX(${u.facing === -1 ? -1 : 1})`;
   }

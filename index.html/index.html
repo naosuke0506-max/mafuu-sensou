@@ -310,6 +310,8 @@
     <button class="act" id="btnSpawnChiefLeft">ゴブリン長を出撃(敵軍/左, 155円)</button>
     <button class="act" id="btnSpawnQueenRight">ゴブリンの女王を出撃(自軍/右, 320円)</button>
     <button class="act" id="btnSpawnQueenLeft">ゴブリンの女王を出撃(敵軍/左, 320円)</button>
+    <button class="act" id="btnSpawnRevenantRight">亡者を出撃(自軍/右, 75円)</button>
+    <button class="act" id="btnSpawnRevenantLeft">亡者を出撃(敵軍/左, 75円)</button>
     <button class="act charge" id="btnDashSoldier">兵士 全員「突撃！」発動</button>
     <button class="act charge" id="btnDashKurowl">クロウル 全員「突進」発動</button>
     <button class="act charge" id="btnDashGoblin">ゴブリン 全員「突撃！」発動</button>
@@ -317,6 +319,7 @@
     <button class="act charge" id="btnDashChief">ゴブリン長 全員「突撃！」発動</button>
     <button class="act charge" id="btnDashBrute">獰猛なゴブリン 全員「突撃！」発動</button>
     <button class="act charge" id="btnDashQueen">ゴブリンの女王 全員「突進」発動</button>
+    <button class="act charge" id="btnDashRevenant">亡者 全員「突進」発動</button>
     <button class="act reset" id="btnReset">編成に戻る</button>
   </div>
 
@@ -651,6 +654,12 @@ const SOUNDS = {
   "queen_summon": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/audio/queen_summon.opus",
   "queen_pain": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/audio/queen_pain.opus",
   "queen_death": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/audio/queen_death.opus",
+  "revenant_warcry": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/audio/revenant_warcry.mp3",
+  "revenant_dash": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/audio/revenant_dash.mp3",
+  "revenant_attack": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/audio/revenant_attack.mp3",
+  "revenant_midrange": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/audio/revenant_midrange.mp3",
+  "revenant_pain": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/audio/revenant_pain.mp3",
+  "revenant_death": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/audio/revenant_death.mp3",
   "catapult_destroy_1": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/audio/catapult_destroy_1.mp3",
   "catapult_destroy_2": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/audio/catapult_destroy_2.mp3",
   "catapult_destroy_3": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/audio/catapult_destroy_3.mp3",
@@ -1196,6 +1205,99 @@ const QUEEN_CONFIG = {
   summonSpacing: 55          // 召喚したゴブリンたちを並べる間隔
 };
 
+// =====================================================================
+// 亡者(レヴナント)の定義:人間カテゴリの雑兵的立ち位置だが高HP・最低機動力の耐久型。
+// クロスボウ(遠距離)と剣(近距離)を距離に応じて自動的に持ち替える(専用の武器切り替えモーションあり)。
+// 突進は剣モード歩行モーションを流用した、他キャラより遅い突進。単体はそこそこだが数が揃うと脅威になる。
+// =====================================================================
+const REVENANT_FRAMES = {
+  "base_1": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/revenant_repo_upload/base_1.png",
+  "switch_1": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/revenant_repo_upload/switch_1.png",
+  "switch_2": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/revenant_repo_upload/switch_2.png",
+  "switch_3": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/revenant_repo_upload/switch_3.png",
+  "switch_4": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/revenant_repo_upload/switch_4.png",
+  "xbow_walk_1": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/revenant_repo_upload/xbow_walk_1.png",
+  "xbow_walk_2": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/revenant_repo_upload/xbow_walk_2.png",
+  "xbow_walk_3": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/revenant_repo_upload/xbow_walk_3.png",
+  "xbow_walk_4": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/revenant_repo_upload/xbow_walk_4.png",
+  "xbow_walk_5": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/revenant_repo_upload/xbow_walk_5.png",
+  "sword_walk_1": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/revenant_repo_upload/sword_walk_1.png",
+  "sword_walk_2": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/revenant_repo_upload/sword_walk_2.png",
+  "sword_walk_3": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/revenant_repo_upload/sword_walk_3.png",
+  "sword_walk_4": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/revenant_repo_upload/sword_walk_4.png",
+  "xbow_attack_1": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/revenant_repo_upload/xbow_attack_1.png",
+  "xbow_attack_2": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/revenant_repo_upload/xbow_attack_2.png",
+  "xbow_attack_3": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/revenant_repo_upload/xbow_attack_3.png",
+  "xbow_attack_4": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/revenant_repo_upload/xbow_attack_4.png",
+  "xbow_attack_5": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/revenant_repo_upload/xbow_attack_5.png",
+  "xbow_attack_6": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/revenant_repo_upload/xbow_attack_6.png",
+  "attack_1": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/revenant_repo_upload/attack_1.png",
+  "attack_2": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/revenant_repo_upload/attack_2.png",
+  "attack_3": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/revenant_repo_upload/attack_3.png",
+  "attack_4": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/revenant_repo_upload/attack_4.png",
+  "attack_5": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/revenant_repo_upload/attack_5.png",
+  "attack_6": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/revenant_repo_upload/attack_6.png",
+  "attack_7": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/revenant_repo_upload/attack_7.png",
+  "attack_8": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/revenant_repo_upload/attack_8.png",
+  "attack_9": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/revenant_repo_upload/attack_9.png",
+  "attack_10": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/revenant_repo_upload/attack_10.png",
+  "flinch_1": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/revenant_repo_upload/flinch_1.png",
+  "flinch_2": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/revenant_repo_upload/flinch_2.png",
+  "down_1": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/revenant_repo_upload/down_1.png",
+  "down_2": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/revenant_repo_upload/down_2.png",
+  "down_3": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/revenant_repo_upload/down_3.png"
+};
+const ICON_REVENANT = "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/icons/revenant_icon.png";
+
+const REVENANT_MOTIONS = {
+  idle: { frames: ["base_1"], loop: true, msPerFrame: 700 },
+  // クロスボウを携行している時の歩行(既定状態)
+  walk: { frames: ["xbow_walk_1", "xbow_walk_2", "xbow_walk_3", "xbow_walk_4", "xbow_walk_5"], loop: true, msPerFrame: 220 },
+  // 剣を携行している時の歩行(突進モーションもこれを流用する)
+  swordWalk: { frames: ["sword_walk_1", "sword_walk_2", "sword_walk_3", "sword_walk_4"], loop: true, msPerFrame: 200 },
+  // 武器切り替え:クロスボウ→剣。剣→クロスボウの時は同じフレームを逆再生する
+  switchToSword: { frames: ["switch_1", "switch_2", "switch_3", "switch_4"], loop: false, msPerFrame: 90 },
+  switchToCrossbow: { frames: ["switch_4", "switch_3", "switch_2", "switch_1"], loop: false, msPerFrame: 90 },
+  flinch: { frames: ["flinch_1", "flinch_2"], frameDurations: [120, 280], loop: false },
+  // ダウン(突進衝突での転倒/死亡演出兼用)
+  down: { frames: ["down_1", "down_2", "down_3"], frameDurations: [200, 250, 5000], loop: false },
+  // 突進:剣モード歩行を流用(他キャラより遅い突進)
+  dash: { frames: ["sword_walk_1", "sword_walk_2", "sword_walk_3", "sword_walk_4"], loop: true, msPerFrame: 200 },
+  // 近接攻撃(剣):横斬り(index3でヒット)→突き(index6でヒット)→袈裟斬り(index9でヒット)の3段コンボ
+  attack: {
+    frames: ["attack_1", "attack_2", "attack_3", "attack_4", "attack_5", "attack_6", "attack_7", "attack_8", "attack_9", "attack_10"],
+    loop: false,
+    frameDurations: [130, 150, 150, 160, 140, 140, 160, 150, 150, 220],
+    hitFrames: [3, 6, 9]
+  },
+  // 中距離攻撃(クロスボウ):しゃがみ→構え→発射(hitFrameはindex3)→反動
+  xbowAttack: {
+    frames: ["xbow_attack_1", "xbow_attack_2", "xbow_attack_3", "xbow_attack_4", "xbow_attack_5", "xbow_attack_6"],
+    loop: false,
+    frameDurations: [180, 220, 150, 130, 220, 260],
+    hitFrames: [3]
+  }
+};
+
+const REVENANT_CONFIG = {
+  walkSpeed: 28,             // 軍団最低クラスの移動速度
+  dashSpeedMultiplier: 1.6,  // 他キャラより遅い突進
+  dashDurationMs: 2200,
+  dashHitDamage: 10,
+  meleeRange: 58,
+  meleeHitDamage1: 4,  // 横斬り
+  meleeHitDamage2: 5,  // 突き
+  meleeHitDamage3: 6,  // 袈裟斬り
+  weight: 65,
+  maxHp: 20,           // 人間カテゴリの中では高HP
+  attackLabel: "斬撃",
+  voiceCategory: "revenant",
+  midRangeMin: 120,
+  midRangeMax: 280,
+  midrangeDamage: 6,   // クロスボウの矢
+  guardFootstepRange: 0 // (未使用・予約)
+};
+
 function motionDuration(m) {
   if (m.frameDurations) return m.frameDurations.reduce((a, b) => a + b, 0);
   return m.frames.length * m.msPerFrame;
@@ -1233,6 +1335,8 @@ const els = {
   btnSpawnChiefRight: document.getElementById("btnSpawnChiefRight"),
   btnSpawnQueenLeft: document.getElementById("btnSpawnQueenLeft"),
   btnSpawnQueenRight: document.getElementById("btnSpawnQueenRight"),
+  btnSpawnRevenantLeft: document.getElementById("btnSpawnRevenantLeft"),
+  btnSpawnRevenantRight: document.getElementById("btnSpawnRevenantRight"),
   btnDashSoldier: document.getElementById("btnDashSoldier"),
   btnDashKurowl: document.getElementById("btnDashKurowl"),
   btnDashGoblin: document.getElementById("btnDashGoblin"),
@@ -1240,6 +1344,7 @@ const els = {
   btnDashBrute: document.getElementById("btnDashBrute"),
   btnDashChief: document.getElementById("btnDashChief"),
   btnDashQueen: document.getElementById("btnDashQueen"),
+  btnDashRevenant: document.getElementById("btnDashRevenant"),
   btnReset: document.getElementById("btnReset"),
   enemyCastleHpFill: document.getElementById("enemyCastleHpFill"),
   enemyCastleHpText: document.getElementById("enemyCastleHpText"),
@@ -1262,6 +1367,7 @@ let catapults = [];
 let brutes = [];
 let chiefs = [];
 let queens = [];
+let revenants = [];
 let projectiles = [];    // カタパルトの岩(飛翔中)
 let impactEffects = [];  // 着弾エフェクト(スパーク・砂煙)
 let queenBolts = [];        // 女王の魔砲弾(飛翔中)
@@ -1274,7 +1380,7 @@ let effectIdSeq = 0;
 let enemyCastle = null;
 let allyCastle = null;
 let money = 0;
-let loadout = { soldier: true, kurowl: true, goblin: true, archer: true, catapult: true, brute: true, chief: true, queen: true }; // 出撃可能なユニット種別(スロットから導出)
+let loadout = { soldier: true, kurowl: true, goblin: true, archer: true, catapult: true, brute: true, chief: true, queen: true, revenant: true }; // 出撃可能なユニット種別(スロットから導出)
 
 const SOLDIER_QUEUE_GAP = 0; // 味方同士は重なって密集できる(間合いに入れるユニット数を制限しないため)
 const CASTLE_CONFIG = { maxHp: 150 }; // 魔の平原の城HP仕様
@@ -1287,10 +1393,11 @@ const ECONOMY_CONFIG = {
   catapultCost: 135, // カタパルト90円 + 搭乗ゴブリン30円 の合計
   bruteCost: 125,
   chiefCost: 155,
-  queenCost: 320
+  queenCost: 320,
+  revenantCost: 75
 };
 
-const MAX_SLOTS = 8;
+const MAX_SLOTS = 9;
 const ROSTER = [
   { kind: "soldier", name: "兵士", cost: ECONOMY_CONFIG.soldierCost, statsLine: "HP10 / 攻撃力5(刺突) / 体重60", icon: ICON_SOLDIER },
   { kind: "kurowl", name: "クロウル", cost: ECONOMY_CONFIG.kurowlCost, statsLine: "HP16 / 引っ掻き3×6・中距離15 / 体重70", icon: ICON_KUROWL },
@@ -1299,17 +1406,18 @@ const ROSTER = [
   { kind: "chief", name: "ゴブリン長", cost: ECONOMY_CONFIG.chiefCost, statsLine: "HP15 / 小盾HP26 / 斬撃7 / 体重70 / ガード持ち", icon: ICON_CHIEF },
   { kind: "archer", name: "ゴブリン弓兵", cost: ECONOMY_CONFIG.archerCost, statsLine: "HP6 / 矢4 / 体重40 / 射程250(その場で射撃)", icon: ICON_ARCHER },
   { kind: "catapult", name: "ゴブリンカタパルト", cost: ECONOMY_CONFIG.catapultCost, statsLine: "カタパルトHP25 / 岩15(範囲) / 体重300 / 射程250〜400・破壊後は搭乗ゴブリンが継戦", icon: ICON_CATAPULT },
-  { kind: "queen", name: "ゴブリンの女王", cost: ECONOMY_CONFIG.queenCost, statsLine: "HP38 / 杖14・魔砲弾18(範囲) / 体重115 / 常時スーパーアーマー・デバフ咆哮・召喚持ち", icon: ICON_QUEEN }
+  { kind: "queen", name: "ゴブリンの女王", cost: ECONOMY_CONFIG.queenCost, statsLine: "HP38 / 杖14・魔砲弾18(範囲) / 体重115 / 常時スーパーアーマー・デバフ咆哮・召喚持ち", icon: ICON_QUEEN },
+  { kind: "revenant", name: "亡者", cost: ECONOMY_CONFIG.revenantCost, statsLine: "HP20 / 剣4-5-6・矢6 / 体重65 / 移動最遅・近接遠距離を自動で持ち替え", icon: ICON_REVENANT }
 ];
 let formationSlots = new Array(MAX_SLOTS).fill(null); // 各要素: null | "soldier" | "kurowl" | "goblin" | "archer" | "catapult"
 let selectedRosterKind = null;
 let lastMoneyTick = 0;
 let battleActive = false;
 
-const MOTIONS_BY_KIND = { soldier: SOLDIER_MOTIONS, kurowl: KUROWL_MOTIONS, goblin: GOBLIN_MOTIONS, archer: ARCHER_MOTIONS, catapult: CATAPULT_MOTIONS, brute: BRUTE_MOTIONS, chief: CHIEF_MOTIONS, queen: QUEEN_MOTIONS };
-const CONFIG_BY_KIND = { soldier: SOLDIER_CONFIG, kurowl: KUROWL_CONFIG, goblin: GOBLIN_CONFIG, archer: ARCHER_CONFIG, catapult: CATAPULT_CONFIG, brute: BRUTE_CONFIG, chief: CHIEF_CONFIG, queen: QUEEN_CONFIG };
-const FRAMES_BY_KIND = { soldier: SOLDIER_FRAMES, kurowl: KUROWL_FRAMES, goblin: GOBLIN_FRAMES, archer: ARCHER_FRAMES, catapult: CATAPULT_FRAMES, brute: BRUTE_FRAMES, chief: CHIEF_FRAMES, queen: QUEEN_FRAMES };
-const UNIT_LABEL_BY_KIND = { soldier: "兵士", kurowl: "クロウル", goblin: "ゴブリン", archer: "ゴブリン弓兵", catapult: "ゴブリンカタパルト", brute: "獰猛なゴブリン", chief: "ゴブリン長", queen: "ゴブリンの女王" };
+const MOTIONS_BY_KIND = { soldier: SOLDIER_MOTIONS, kurowl: KUROWL_MOTIONS, goblin: GOBLIN_MOTIONS, archer: ARCHER_MOTIONS, catapult: CATAPULT_MOTIONS, brute: BRUTE_MOTIONS, chief: CHIEF_MOTIONS, queen: QUEEN_MOTIONS, revenant: REVENANT_MOTIONS };
+const CONFIG_BY_KIND = { soldier: SOLDIER_CONFIG, kurowl: KUROWL_CONFIG, goblin: GOBLIN_CONFIG, archer: ARCHER_CONFIG, catapult: CATAPULT_CONFIG, brute: BRUTE_CONFIG, chief: CHIEF_CONFIG, queen: QUEEN_CONFIG, revenant: REVENANT_CONFIG };
+const FRAMES_BY_KIND = { soldier: SOLDIER_FRAMES, kurowl: KUROWL_FRAMES, goblin: GOBLIN_FRAMES, archer: ARCHER_FRAMES, catapult: CATAPULT_FRAMES, brute: BRUTE_FRAMES, chief: CHIEF_FRAMES, queen: QUEEN_FRAMES, revenant: REVENANT_FRAMES };
+const UNIT_LABEL_BY_KIND = { soldier: "兵士", kurowl: "クロウル", goblin: "ゴブリン", archer: "ゴブリン弓兵", catapult: "ゴブリンカタパルト", brute: "獰猛なゴブリン", chief: "ゴブリン長", queen: "ゴブリンの女王", revenant: "亡者" };
 
 // =====================================================================
 // 突撃システム(新):ダウン/起き上がりモーションの補完
@@ -1362,6 +1470,14 @@ const VOICE_SETS = {
     summon: SOUNDS.queen_summon,           // 召喚(魔法陣)発動時
     pain: SOUNDS.queen_pain,               // 被弾時(通常はスーパーアーマーで鳴らないが、将来の演出用に用意)
     death: SOUNDS.queen_death              // 死亡時
+  },
+  revenant: {
+    warCry: SOUNDS.revenant_warcry,           // 出撃時の掛け声
+    dash: SOUNDS.revenant_dash,               // 突進発動時
+    attack: SOUNDS.revenant_attack,           // 近接攻撃(剣)ヒット時
+    midrangeAttack: SOUNDS.revenant_midrange, // クロスボウ発射時
+    pain: SOUNDS.revenant_pain,               // 被弾時
+    death: SOUNDS.revenant_death              // 死亡時
   },
   brute: {
     warCry: SOUNDS.brute_warcry,         // 出撃時の咆哮(バフ発動)・編成選択プレビュー以外
@@ -1451,6 +1567,9 @@ function motionLabel(kind, key) {
   if (kind === "queen") {
     return { idle: "待機", walk: "歩行", attack: "杖の叩きつけ", flinch: "怯み", dash: "突進", down: "ダウン", midrange: "魔砲弾", roar: "デバフ咆哮", summon: "召喚" }[key] || key;
   }
+  if (kind === "revenant") {
+    return { idle: "待機", walk: "歩行(クロスボウ)", swordWalk: "歩行(剣)", attack: "斬撃", xbowAttack: "射撃", flinch: "怯み", dash: "突進", down: "ダウン", switchToSword: "剣に持ち替え", switchToCrossbow: "クロスボウに持ち替え" }[key] || key;
+  }
   return { idle: "待機", walk: "歩行", flinch: "怯み", knockback: "吹き飛ばし", melee: "近接攻撃", midrange: "中距離攻撃", charge: "突進" }[key] || key;
 }
 
@@ -1459,6 +1578,7 @@ function isEngagedMotion(kind, key) {
   if (kind === "brute") return key === "attack" || key === "midrange";
   if (kind === "chief") return key === "attack" || key === "midrange";
   if (kind === "queen") return key === "attack" || key === "midrange";
+  if (kind === "revenant") return key === "attack" || key === "xbowAttack" || key === "switchToSword" || key === "switchToCrossbow";
   return key === "attack"; // soldier / goblin など近接攻撃タイプ共通
 }
 
@@ -1542,11 +1662,12 @@ function createUnit(kind, side, startXOverride) {
     roarCooldownUntil: 0,   // 女王:デバフ咆哮の次回発動可能時刻
     midrangeCooldownUntil: 0, // 女王:中距離攻撃(魔砲弾)の次回発動可能時刻
     nextSummonAt: 0,        // 女王:次回召喚予定時刻
+    weaponMode: "crossbow", // 亡者:現在の武器モード("crossbow" | "sword")
     debuffUntil: 0,         // 女王のデバフ咆哮を受けている場合の解除時刻
     debuffMultiplier: 1,
     el
   };
-  const targetArr = kind === "kurowl" ? kurowls : kind === "goblin" ? goblins : kind === "archer" ? archers : kind === "catapult" ? catapults : kind === "brute" ? brutes : kind === "chief" ? chiefs : kind === "queen" ? queens : soldiers;
+  const targetArr = kind === "kurowl" ? kurowls : kind === "goblin" ? goblins : kind === "archer" ? archers : kind === "catapult" ? catapults : kind === "brute" ? brutes : kind === "chief" ? chiefs : kind === "queen" ? queens : kind === "revenant" ? revenants : soldiers;
   targetArr.push(u);
   el.unit.style.display = "block";
   setUnitMotion(u, "walk");
@@ -1575,7 +1696,7 @@ function updateCastleUI(castle, fillEl, textEl) {
 // 共通ヘルパー
 // =====================================================================
 function allUnits() {
-  return soldiers.concat(kurowls, goblins, archers, catapults, brutes, chiefs, queens);
+  return soldiers.concat(kurowls, goblins, archers, catapults, brutes, chiefs, queens, revenants);
 }
 
 function dist(a, b) {
@@ -1763,6 +1884,31 @@ function evaluateUnitState(u, now) {
       setUnitMotion(u, "midrange");
     } else {
       setUnitMotion(u, "walk");
+    }
+  } else if (u.kind === "revenant") {
+    const cfg = CONFIG_BY_KIND[u.kind];
+    const inMelee = d <= cfg.meleeRange || isChainEngaged(u, u.facing);
+    const inMidRange = d >= cfg.midRangeMin && d <= cfg.midRangeMax;
+    if (inMelee) {
+      if (u.weaponMode !== "sword") {
+        u.weaponMode = "sword";
+        u.lockedMotion = "switchToSword";
+        u.lockedUntil = now + motionDuration(REVENANT_MOTIONS.switchToSword);
+        setUnitMotion(u, "switchToSword");
+      } else {
+        setUnitMotion(u, "attack");
+      }
+    } else if (inMidRange) {
+      if (u.weaponMode !== "crossbow") {
+        u.weaponMode = "crossbow";
+        u.lockedMotion = "switchToCrossbow";
+        u.lockedUntil = now + motionDuration(REVENANT_MOTIONS.switchToCrossbow);
+        setUnitMotion(u, "switchToCrossbow");
+      } else {
+        setUnitMotion(u, "xbowAttack");
+      }
+    } else {
+      setUnitMotion(u, u.weaponMode === "sword" ? "swordWalk" : "walk");
     }
   } else {
     // soldier / goblin など近接攻撃タイプ共通
@@ -2005,6 +2151,34 @@ function damageUnit(u, dmg, sourceLabel, attacker) {
       logMsg(`${sourceLabel} → ${label}に<b>${dmg}</b>ダメージ(残り${u.hp.toFixed(0)})、怯んだ。`);
       u.lockedMotion = "flinch";
       u.lockedUntil = performance.now() + motionDuration(QUEEN_MOTIONS.flinch);
+      setUnitMotion(u, "flinch");
+      playUnitVoice(u, "pain");
+    }
+    return;
+  }
+
+  // 亡者(レヴナント): 突進中のみ無敵。それ以外は通常通り怯む(特殊耐性は持たない)
+  if (u.kind === "revenant") {
+    if (u.motionKey === "dash") {
+      logMsg(`${sourceLabel} → ${label}は突進中のため無敵、ダメージを無効化した。`);
+      return;
+    }
+    u.hp = Math.max(0, u.hp - dmg);
+    logMsg(`${sourceLabel} → ${label}に<b>${dmg}</b>ダメージ(残り${u.hp.toFixed(0)})`);
+    if (u.hp <= 0) {
+      u.dead = true;
+      u.isDown = false;
+      u.deadAt = performance.now();
+      u.lockedMotion = null;
+      setUnitMotion(u, "down");
+      u.removeAt = u.deadAt + motionDuration(REVENANT_MOTIONS.down);
+      playUnitVoice(u, "death");
+      logMsg(`${label}が倒れた。`);
+    } else if (u.isDown) {
+      logMsg(`${label}はダウン中のため怯まず、そのまま倒れ続けている。`);
+    } else {
+      u.lockedMotion = "flinch";
+      u.lockedUntil = performance.now() + motionDuration(REVENANT_MOTIONS.flinch);
       setUnitMotion(u, "flinch");
       playUnitVoice(u, "pain");
     }
@@ -2587,7 +2761,7 @@ function tickQueenSummonFx(now) {
 // 死亡後のユニット(当たり判定・移動・攻撃は行わず、吹き飛ばしモーションのコマ送りと描画だけ継続する)
 // =====================================================================
 function tickDeadUnitAnimation(u, now) {
-  const motion = u.kind === "catapult" ? MOTIONS_BY_KIND[u.kind].destroy : u.kind === "queen" ? MOTIONS_BY_KIND[u.kind].down : MOTIONS_BY_KIND[u.kind].knockback;
+  const motion = u.kind === "catapult" ? MOTIONS_BY_KIND[u.kind].destroy : (u.kind === "queen" || u.kind === "revenant") ? MOTIONS_BY_KIND[u.kind].down : MOTIONS_BY_KIND[u.kind].knockback;
   const frameDt = Math.max(0, now - u.lastFrameTime);
   const curDuration = (motion.frameDurations ? motion.frameDurations[u.frameIndex] : null) || motion.msPerFrame;
 
@@ -2677,7 +2851,7 @@ function tickUnit(u, now) {
   // 兵士/ゴブリンなど近接タイプは攻撃中でも継続的に再評価してよい(自身は移動しないため)が、
   // クロウルの中距離/近接攻撃は自ら移動・演出するモーションなので、
   // walk中のみ再評価し、攻撃モーションは最後まで中断せず再生し切る
-  if ((u.kind !== "kurowl" || u.motionKey === "walk") && !(u.kind === "brute" && u.motionKey === "midrange") && !(u.kind === "chief" && (u.motionKey === "midrange" || u.motionKey === "attack"))) {
+  if ((u.kind !== "kurowl" || u.motionKey === "walk") && !(u.kind === "brute" && u.motionKey === "midrange") && !(u.kind === "chief" && (u.motionKey === "midrange" || u.motionKey === "attack")) && !(u.kind === "revenant" && (u.motionKey === "attack" || u.motionKey === "xbowAttack" || u.motionKey === "switchToSword" || u.motionKey === "switchToCrossbow"))) {
     evaluateUnitState(u, now);
   }
 
@@ -2763,6 +2937,14 @@ function tickUnit(u, now) {
         // hitFrames: [5, 8] → index5が1段目(単体)、index8が2段目(薙ぎ払い・範囲攻撃)
         dmg = u.frameIndex === 5 ? QUEEN_CONFIG.meleeHitDamage : QUEEN_CONFIG.meleeHitDamage2;
         label = u.frameIndex === 5 ? `ゴブリンの女王#${u.id}の${QUEEN_CONFIG.attackLabel}` : `ゴブリンの女王#${u.id}の薙ぎ払い`;
+      } else if (u.kind === "revenant" && u.motionKey === "attack") {
+        // hitFrames: [3, 6, 9] → 横斬り→突き→袈裟斬りの3段コンボ
+        if (u.frameIndex === 3) { dmg = REVENANT_CONFIG.meleeHitDamage1; label = `亡者#${u.id}の横斬り`; }
+        else if (u.frameIndex === 6) { dmg = REVENANT_CONFIG.meleeHitDamage2; label = `亡者#${u.id}の突き`; }
+        else { dmg = REVENANT_CONFIG.meleeHitDamage3; label = `亡者#${u.id}の袈裟斬り`; }
+      } else if (u.kind === "revenant" && u.motionKey === "xbowAttack") {
+        dmg = REVENANT_CONFIG.midrangeDamage;
+        label = `亡者#${u.id}の矢`;
       } else {
         dmg = cfg.meleeHitDamage;
         label = `${UNIT_LABEL_BY_KIND[u.kind]}#${u.id}の${cfg.attackLabel}`;
@@ -2802,6 +2984,8 @@ function tickUnit(u, now) {
         // hitFrames: [6, 11] → index6が回転斬り、index11が突き刺し
         playUnitVoice(u, u.frameIndex === 6 ? "midrangeAttack1" : "midrangeAttack2");
       } else if (u.kind === "queen" && u.motionKey === "midrange") {
+        playUnitVoice(u, "midrangeAttack");
+      } else if (u.kind === "revenant" && u.motionKey === "xbowAttack") {
         playUnitVoice(u, "midrangeAttack");
       } else {
         playUnitVoice(u, "attack");
@@ -2844,6 +3028,13 @@ function tickUnit(u, now) {
             u.midrangeStartX = u.xPx;
           }
         } else if (u.kind === "queen" && finishedKey === "midrange") {
+          evaluateUnitState(u, now);
+          if (u.motionKey === finishedKey) {
+            u.frameIndex = 0;
+            u.lastFrameTime = now;
+            u.hitAppliedFrames = new Set();
+          }
+        } else if (u.kind === "revenant" && finishedKey === "xbowAttack") {
           evaluateUnitState(u, now);
           if (u.motionKey === finishedKey) {
             u.frameIndex = 0;
@@ -2951,6 +3142,7 @@ function tick(now) {
       brutes = brutes.filter(b => !b.removed);
       chiefs = chiefs.filter(c => !c.removed);
       queens = queens.filter(q => !q.removed);
+      revenants = revenants.filter(r => !r.removed);
     }
   } catch (err) {
     logMsg(`⚠ 内部エラーを検出したため今フレームをスキップしました: ${err.message}`);
@@ -2989,10 +3181,11 @@ function spawnUnit(kind, side) {
     u.lockedUntil = performance.now() + motionDuration(QUEEN_MOTIONS.summon);
     setUnitMotion(u, "summon");
   }
+  if (kind === "revenant") playUnitVoice(u, "warCry");
 }
 
 function dashAll(kind) {
-  const list = kind === "kurowl" ? kurowls : kind === "goblin" ? goblins : kind === "archer" ? archers : kind === "brute" ? brutes : kind === "chief" ? chiefs : kind === "queen" ? queens : soldiers;
+  const list = kind === "kurowl" ? kurowls : kind === "goblin" ? goblins : kind === "archer" ? archers : kind === "brute" ? brutes : kind === "chief" ? chiefs : kind === "queen" ? queens : kind === "revenant" ? revenants : soldiers;
   const targets = list.filter(u => u.spawned && !u.dead && !u.isDown);
   if (!targets.length) return;
   const cfg = CONFIG_BY_KIND[kind];
@@ -3008,7 +3201,7 @@ function dashAll(kind) {
     setUnitMotion(u, dashKey);
     // 複数体が一斉に叫ぶことで声が重なるよう、わずかにタイミングをずらして再生
     const delay = Math.floor(Math.random() * 150);
-    const dashVoiceKey = (kind === "brute" || kind === "chief" || kind === "queen") ? "dash" : "warCry";
+    const dashVoiceKey = (kind === "brute" || kind === "chief" || kind === "queen" || kind === "revenant") ? "dash" : "warCry";
     setTimeout(() => playUnitVoice(u, dashVoiceKey), delay);
   }
 }
@@ -3023,6 +3216,7 @@ function clearAllUnits() {
   brutes = [];
   chiefs = [];
   queens = [];
+  revenants = [];
   for (const p of projectiles) p.el.remove();
   projectiles = [];
   for (const e of impactEffects) e.el.remove();
@@ -3123,6 +3317,9 @@ function applyLoadoutToButtons() {
   els.btnDashBrute.style.display = loadout.brute ? "" : "none";
   els.btnDashChief.style.display = loadout.chief ? "" : "none";
   els.btnDashQueen.style.display = loadout.queen ? "" : "none";
+  els.btnSpawnRevenantLeft.style.display = loadout.revenant ? "" : "none";
+  els.btnSpawnRevenantRight.style.display = loadout.revenant ? "" : "none";
+  els.btnDashRevenant.style.display = loadout.revenant ? "" : "none";
 }
 
 function startBattle() {
@@ -3134,7 +3331,8 @@ function startBattle() {
   loadout.archer = formationSlots.includes("archer");
   loadout.catapult = formationSlots.includes("catapult");
   loadout.queen = formationSlots.includes("queen");
-  if (!loadout.soldier && !loadout.kurowl && !loadout.goblin && !loadout.archer && !loadout.catapult && !loadout.brute && !loadout.chief && !loadout.queen) {
+  loadout.revenant = formationSlots.includes("revenant");
+  if (!loadout.soldier && !loadout.kurowl && !loadout.goblin && !loadout.archer && !loadout.catapult && !loadout.brute && !loadout.chief && !loadout.queen && !loadout.revenant) {
     els.formationWarning.style.display = "block";
     return;
   }
@@ -3170,6 +3368,8 @@ els.btnSpawnChiefLeft.addEventListener("click", () => spawnUnit("chief", "left")
 els.btnSpawnChiefRight.addEventListener("click", () => spawnUnit("chief", "right"));
 els.btnSpawnQueenLeft.addEventListener("click", () => spawnUnit("queen", "left"));
 els.btnSpawnQueenRight.addEventListener("click", () => spawnUnit("queen", "right"));
+els.btnSpawnRevenantLeft.addEventListener("click", () => spawnUnit("revenant", "left"));
+els.btnSpawnRevenantRight.addEventListener("click", () => spawnUnit("revenant", "right"));
 els.btnDashSoldier.addEventListener("click", () => dashAll("soldier"));
 els.btnDashKurowl.addEventListener("click", () => dashAll("kurowl"));
 els.btnDashGoblin.addEventListener("click", () => dashAll("goblin"));
@@ -3177,6 +3377,7 @@ els.btnDashArcher.addEventListener("click", () => dashAll("archer"));
 els.btnDashChief.addEventListener("click", () => dashAll("chief"));
 els.btnDashBrute.addEventListener("click", () => dashAll("brute"));
 els.btnDashQueen.addEventListener("click", () => dashAll("queen"));
+els.btnDashRevenant.addEventListener("click", () => dashAll("revenant"));
 els.btnReset.addEventListener("click", reset);
 els.btnStartBattle.addEventListener("click", startBattle);
 
@@ -3188,6 +3389,7 @@ formationSlots[4] = "catapult";
 formationSlots[5] = "brute";
 formationSlots[6] = "chief";
 formationSlots[7] = "queen";
+formationSlots[8] = "revenant";
 renderRoster();
 renderSlots();
 initCastles();

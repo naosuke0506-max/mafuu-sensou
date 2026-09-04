@@ -308,8 +308,8 @@
     <button class="act" id="btnSpawnBruteLeft">獰猛なゴブリンを出撃(敵軍/左, 125円)</button>
     <button class="act" id="btnSpawnChiefRight">ゴブリン長を出撃(自軍/右, 155円)</button>
     <button class="act" id="btnSpawnChiefLeft">ゴブリン長を出撃(敵軍/左, 155円)</button>
-    <button class="act" id="btnSpawnQueenRight">ゴブリンの女王を出撃(自軍/右, 280円)</button>
-    <button class="act" id="btnSpawnQueenLeft">ゴブリンの女王を出撃(敵軍/左, 280円)</button>
+    <button class="act" id="btnSpawnQueenRight">ゴブリンの女王を出撃(自軍/右, 320円)</button>
+    <button class="act" id="btnSpawnQueenLeft">ゴブリンの女王を出撃(敵軍/左, 320円)</button>
     <button class="act charge" id="btnDashSoldier">兵士 全員「突撃！」発動</button>
     <button class="act charge" id="btnDashKurowl">クロウル 全員「突進」発動</button>
     <button class="act charge" id="btnDashGoblin">ゴブリン 全員「突撃！」発動</button>
@@ -1287,7 +1287,7 @@ const ECONOMY_CONFIG = {
   catapultCost: 135, // カタパルト90円 + 搭乗ゴブリン30円 の合計
   bruteCost: 125,
   chiefCost: 155,
-  queenCost: 280
+  queenCost: 320
 };
 
 const MAX_SLOTS = 8;
@@ -1877,7 +1877,7 @@ function damageUnit(u, dmg, sourceLabel, attacker) {
       logMsg(`${sourceLabel} → ${label}は側転中で無敵、ダメージを無効化した。`);
       return;
     }
-    const guardable = !u.shieldBroken && (u.motionKey === "idle" || u.motionKey === "walk" || u.motionKey === "attack" || u.motionKey === "midrange");
+    const guardable = !u.shieldBroken && (u.motionKey === "idle" || u.motionKey === "walk");
     if (guardable) {
       const piercing = isShieldPiercingAttacker(attacker);
       const breaker = isGuardBreakerAttacker(attacker);
@@ -1915,9 +1915,11 @@ function damageUnit(u, dmg, sourceLabel, attacker) {
       }
       return;
     }
-    // ガード不可(盾破壊済み、または他の行動モーション中)はそのままダメージを受ける
+    // ガード不可(盾破壊済み、または待機・歩行以外の行動モーション中)はそのままダメージを受ける。
+    // 近接攻撃・中距離攻撃モーション中はスーパーアーマーで怯まず、動作を継続する
+    const superArmor = u.motionKey === "attack" || u.motionKey === "midrange";
     u.hp = Math.max(0, u.hp - dmg);
-    logMsg(`${sourceLabel} → ${label}に<b>${dmg}</b>ダメージ(残り${u.hp.toFixed(0)})`);
+    logMsg(`${sourceLabel} → ${label}に<b>${dmg}</b>ダメージ(残り${u.hp.toFixed(0)})${superArmor ? "(攻撃中はスーパーアーマーで怯まず)" : ""}`);
     if (u.hp <= 0) {
       u.dead = true;
       u.isDown = false;
@@ -1929,6 +1931,8 @@ function damageUnit(u, dmg, sourceLabel, attacker) {
       logMsg(`${label}が倒れた。`);
     } else if (u.isDown) {
       logMsg(`${label}はダウン中のため怯まず、そのまま倒れ続けている。`);
+    } else if (superArmor) {
+      // スーパーアーマー: 怯まずモーションを継続する
     } else {
       u.lockedMotion = "flinch";
       u.lockedUntil = performance.now() + motionDuration(CHIEF_MOTIONS.flinch);
@@ -1938,15 +1942,15 @@ function damageUnit(u, dmg, sourceLabel, attacker) {
     return;
   }
 
-  // 獰猛なゴブリン(ブルート): 咆哮中(単独roar・中距離の咆哮部分)はスーパーアーマーで怯まない
+  // 獰猛なゴブリン(ブルート): 咆哮中・近接攻撃中・中距離攻撃中はスーパーアーマーで怯まない
   if (u.kind === "brute") {
     if (u.motionKey === "dash") {
       logMsg(`${sourceLabel} → ${label}は突撃中のため無敵、ダメージを無効化した。`);
       return;
     }
-    const superArmor = u.motionKey === "roar" || (u.motionKey === "midrange" && u.frameIndex < 3);
+    const superArmor = u.motionKey === "roar" || u.motionKey === "attack" || u.motionKey === "midrange";
     u.hp = Math.max(0, u.hp - dmg);
-    logMsg(`${sourceLabel} → ${label}に<b>${dmg}</b>ダメージ(残り${u.hp.toFixed(0)})${superArmor ? "(咆哮中のためスーパーアーマーで怯まず)" : ""}`);
+    logMsg(`${sourceLabel} → ${label}に<b>${dmg}</b>ダメージ(残り${u.hp.toFixed(0)})${superArmor ? "(スーパーアーマーで怯まず)" : ""}`);
     if (u.hp <= 0) {
       u.dead = true;
       u.isDown = false;
@@ -2042,7 +2046,13 @@ function damageUnit(u, dmg, sourceLabel, attacker) {
 function isSuperArmoredAttacker(attacker) {
   if (!attacker) return false;
   if (attacker.kind === "brute") {
-    return attacker.motionKey === "roar" || (attacker.motionKey === "midrange" && attacker.frameIndex < 3);
+    return attacker.motionKey === "roar" || attacker.motionKey === "attack" || attacker.motionKey === "midrange";
+  }
+  if (attacker.kind === "chief") {
+    return attacker.motionKey === "attack" || attacker.motionKey === "midrange";
+  }
+  if (attacker.kind === "queen") {
+    return attacker.motionKey === "attack" || attacker.motionKey === "midrange";
   }
   return false;
 }

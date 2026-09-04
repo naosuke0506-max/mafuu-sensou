@@ -870,7 +870,8 @@ const BRUTE_CONFIG = {
   dashDurationMs: 2500,
   meleeRange: 55,
   meleeHitDamage1: 5, // 1段目(素早い一撃)
-  meleeHitDamage2: 8, // 2段目(叩きつけ)
+  meleeHitDamage2: 8, // 2段目(叩きつけ・範囲内2体まで攻撃)
+  attack2MultiRadius: 75, // 2段目(叩きつけ)が同時に攻撃できる範囲
   dashHitDamage: 15,
   weight: 90,
   maxHp: 19,
@@ -945,15 +946,16 @@ const CHIEF_CONFIG = {
   meleeRange: 55,
   meleeHitDamage: 7,
   weight: 70,
-  maxHp: 15,
-  shieldMaxHp: 26,
+  maxHp: 16,
+  shieldMaxHp: 42,
   attackLabel: "斬撃",
   voiceCategory: "chief",
   midRangeMin: 60,
   midRangeMax: 160,
   midrangeLeapAdvance: 110,
-  midrangeDamage1: 9, // 回転斬り
+  midrangeDamage1: 9, // 回転斬り(範囲内2体まで攻撃)
   midrangeDamage2: 12, // 突き刺し
+  midrangeMultiRadius: 90, // 回転斬りが同時に攻撃できる範囲
   guardFootstepRange: 45 // 範囲攻撃を肩代わりする「歩幅分」の距離
 };
 
@@ -1122,12 +1124,12 @@ const QUEEN_MOTIONS = {
   idle: { frames: ["walk_1"], loop: true, msPerFrame: 700 },
   walk: { frames: ["walk_1", "walk_2", "walk_3", "walk_4", "walk_5"], loop: true, msPerFrame: 250 },
   flinch: { frames: ["flinch_1", "flinch_2"], frameDurations: [100, 300], loop: false },
-  // 近接攻撃:杖の振り上げ(4fps)→叩きつけ〜着地(6fps)
+  // 近接攻撃:杖の振り上げ(4fps)→叩きつけ〜着地(6fps)。1段目(index5)は単体、2段目(index8)は範囲攻撃
   attack: {
     frames: ["attack_1", "attack_2", "attack_3", "attack_4", "attack_5", "attack_6", "attack_7", "attack_8", "attack_9"],
     loop: false,
     frameDurations: [250, 250, 250, 250, 166, 166, 166, 166, 320],
-    hitFrames: [5]
+    hitFrames: [5, 8]
   },
   // 突進:全身が紫のオーラで覆われる(6fps)
   dash: { frames: ["dash_1", "dash_2", "dash_3"], loop: true, msPerFrame: 166 },
@@ -1167,14 +1169,17 @@ const QUEEN_CONFIG = {
   dashDurationMs: 2500,
   dashHitDamage: 20,
   meleeRange: 65,
-  meleeHitDamage: 14,
-  weight: 115,
+  meleeHitDamage: 14,       // 1段目(単体)
+  meleeHitDamage2: 10,      // 2段目(薙ぎ払い・範囲攻撃)
+  meleeSplashRadius2: 80,   // 2段目の範囲攻撃の半径
+  weight: 145,
   maxHp: 38,
   attackLabel: "杖の叩きつけ",
   voiceCategory: "queen",
   midRangeMin: 100,
   midRangeMax: 220,
   midrangeDamage: 18,
+  midrangeCooldownMs: 15000,         // 中距離攻撃(魔砲弾)の再使用クールタイム
   midrangeSplashRadius: 90,
   midrangeSplashMinDamage: 6,
   midrangeProjectileFlightMs: 550,
@@ -1535,6 +1540,7 @@ function createUnit(kind, side, startXOverride) {
     shieldMaxHp: kind === "chief" ? cfg.shieldMaxHp : 0,
     shieldBroken: false,
     roarCooldownUntil: 0,   // 女王:デバフ咆哮の次回発動可能時刻
+    midrangeCooldownUntil: 0, // 女王:中距離攻撃(魔砲弾)の次回発動可能時刻
     nextSummonAt: 0,        // 女王:次回召喚予定時刻
     debuffUntil: 0,         // 女王のデバフ咆哮を受けている場合の解除時刻
     debuffMultiplier: 1,
@@ -1593,6 +1599,13 @@ function findNearestTarget(self) {
   if (!candidates.length) return null;
   candidates.sort((a, b) => dist(self, a) - dist(self, b));
   return candidates[0];
+}
+
+// 指定半径内にいる敵のうち、近い順に最大maxCount体を返す(複数体攻撃用)
+function findNearestTargetsWithin(self, maxCount, radius) {
+  const candidates = possibleEnemyTargets(self).filter(c => dist(self, c) <= radius);
+  candidates.sort((a, b) => dist(self, a) - dist(self, b));
+  return candidates.slice(0, maxCount);
 }
 
 function computeFacing(self, other, defaultFacing) {
@@ -1745,7 +1758,8 @@ function evaluateUnitState(u, now) {
     const inMelee = d <= cfg.meleeRange || isChainEngaged(u, u.facing);
     if (inMelee) {
       setUnitMotion(u, "attack");
-    } else if (d >= cfg.midRangeMin && d <= cfg.midRangeMax) {
+    } else if (d >= cfg.midRangeMin && d <= cfg.midRangeMax && now >= (u.midrangeCooldownUntil || 0)) {
+      if (u.motionKey !== "midrange") u.midrangeCooldownUntil = now + cfg.midrangeCooldownMs;
       setUnitMotion(u, "midrange");
     } else {
       setUnitMotion(u, "walk");
@@ -2357,6 +2371,26 @@ function spawnQueenBolt(u, target, label) {
   });
 }
 
+// ゴブリンの女王の近接攻撃2段目(薙ぎ払い):女王自身を中心とした範囲攻撃。範囲内の敵全員に同じダメージを与える
+function resolveQueenMeleeSplash(u, dmg, label) {
+  const cfg = QUEEN_CONFIG;
+  for (const unit of allUnits()) {
+    if (unit === u || unit.dead || unit.team === u.team) continue;
+    if (Math.abs(unit.xPx - u.xPx) > cfg.meleeSplashRadius2) continue;
+    const guardian = findGuardianChief(unit, u.team);
+    if (guardian) {
+      applyDamageTo(guardian, dmg, label + "(範囲攻撃を肩代わり)");
+    } else {
+      applyDamageTo(unit, dmg, label);
+    }
+  }
+  for (const castle of [enemyCastle, allyCastle]) {
+    if (!castle || castle.dead || castle.team === u.team) continue;
+    if (Math.abs(castle.xPx - u.xPx) > cfg.meleeSplashRadius2) continue;
+    damageCastle(castle, dmg, label);
+  }
+}
+
 function resolveQueenSplashDamage(xImpact, attackerTeam, label, mult) {
   const cfg = QUEEN_CONFIG;
   for (const unit of allUnits()) {
@@ -2714,8 +2748,9 @@ function tickUnit(u, now) {
         dmg = QUEEN_CONFIG.midrangeDamage;
         label = `ゴブリンの女王#${u.id}の魔砲弾`;
       } else if (u.kind === "queen" && u.motionKey === "attack") {
-        dmg = QUEEN_CONFIG.meleeHitDamage;
-        label = `ゴブリンの女王#${u.id}の${QUEEN_CONFIG.attackLabel}`;
+        // hitFrames: [5, 8] → index5が1段目(単体)、index8が2段目(薙ぎ払い・範囲攻撃)
+        dmg = u.frameIndex === 5 ? QUEEN_CONFIG.meleeHitDamage : QUEEN_CONFIG.meleeHitDamage2;
+        label = u.frameIndex === 5 ? `ゴブリンの女王#${u.id}の${QUEEN_CONFIG.attackLabel}` : `ゴブリンの女王#${u.id}の薙ぎ払い`;
       } else {
         dmg = cfg.meleeHitDamage;
         label = `${UNIT_LABEL_BY_KIND[u.kind]}#${u.id}の${cfg.attackLabel}`;
@@ -2734,6 +2769,12 @@ function tickUnit(u, now) {
           spawnProjectile(u, hitTarget, label);
         } else if (u.kind === "queen" && u.motionKey === "midrange") {
           spawnQueenBolt(u, hitTarget, label);
+        } else if (u.kind === "queen" && u.motionKey === "attack" && u.frameIndex === 8) {
+          resolveQueenMeleeSplash(u, dmg, label);
+        } else if (u.kind === "chief" && u.motionKey === "midrange" && u.frameIndex === 6) {
+          for (const t of findNearestTargetsWithin(u, 2, CHIEF_CONFIG.midrangeMultiRadius)) applyDamageTo(t, dmg, label, u);
+        } else if (u.kind === "brute" && u.motionKey === "attack" && u.frameIndex === 8) {
+          for (const t of findNearestTargetsWithin(u, 2, BRUTE_CONFIG.attack2MultiRadius)) applyDamageTo(t, dmg, label, u);
         } else {
           applyDamageTo(hitTarget, dmg, label, u);
         }

@@ -1478,11 +1478,12 @@ const VOICE_SETS = {
   },
   revenant: {
     warCry: SOUNDS.revenant_warcry,           // 出撃時の掛け声
-    dash: SOUNDS.revenant_dash,               // 突進発動時
+    iconPreview: SOUNDS.revenant_warcry,      // 編成画面でアイコンをタップした時(warcryを流用)
+    dash: SOUNDS.revenant_warcry,             // 突進発動時(warcryを流用。専用音ができ次第差し替え)
     attack: SOUNDS.revenant_attack,           // 近接攻撃(剣)ヒット時
     midrangeAttack: SOUNDS.revenant_midrange, // クロスボウ発射時
     pain: SOUNDS.revenant_pain,               // 被弾時
-    death: SOUNDS.revenant_death              // 死亡時
+    death: SOUNDS.revenant_pain               // 死亡時(painを流用。専用音ができ次第差し替え)
   },
   brute: {
     warCry: SOUNDS.brute_warcry,         // 出撃時の咆哮(バフ発動)・編成選択プレビュー以外
@@ -3282,7 +3283,7 @@ function renderRoster() {
       selectedRosterKind = wasSelected ? null : item.kind;
       renderRoster();
       if (!wasSelected) {
-        const previewKey = (item.kind === "brute" || item.kind === "chief" || item.kind === "queen") ? "iconPreview" : "warCry";
+        const previewKey = (item.kind === "brute" || item.kind === "chief" || item.kind === "queen" || item.kind === "revenant") ? "iconPreview" : "warCry";
         playVoice(CONFIG_BY_KIND[item.kind].voiceCategory, previewKey);
       }
     });

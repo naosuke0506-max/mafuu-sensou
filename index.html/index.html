@@ -1186,7 +1186,7 @@ const QUEEN_CONFIG = {
   roarDebuffDurationMs: 10000,
   roarDebuffMultiplier: 0.7, // 攻撃力-30%
   summonIntervalMs: 100000,  // 召喚の再発動間隔
-  summonGoblinCount: 3,
+  summonGoblinCount: 2,
   summonArcherCount: 2,
   summonSpacing: 55          // 召喚したゴブリンたちを並べる間隔
 };
@@ -1955,15 +1955,17 @@ function damageUnit(u, dmg, sourceLabel, attacker) {
     return;
   }
 
-  // ゴブリンの女王:突進中のみ完全無敵。それ以外は常にスーパーアーマーで一切怯まない
+  // ゴブリンの女王:突進中のみ完全無敵。攻撃モーション(近接・中距離)中のみスーパーアーマーで怯まない。
+  // それ以外(待機・歩行・咆哮・召喚など)は通常通り怯む。
   if (u.kind === "queen") {
     if (u.motionKey === "dash") {
       logMsg(`${sourceLabel} → ${label}は突進中のため無敵、ダメージを無効化した。`);
       return;
     }
     u.hp = Math.max(0, u.hp - dmg);
-    logMsg(`${sourceLabel} → ${label}に<b>${dmg}</b>ダメージ(残り${u.hp.toFixed(0)})(常時スーパーアーマーで怯まず)`);
+    const isAttacking = u.motionKey === "attack" || u.motionKey === "midrange";
     if (u.hp <= 0) {
+      logMsg(`${sourceLabel} → ${label}に<b>${dmg}</b>ダメージ(残り0)`);
       u.dead = true;
       u.isDown = false;
       u.deadAt = performance.now();
@@ -1973,7 +1975,15 @@ function damageUnit(u, dmg, sourceLabel, attacker) {
       playUnitVoice(u, "death");
       logMsg(`${label}が倒れた。`);
     } else if (u.isDown) {
-      logMsg(`${label}はダウン中のため怯まず、そのまま倒れ続けている。`);
+      logMsg(`${sourceLabel} → ${label}に<b>${dmg}</b>ダメージ(残り${u.hp.toFixed(0)})(ダウン中のため怯まず、そのまま倒れ続けている)`);
+    } else if (isAttacking) {
+      logMsg(`${sourceLabel} → ${label}に<b>${dmg}</b>ダメージ(残り${u.hp.toFixed(0)})(攻撃中はスーパーアーマーで怯まず)`);
+    } else {
+      logMsg(`${sourceLabel} → ${label}に<b>${dmg}</b>ダメージ(残り${u.hp.toFixed(0)})、怯んだ。`);
+      u.lockedMotion = "flinch";
+      u.lockedUntil = performance.now() + motionDuration(QUEEN_MOTIONS.flinch);
+      setUnitMotion(u, "flinch");
+      playUnitVoice(u, "pain");
     }
     return;
   }
@@ -2074,10 +2084,23 @@ function applyQueenRoarDebuff(u) {
   spawnQueenRoarEffect(u);
 }
 
-// ゴブリンの女王の召喚:女王を中心とした魔法陣の外縁に沿って、味方ゴブリン族を等間隔で無償召喚する
+// ゴブリンの女王の召喚:魔法陣を展開する(実際のゴブリン出現は魔法陣が最大になった瞬間、
+// spawnQueenSummonFx側のtickQueenSummonFxで行われる)
 function executeQueenSummon(u) {
   const cfg = QUEEN_CONFIG;
-  logMsg(`${UNIT_LABEL_BY_KIND[u.kind]}#${u.id}が召喚魔法陣を展開!ゴブリンたちが呼び出された。`);
+  logMsg(`${UNIT_LABEL_BY_KIND[u.kind]}#${u.id}が召喚魔法陣を展開した!`);
+  u.nextSummonAt = performance.now() + cfg.summonIntervalMs;
+  spawnQueenSummonFx(u, {
+    side: u.side,
+    facing: u.facing,
+    xPx: u.xPx,
+    queenId: u.id
+  });
+}
+
+// 魔法陣の外縁に沿って、味方ゴブリン族を等間隔で無償召喚する(実際の出現処理)
+function spawnQueenSummonUnits(pending) {
+  const cfg = QUEEN_CONFIG;
   const plan = [];
   for (let i = 0; i < cfg.summonGoblinCount; i++) plan.push("goblin");
   for (let i = 0; i < cfg.summonArcherCount; i++) plan.push("archer");
@@ -2085,13 +2108,12 @@ function executeQueenSummon(u) {
     const step = Math.ceil((i + 1) / 2);
     const dir = (i % 2 === 0) ? 1 : -1;
     const offset = dir * step * cfg.summonSpacing;
-    const xPx = Math.min(FIELD.length, Math.max(0, u.xPx + offset));
-    const g = createUnit(kind, u.side, xPx);
-    g.facing = u.facing;
+    const xPx = Math.min(FIELD.length, Math.max(0, pending.xPx + offset));
+    const g = createUnit(kind, pending.side, xPx);
+    g.facing = pending.facing;
     playUnitVoice(g, "taunt");
   });
-  u.nextSummonAt = performance.now() + cfg.summonIntervalMs;
-  spawnQueenSummonFx(u);
+  logMsg(`ゴブリンの女王#${pending.queenId}の魔法陣からゴブリンたちが出現した。`);
 }
 
 function applyDamageTo(target, dmg, sourceLabel, attacker) {
@@ -2464,7 +2486,7 @@ function tickQueenRoarFx(now) {
   queenRoarFx = queenRoarFx.filter(e => !e.done);
 }
 
-function spawnQueenSummonFx(u) {
+function spawnQueenSummonFx(u, pending) {
   const frames = ["summonfx_1", "summonfx_2", "summonfx_3", "summonfx_4", "summonfx_5", "summonfx_6", "summonfx_7", "summonfx_8"];
   const frameDurations = [280, 280, 280, 280, 280, 280, 280, 280];
   const el = document.createElement("div");
@@ -2482,10 +2504,16 @@ function spawnQueenSummonFx(u) {
     frameDurations,
     frameIndex: 0,
     lastFrameTime: performance.now(),
+    pending,             // ゴブリン出現に必要な情報(座標・陣営・向き)
+    unitsSpawned: false, // 魔法陣が最大になった瞬間に一度だけtrueにする
     el,
     img
   });
 }
+
+// 魔法陣アニメーションのうち、円が最大に展開しきったと見なすコマ(0始まり)。
+// このコマに到達した瞬間にゴブリンたちを実際に出現させる。
+const QUEEN_SUMMON_PEAK_FRAME = 4; // summonfx_5(稲妻付きの円が全開になるコマ)
 
 function tickQueenSummonFx(now) {
   for (const e of queenSummonFx) {
@@ -2494,6 +2522,10 @@ function tickQueenSummonFx(now) {
       e.frameIndex++;
       e.lastFrameTime = now;
       e.img.src = QUEEN_FRAMES[e.frames[e.frameIndex]];
+    }
+    if (!e.unitsSpawned && e.frameIndex >= QUEEN_SUMMON_PEAK_FRAME) {
+      e.unitsSpawned = true;
+      spawnQueenSummonUnits(e.pending);
     }
     e.el.style.left = `${fieldScreenX(e.xImpact)}px`;
     e.done = e.frameIndex >= e.frames.length - 1 && (now - e.lastFrameTime) >= e.frameDurations[e.frameIndex];

@@ -353,6 +353,8 @@
     <button class="act" id="btnSpawnSpearLeft">槍兵を出撃(敵軍/左, 175円)</button>
     <button class="act" id="btnSpawnNoirkurowlRight">ノワール・クロウルを出撃(自軍/右, 17500円)</button>
     <button class="act" id="btnSpawnNoirkurowlLeft">ノワール・クロウルを出撃(敵軍/左, 17500円)</button>
+    <button class="act" id="btnSpawnAssassinRight">暗殺亡者を出撃(自軍/右, 450円)</button>
+    <button class="act" id="btnSpawnAssassinLeft">暗殺亡者を出撃(敵軍/左, 450円)</button>
     <button class="act wallet" id="btnWalletUp">財布レベルアップ(<span id="walletUpCostText">?</span>円)</button>
     <button class="act reset" id="btnReset">編成に戻る</button>
   </div>
@@ -556,7 +558,8 @@ const NOIRKUROWL_CONFIG = {
   roarDamage: 25,          // 咆哮の中距離帯ダメージ
   roarDownHoldMs: 2000,    // 咆哮で発生するダウンの保持時間(通常の5秒より短い2秒)
   roarBuffDurationMs: 10000, // 咆哮で味方クロウルに付与するバフ/敵の変身の持続時間
-  roarDamageCutMultiplier: 0.3 // 咆哮バフ中のクロウルの被ダメージ倍率(70%カット)
+  roarDamageCutMultiplier: 0.3, // 咆哮バフ中のクロウルの被ダメージ倍率(70%カット)
+  isGuardBreaker: true // 咆哮がガードブレイカー属性を持つ
 };
 
 const SOLDIER_FRAMES = {
@@ -1128,7 +1131,8 @@ const BRUTE_CONFIG = {
   midrangeDamage: 16,    // コスト1,800円版(旧10)
   roarBuffRadius: 170, // 咆哮のバフ範囲(中距離攻撃の射程と同じ)
   roarBuffDurationMs: 5000,
-  roarBuffMultiplier: 1.4 // 攻撃力+40%
+  roarBuffMultiplier: 1.4, // 攻撃力+40%
+  isGuardBreaker: true // 近接2段目(叩きつけ)がガードブレイカー属性を持つ
 };
 
 // ゴブリン族としてバフを受けられる種別(獰猛なゴブリン自身も含む)
@@ -1438,7 +1442,8 @@ const QUEEN_CONFIG = {
   summonIntervalMs: 100000,  // 召喚の再発動間隔
   summonGoblinCount: 2,
   summonArcherCount: 2,
-  summonSpacing: 55          // 召喚したゴブリンたちを並べる間隔
+  summonSpacing: 55,          // 召喚したゴブリンたちを並べる間隔
+  isGuardBreaker: true        // 中距離・近接攻撃がガードブレイカー属性を持つ
 };
 
 // =====================================================================
@@ -1537,8 +1542,117 @@ const REVENANT_CONFIG = {
   guardFootstepRange: 0 // (未使用・予約)
 };
 
+// =====================================================================
+// 暗殺亡者の定義:対人型・高火力・低HP・高機動力のアタッカー。近接専用(遠近切り替えなし)。
+// パリィ不可の攻撃を受けた場合は小盾でガード。パリィ可能な攻撃を受けた場合は確率(40%)でパリィが発動し、
+// 成功すると相手を一撃で仕留める「パリィ成功・致命の一撃」に繋がる(この間は完全無敵)。
+// 近接攻撃がヒットすると相手の出血蓄積値が8%溜まり、100%に達すると出血が発生する。
+// =====================================================================
+const ASSASSIN_FRAMES = {
+  "walk_1": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/assassin_repo_upload/assassin_walk_01.png",
+  "walk_2": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/assassin_repo_upload/assassin_walk_02.png",
+  "walk_3": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/assassin_repo_upload/assassin_walk_03.png",
+  "walk_4": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/assassin_repo_upload/assassin_walk_04.png",
+  "walk_5": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/assassin_repo_upload/assassin_walk_05.png",
+  "attack_1": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/assassin_repo_upload/assassin_attack_01.png",
+  "attack_2": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/assassin_repo_upload/assassin_attack_02.png",
+  "attack_3": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/assassin_repo_upload/assassin_attack_03.png",
+  "attack_4": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/assassin_repo_upload/assassin_attack_04.png",
+  "attack_5": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/assassin_repo_upload/assassin_attack_05.png",
+  "attack_6": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/assassin_repo_upload/assassin_attack_06.png",
+  "attack_7": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/assassin_repo_upload/assassin_attack_07.png",
+  "guard_1": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/assassin_repo_upload/assassin_guard_01.png",
+  "guard_2": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/assassin_repo_upload/assassin_guard_02.png",
+  "guard_3": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/assassin_repo_upload/assassin_guard_03.png",
+  "shieldbreak_1": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/assassin_repo_upload/assassin_shieldbreak_01.png",
+  "shieldbreak_2": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/assassin_repo_upload/assassin_shieldbreak_02.png",
+  "shieldbreak_3": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/assassin_repo_upload/assassin_shieldbreak_03.png",
+  "shieldbreak_4": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/assassin_repo_upload/assassin_shieldbreak_04.png",
+  "shieldbreak_5": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/assassin_repo_upload/assassin_shieldbreak_05.png",
+  "parry_1": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/assassin_repo_upload/assassin_parry_01.png",
+  "parry_2": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/assassin_repo_upload/assassin_parry_02.png",
+  "parry_3": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/assassin_repo_upload/assassin_parry_03.png",
+  "parry_4": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/assassin_repo_upload/assassin_parry_04.png",
+  "parry_5": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/assassin_repo_upload/assassin_parry_05.png",
+  "parrykill_1": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/assassin_repo_upload/assassin_parry_kill_01.png",
+  "parrykill_2": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/assassin_repo_upload/assassin_parry_kill_02.png",
+  "parrykill_3": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/assassin_repo_upload/assassin_parry_kill_03.png",
+  "parrykill_4": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/assassin_repo_upload/assassin_parry_kill_04.png",
+  "parrykill_5": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/assassin_repo_upload/assassin_parry_kill_05.png",
+  "parrykill_6": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/assassin_repo_upload/assassin_parry_kill_06.png",
+  "parrykill_7": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/assassin_repo_upload/assassin_parry_kill_07.png",
+  "parrykill_8": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/assassin_repo_upload/assassin_parry_kill_08.png",
+  "parrykill_9": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/assassin_repo_upload/assassin_parry_kill_09.png",
+  "parrykill_10": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/assassin_repo_upload/assassin_parry_kill_10.png",
+  "flinch_1": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/assassin_repo_upload/assassin_flinch_01.png",
+  "flinch_2": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/assassin_repo_upload/assassin_flinch_02.png",
+  "down_1": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/assassin_repo_upload/assassin_down_01.png",
+  "down_2": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/assassin_repo_upload/assassin_down_02.png",
+  "down_3": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/assassin_repo_upload/assassin_down_03.png",
+  "down_4": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/assassin_repo_upload/assassin_down_04.png",
+  "down_5": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/assassin_repo_upload/assassin_down_05.png",
+  "bleed_1": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/assassin_repo_upload/assassin_bleed_effect_01.png",
+  "bleed_2": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/assassin_repo_upload/assassin_bleed_effect_02.png",
+  "bleed_3": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/assassin_repo_upload/assassin_bleed_effect_03.png",
+  "bleed_4": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/assassin_repo_upload/assassin_bleed_effect_04.png",
+  "bleed_5": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/assassin_repo_upload/assassin_bleed_effect_05.png",
+  "bleed_6": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/assassin_repo_upload/assassin_bleed_effect_06.png",
+  "bleed_7": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/assassin_repo_upload/assassin_bleed_effect_07.png",
+  "bleed_8": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/assassin_repo_upload/assassin_bleed_effect_08.png"
+};
+const ICON_ASSASSIN = "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/icons/assassin.png";
+const ASSASSIN_BLEED_FRAMES = ["bleed_1","bleed_2","bleed_3","bleed_4","bleed_5","bleed_6","bleed_7","bleed_8"];
+
+const ASSASSIN_MOTIONS = {
+  idle: { frames: ["walk_1"], loop: true, msPerFrame: 600 },
+  walk: { frames: ["walk_1","walk_2","walk_3","walk_4","walk_5"], loop: true, msPerFrame: 130 },
+  attack: {
+    // 振りかぶり(0-2)→突き刺し(3-5、白い斬撃エフェクトのコマ。判定はブレードが伸びきる中間コマ)→後隙(6)
+    frames: ["attack_1","attack_2","attack_3","attack_4","attack_5","attack_6","attack_7"],
+    loop: false,
+    frameDurations: [120, 120, 100, 90, 90, 120, 220],
+    hitFrames: [4]
+  },
+  guard: { frames: ["guard_1","guard_2","guard_3"], loop: true, msPerFrame: 150 },
+  shieldbreak: {
+    frames: ["shieldbreak_1","shieldbreak_2","shieldbreak_3","shieldbreak_4","shieldbreak_5"],
+    loop: false,
+    frameDurations: [120, 120, 150, 150, 450]
+  },
+  // パリィ:受け流しモーション。完了すると自動的にparryKillへ移行する
+  parry: {
+    frames: ["parry_1","parry_2","parry_3","parry_4","parry_5"],
+    loop: false,
+    frameDurations: [80, 80, 90, 90, 180]
+  },
+  // パリィ成功・致命の一撃:このモーション開始と同時に対象を即死させる
+  parryKill: {
+    frames: ["parrykill_1","parrykill_2","parrykill_3","parrykill_4","parrykill_5","parrykill_6","parrykill_7","parrykill_8","parrykill_9","parrykill_10"],
+    loop: false,
+    frameDurations: [90, 90, 90, 90, 100, 100, 110, 110, 140, 260]
+  },
+  flinch: { frames: ["flinch_1","flinch_2"], loop: false, frameDurations: [100, 300] },
+  down: {
+    frames: ["down_1","down_2","down_3","down_4","down_5"],
+    loop: false,
+    frameDurations: [150, 200, 250, 300, 5000]
+  }
+};
+
+const ASSASSIN_CONFIG = {
+  walkSpeed: 68,          // 軍団屈指の高機動力
+  meleeRange: 50,
+  meleeHitDamage: 10,     // 単発の突き刺し(連撃ではない)
+  weight: 55,
+  maxHp: 16,
+  attackLabel: "刺突",
+  voiceCategory: "human", // 専用音声セット未制作のため人間キャラ共通の声セットを暫定流用
+  parryChance: 0.4,       // パリィ可能な攻撃を受けた際の発動確率(40%)
+  bleedPerHit: 8,         // 近接攻撃1ヒットあたりの出血蓄積値(%)
+  guardHoldMs: 350
+};
+
 function motionDuration(m) {
-  if (m.frameDurations) return m.frameDurations.reduce((a, b) => a + b, 0);
   return m.frames.length * m.msPerFrame;
 }
 
@@ -1580,6 +1694,8 @@ const els = {
   btnSpawnSpearRight: document.getElementById("btnSpawnSpearRight"),
   btnSpawnNoirkurowlLeft: document.getElementById("btnSpawnNoirkurowlLeft"),
   btnSpawnNoirkurowlRight: document.getElementById("btnSpawnNoirkurowlRight"),
+  btnSpawnAssassinLeft: document.getElementById("btnSpawnAssassinLeft"),
+  btnSpawnAssassinRight: document.getElementById("btnSpawnAssassinRight"),
   btnReset: document.getElementById("btnReset"),
   enemyCastleHpFill: document.getElementById("enemyCastleHpFill"),
   enemyCastleHpText: document.getElementById("enemyCastleHpText"),
@@ -1610,6 +1726,7 @@ let queens = [];
 let revenants = [];
 let spears = [];
 let noirkurowls = [];
+let assassins = [];
 let projectiles = [];    // カタパルトの岩(飛翔中)
 let impactEffects = [];  // 着弾エフェクト(スパーク・砂煙)
 let queenBolts = [];        // 女王の魔砲弾(飛翔中)
@@ -1622,7 +1739,7 @@ let effectIdSeq = 0;
 let enemyCastle = null;
 let allyCastle = null;
 let money = 0;
-let loadout = { soldier: true, kurowl: true, goblin: true, archer: true, catapult: true, brute: true, chief: true, queen: true, revenant: true, spear: true, noirkurowl: true }; // 出撃可能なユニット種別(スロットから導出)
+let loadout = { soldier: true, kurowl: true, goblin: true, archer: true, catapult: true, brute: true, chief: true, queen: true, revenant: true, spear: true, noirkurowl: true, assassin: true }; // 出撃可能なユニット種別(スロットから導出)
 
 const SOLDIER_QUEUE_GAP = 0; // 味方同士は重なって密集できる(間合いに入れるユニット数を制限しないため)
 const CASTLE_CONFIG = { maxHp: 150 }; // 魔の平原の城HP仕様
@@ -1670,17 +1787,18 @@ const ROSTER = [
   { kind: "queen", name: "ゴブリンの女王", cost: ECONOMY_CONFIG.queenCost, statsLine: "HP400 / 杖35・魔砲弾45(範囲・ガードブレイカー) / 体重145 / 常時スーパーアーマー・デバフ咆哮・召喚持ち", icon: ICON_QUEEN },
   { kind: "revenant", name: "亡者", cost: ECONOMY_CONFIG.revenantCost, statsLine: "HP32 / 剣5-5-5・矢5 / 体重65 / 移動最遅・近接遠距離を自動で持ち替え", icon: ICON_REVENANT },
   { kind: "spear", name: "槍兵", cost: ECONOMY_CONFIG.spearCost, statsLine: "HP15 / 刺突8 / 体重65 / 兵士より長いリーチ", icon: ICON_SPEAR },
-  { kind: "noirkurowl", name: "ノワール・クロウル", cost: ECONOMY_CONFIG.noirkurowlCost, statsLine: "HP600 / 引っ掻き30×2(第二形態45) / 体重320 / 全長5m超のボス級・HP50%以下で一度だけ第二形態へ変身し全域咆哮(ガードブレイカー)", icon: ICON_NOIRKUROWL }
+  { kind: "noirkurowl", name: "ノワール・クロウル", cost: ECONOMY_CONFIG.noirkurowlCost, statsLine: "HP600 / 引っ掻き30×2(第二形態45) / 体重320 / 全長5m超のボス級・HP50%以下で一度だけ第二形態へ変身し全域咆哮(ガードブレイカー)", icon: ICON_NOIRKUROWL },
+  { kind: "assassin", name: "暗殺亡者", cost: ECONOMY_CONFIG.assassinCost, statsLine: "HP16 / 刺突10 / 体重55 / 高機動アタッカー・パリィ可能な攻撃を40%で受け流し致命の一撃(即死)、それ以外はガード。攻撃ヒットで出血蓄積+8%", icon: ICON_ASSASSIN }
 ];
 let formationSlots = new Array(MAX_SLOTS).fill(null); // 各要素: null | "soldier" | "kurowl" | "goblin" | "archer" | "catapult"
 let selectedRosterKind = null;
 let lastMoneyTick = 0;
 let battleActive = false;
 
-const MOTIONS_BY_KIND = { soldier: SOLDIER_MOTIONS, kurowl: KUROWL_MOTIONS, goblin: GOBLIN_MOTIONS, archer: ARCHER_MOTIONS, catapult: CATAPULT_MOTIONS, brute: BRUTE_MOTIONS, chief: CHIEF_MOTIONS, queen: QUEEN_MOTIONS, revenant: REVENANT_MOTIONS, spear: SPEAR_MOTIONS, noirkurowl: NOIRKUROWL_MOTIONS };
-const CONFIG_BY_KIND = { soldier: SOLDIER_CONFIG, kurowl: KUROWL_CONFIG, goblin: GOBLIN_CONFIG, archer: ARCHER_CONFIG, catapult: CATAPULT_CONFIG, brute: BRUTE_CONFIG, chief: CHIEF_CONFIG, queen: QUEEN_CONFIG, revenant: REVENANT_CONFIG, spear: SPEAR_CONFIG, noirkurowl: NOIRKUROWL_CONFIG };
-const FRAMES_BY_KIND = { soldier: SOLDIER_FRAMES, kurowl: KUROWL_FRAMES, goblin: GOBLIN_FRAMES, archer: ARCHER_FRAMES, catapult: CATAPULT_FRAMES, brute: BRUTE_FRAMES, chief: CHIEF_FRAMES, queen: QUEEN_FRAMES, revenant: REVENANT_FRAMES, spear: SPEAR_FRAMES, noirkurowl: NOIRKUROWL_FRAMES };
-const UNIT_LABEL_BY_KIND = { soldier: "兵士", kurowl: "クロウル", goblin: "ゴブリン", archer: "ゴブリン弓兵", catapult: "ゴブリンカタパルト", brute: "獰猛なゴブリン", chief: "ゴブリン長", queen: "ゴブリンの女王", revenant: "亡者", spear: "槍兵", noirkurowl: "ノワール・クロウル" };
+const MOTIONS_BY_KIND = { soldier: SOLDIER_MOTIONS, kurowl: KUROWL_MOTIONS, goblin: GOBLIN_MOTIONS, archer: ARCHER_MOTIONS, catapult: CATAPULT_MOTIONS, brute: BRUTE_MOTIONS, chief: CHIEF_MOTIONS, queen: QUEEN_MOTIONS, revenant: REVENANT_MOTIONS, spear: SPEAR_MOTIONS, noirkurowl: NOIRKUROWL_MOTIONS, assassin: ASSASSIN_MOTIONS };
+const CONFIG_BY_KIND = { soldier: SOLDIER_CONFIG, kurowl: KUROWL_CONFIG, goblin: GOBLIN_CONFIG, archer: ARCHER_CONFIG, catapult: CATAPULT_CONFIG, brute: BRUTE_CONFIG, chief: CHIEF_CONFIG, queen: QUEEN_CONFIG, revenant: REVENANT_CONFIG, spear: SPEAR_CONFIG, noirkurowl: NOIRKUROWL_CONFIG, assassin: ASSASSIN_CONFIG };
+const FRAMES_BY_KIND = { soldier: SOLDIER_FRAMES, kurowl: KUROWL_FRAMES, goblin: GOBLIN_FRAMES, archer: ARCHER_FRAMES, catapult: CATAPULT_FRAMES, brute: BRUTE_FRAMES, chief: CHIEF_FRAMES, queen: QUEEN_FRAMES, revenant: REVENANT_FRAMES, spear: SPEAR_FRAMES, noirkurowl: NOIRKUROWL_FRAMES, assassin: ASSASSIN_FRAMES };
+const UNIT_LABEL_BY_KIND = { soldier: "兵士", kurowl: "クロウル", goblin: "ゴブリン", archer: "ゴブリン弓兵", catapult: "ゴブリンカタパルト", brute: "獰猛なゴブリン", chief: "ゴブリン長", queen: "ゴブリンの女王", revenant: "亡者", spear: "槍兵", noirkurowl: "ノワール・クロウル", assassin: "暗殺亡者" };
 
 // =====================================================================
 // 突撃システム(新):ダウン/起き上がりモーションの補完
@@ -1857,6 +1975,9 @@ function motionLabel(kind, key) {
   if (kind === "noirkurowl") {
     return { idle: "待機", walk: "歩行", attack: "引っ掻き", attack2: "追撃コンボ(第二形態)", flinch: "怯み", dash: "突進", knockback: "吹き飛ばし", transform: "第二形態への変身(無敵)" }[key] || key;
   }
+  if (kind === "assassin") {
+    return { idle: "待機", walk: "歩行", attack: "刺突", flinch: "怯み", down: "ダウン", guard: "ガード", shieldbreak: "小盾破壊", parry: "パリィ", parryKill: "パリィ成功・致命の一撃" }[key] || key;
+  }
   return { idle: "待機", walk: "歩行", flinch: "怯み", knockback: "吹き飛ばし", melee: "近接攻撃", midrange: "中距離攻撃", charge: "突進" }[key] || key;
 }
 
@@ -1967,9 +2088,11 @@ function createUnit(kind, side, startXOverride) {
     weaponMode: "crossbow", // 亡者:現在の武器モード("crossbow" | "sword")
     debuffUntil: 0,         // 女王のデバフ咆哮を受けている場合の解除時刻
     debuffMultiplier: 1,
+    bleedAccum: 0,          // 出血蓄積値(%)。100に達すると出血が発生する
+    parryVictim: null,      // 暗殺亡者:パリィ成功時に致命の一撃で仕留める対象
     el
   };
-  const targetArr = kind === "kurowl" ? kurowls : kind === "goblin" ? goblins : kind === "archer" ? archers : kind === "catapult" ? catapults : kind === "brute" ? brutes : kind === "chief" ? chiefs : kind === "queen" ? queens : kind === "revenant" ? revenants : kind === "spear" ? spears : kind === "noirkurowl" ? noirkurowls : soldiers;
+  const targetArr = kind === "kurowl" ? kurowls : kind === "goblin" ? goblins : kind === "archer" ? archers : kind === "catapult" ? catapults : kind === "brute" ? brutes : kind === "chief" ? chiefs : kind === "queen" ? queens : kind === "revenant" ? revenants : kind === "spear" ? spears : kind === "noirkurowl" ? noirkurowls : kind === "assassin" ? assassins : soldiers;
   targetArr.push(u);
   el.unit.style.display = "block";
   setUnitMotion(u, "walk");
@@ -1998,7 +2121,7 @@ function updateCastleUI(castle, fillEl, textEl) {
 // 共通ヘルパー
 // =====================================================================
 function allUnits() {
-  return soldiers.concat(kurowls, goblins, archers, catapults, brutes, chiefs, queens, revenants, spears, noirkurowls);
+  return soldiers.concat(kurowls, goblins, archers, catapults, brutes, chiefs, queens, revenants, spears, noirkurowls, assassins);
 }
 
 function dist(a, b) {
@@ -2309,6 +2432,74 @@ function damageUnit(u, dmg, sourceLabel, attacker) {
     return;
   }
 
+  // 暗殺亡者:パリィ可能な攻撃には確率でパリィ、パリィ不可の攻撃は小盾でガードして対応
+  if (u.kind === "assassin") {
+    if (u.motionKey === "parry" || u.motionKey === "parryKill") {
+      logMsg(`${sourceLabel} → ${label}はパリィモーション中で完全無敵、ダメージを無効化した。`);
+      return;
+    }
+    const guardableState = !u.isDown && (u.motionKey === "idle" || u.motionKey === "walk" || u.motionKey === "attack");
+    if (guardableState) {
+      const breaker = isGuardBreakerAttacker(attacker);
+      if (breaker && !u.shieldBroken) {
+        u.shieldBroken = true;
+        logMsg(`${sourceLabel} → ${label}の小盾はガードブレイカーを受け、一撃で破壊された!`);
+        u.lockedMotion = "shieldbreak";
+        u.lockedUntil = performance.now() + motionDuration(ASSASSIN_MOTIONS.shieldbreak);
+        setUnitMotion(u, "shieldbreak");
+        playUnitVoice(u, "shieldbreak");
+        return;
+      }
+      const parryable = isAttackParryable(attacker) && !breaker;
+      if (parryable) {
+        if (Math.random() < ASSASSIN_CONFIG.parryChance) {
+          u.parryVictim = attacker || null;
+          logMsg(`${sourceLabel} → ${label}が「パリィ」に成功!致命の一撃に繋げる。(この間完全無敵)`);
+          u.lockedMotion = "parry";
+          u.lockedUntil = performance.now() + motionDuration(ASSASSIN_MOTIONS.parry);
+          setUnitMotion(u, "parry");
+          playUnitVoice(u, "guard");
+          return;
+        }
+        // パリィ失敗: 下の通常ダメージ処理へ進む
+      } else if (!u.shieldBroken) {
+        u.lockedMotion = "guard";
+        u.lockedUntil = performance.now() + ASSASSIN_CONFIG.guardHoldMs;
+        setUnitMotion(u, "guard");
+        playUnitVoice(u, "guard");
+        logMsg(`${sourceLabel} → ${label}が小盾でガード!ダメージを無効化した。`);
+        if (!isSuperArmoredAttacker(attacker) && attacker && !attacker.dead) {
+          attacker.lockedMotion = "flinch";
+          attacker.lockedUntil = performance.now() + motionDuration(MOTIONS_BY_KIND[attacker.kind].flinch);
+          setUnitMotion(attacker, "flinch");
+          logMsg(`${UNIT_LABEL_BY_KIND[attacker.kind]}#${attacker.id}はガードされて怯んだ。`);
+        }
+        return;
+      }
+    }
+    // 通常ダメージ処理(パリィ失敗・盾破壊済み・ガード不可の状態)
+    u.hp = Math.max(0, u.hp - dmg);
+    logMsg(`${sourceLabel} → ${label}に<b>${dmg}</b>ダメージ(残り${u.hp.toFixed(0)})`);
+    if (u.hp <= 0) {
+      u.dead = true;
+      u.isDown = false;
+      u.deadAt = performance.now();
+      u.lockedMotion = null;
+      setUnitMotion(u, "down");
+      u.removeAt = u.deadAt + motionDuration(ASSASSIN_MOTIONS.down);
+      playUnitVoice(u, "death");
+      logMsg(`${label}が倒れた。`);
+    } else if (u.isDown) {
+      logMsg(`${label}はダウン中のため怯まず、そのまま倒れ続けている。`);
+    } else {
+      u.lockedMotion = "flinch";
+      u.lockedUntil = performance.now() + motionDuration(ASSASSIN_MOTIONS.flinch);
+      setUnitMotion(u, "flinch");
+      playUnitVoice(u, "pain");
+    }
+    return;
+  }
+
   if (u.kind === "soldier" || u.kind === "goblin" || u.kind === "archer" || u.kind === "spear") {
     if (u.motionKey === "dash") {
       logMsg(`${sourceLabel} → ${label}は突撃中のため無敵、ダメージを無効化した。`);
@@ -2593,6 +2784,79 @@ function isShieldPiercingAttacker(attacker) {
   if (!attacker) return false;
   return !!(CONFIG_BY_KIND[attacker.kind] && CONFIG_BY_KIND[attacker.kind].isShieldPiercing);
 }
+// 暗殺亡者のパリィ可否判定:攻撃側の種類・モーションごとに個別のフラグを持つ
+// パリィ可能: 兵士・ゴブリン・ゴブリン長の通常攻撃、クロウルの中距離攻撃、亡者の近接攻撃、暗殺亡者の攻撃
+// パリィ不可: クロウルの近接攻撃、ゴブリン弓兵、ゴブリンカタパルト、獰猛なゴブリン、ゴブリンの女王、亡者のクロスボウ攻撃、
+//            ノワール・クロウル、槍兵(現時点で未指定のため安全側でパリィ不可扱い)
+function isAttackParryable(attacker) {
+  if (!attacker) return false;
+  switch (attacker.kind) {
+    case "soldier":
+    case "goblin":
+    case "chief":
+    case "assassin":
+      return true;
+    case "kurowl":
+      return attacker.motionKey === "midrange";
+    case "revenant":
+      return attacker.motionKey === "attack";
+    default:
+      return false;
+  }
+}
+
+// 出血蓄積:蓄積値が100%に達すると出血が発生し、最大HPの15%のダメージ+専用エフェクトを与える
+function applyBleedStack(target, amount) {
+  if (!target || target.dead || target.isCastle || !amount) return;
+  target.bleedAccum = (target.bleedAccum || 0) + amount;
+  if (target.bleedAccum >= 100) {
+    target.bleedAccum = 0;
+    triggerBleedProc(target);
+  }
+}
+function showBleedVisual(target) {
+  if (!target || !target.el || !target.el.unit) return;
+  attachEffectOverlay(target, ASSASSIN_BLEED_FRAMES, 2000, 90, { loop: false }, ASSASSIN_FRAMES);
+}
+function triggerBleedProc(target) {
+  if (!target || target.dead || target.isCastle) return;
+  const label = `${UNIT_LABEL_BY_KIND[target.kind]}#${target.id}`;
+  const dmg = Math.round((target.maxHp || 1) * 0.15);
+  target.hp = Math.max(0, target.hp - dmg);
+  showBleedVisual(target);
+  logMsg(`${label}の出血が蓄積上限に達し、最大HPの15%(<b>${dmg}</b>)のダメージ!(残り${target.hp.toFixed(0)})`);
+  if (target.hp <= 0 && !target.dead) {
+    target.dead = true;
+    target.isDown = false;
+    target.deadAt = performance.now();
+    target.lockedMotion = null;
+    const vMotions = MOTIONS_BY_KIND[target.kind];
+    const deathKey = vMotions.down ? "down" : "knockback";
+    setUnitMotion(target, deathKey);
+    target.removeAt = target.deadAt + motionDuration(vMotions[deathKey]);
+    playUnitVoice(target, "death");
+    logMsg(`${label}が出血により倒れた。`);
+  }
+}
+// 暗殺亡者:パリィ成功後の「致命の一撃」を実行する。対象がどんな種類・残りHPでも一撃で仕留める
+function executeAssassinParryKill(u, now) {
+  const victim = u.parryVictim;
+  if (!victim || victim.dead || victim.isCastle) return;
+  const label = `暗殺亡者#${u.id}の「パリィ成功・致命の一撃」`;
+  const vLabel = `${UNIT_LABEL_BY_KIND[victim.kind]}#${victim.id}`;
+  logMsg(`${label}が炸裂!${vLabel}を一撃で仕留めた。`);
+  victim.hp = 0;
+  victim.dead = true;
+  victim.isDown = false;
+  victim.deadAt = now;
+  victim.lockedMotion = null;
+  const vMotions = MOTIONS_BY_KIND[victim.kind];
+  const deathKey = vMotions.down ? "down" : "knockback";
+  setUnitMotion(victim, deathKey);
+  victim.removeAt = victim.deadAt + motionDuration(vMotions[deathKey]);
+  playUnitVoice(victim, "death");
+  showBleedVisual(victim); // パリィ成功時は出血が確定発生する(演出)
+}
 // 範囲攻撃を肩代わりできる、味方のゴブリン長(ガード可能状態)を探す
 function findGuardianChief(unit, attackerTeam) {
   for (const c of chiefs) {
@@ -2691,6 +2955,7 @@ function arrayForKind(kind) {
     case "revenant": return revenants;
     case "spear": return spears;
     case "noirkurowl": return noirkurowls;
+    case "assassin": return assassins;
     default: return soldiers;
   }
 }
@@ -2703,9 +2968,10 @@ function pushUnitToKindArray(u) {
   arrayForKind(u.kind).push(u);
 }
 
-// 汎用の一時エフェクトオーバーレイ(咆哮バフの専用エフェクトをユニットに重ねて表示する)
-function attachEffectOverlay(u, frameKeys, durationMs, msPerFrame, opts) {
+// 汎用の一時エフェクトオーバーレイ(咆哮バフの専用エフェクトや出血エフェクトをユニットに重ねて表示する)
+function attachEffectOverlay(u, frameKeys, durationMs, msPerFrame, opts, framesTable) {
   opts = opts || {};
+  const table = framesTable || NOIRKUROWL_FRAMES;
   if (u.effectOverlay) {
     u.effectOverlay.el.remove();
     u.effectOverlay = null;
@@ -2713,16 +2979,17 @@ function attachEffectOverlay(u, frameKeys, durationMs, msPerFrame, opts) {
   const img = document.createElement("img");
   img.className = "unit-effect-overlay";
   if (opts.maxHeight) img.style.maxHeight = opts.maxHeight;
-  img.src = NOIRKUROWL_FRAMES[frameKeys[0]];
+  img.src = table[frameKeys[0]];
   u.el.unit.appendChild(img);
   u.effectOverlay = {
     el: img,
     frameKeys,
+    framesTable: table,
     frameIndex: 0,
     lastFrameTime: performance.now(),
     msPerFrame: msPerFrame || 120,
     until: performance.now() + durationMs,
-    loop: opts.loop !== false // 既定はループ(バフ表示用)。false指定で1回再生のみ(咆哮の演出用)
+    loop: opts.loop !== false // 既定はループ(バフ表示用)。false指定で1回再生のみ(咆哮・出血の演出用)
   };
 }
 function tickEffectOverlay(u, now) {
@@ -2745,7 +3012,7 @@ function tickEffectOverlay(u, now) {
         return;
       }
     }
-    eo.el.src = NOIRKUROWL_FRAMES[eo.frameKeys[eo.frameIndex]];
+    eo.el.src = (eo.framesTable || NOIRKUROWL_FRAMES)[eo.frameKeys[eo.frameIndex]];
   }
 }
 const NOIRKUROWL_EFFECT_FRAMES = ["effect_1","effect_2","effect_3","effect_4","effect_5","effect_6","effect_7","effect_8"];
@@ -3337,6 +3604,17 @@ function tickUnit(u, now) {
       u.secondForm = true;
       evaluateUnitState(u, now);
       triggerNoirKurowlRoar(u, now);
+    } else if (u.lockedMotion === "parry") {
+      // パリィの受け流しモーション完了 → 致命の一撃モーションへ移行し、この瞬間に対象を仕留める
+      u.lockedMotion = "parryKill";
+      setUnitMotion(u, "parryKill");
+      u.lockedUntil = now + motionDuration(ASSASSIN_MOTIONS.parryKill);
+      executeAssassinParryKill(u, now);
+    } else if (u.lockedMotion === "parryKill") {
+      // 致命の一撃モーション完了 → 通常状態へ復帰
+      u.lockedMotion = null;
+      u.parryVictim = null;
+      evaluateUnitState(u, now);
     } else {
       u.lockedMotion = null;
       evaluateUnitState(u, now);
@@ -3513,6 +3791,9 @@ function tickUnit(u, now) {
           convertToAllyKurowl(hitTarget, u.team, now);
         } else {
           applyDamageTo(hitTarget, dmg, label, u);
+          if (u.kind === "assassin" && hitTarget && !hitTarget.dead) {
+            applyBleedStack(hitTarget, ASSASSIN_CONFIG.bleedPerHit);
+          }
         }
       }
       if (u.kind === "kurowl") {
@@ -3736,6 +4017,7 @@ function tick(now) {
       revenants = revenants.filter(r => !r.removed);
       spears = spears.filter(s => !s.removed);
       noirkurowls = noirkurowls.filter(n => !n.removed);
+      assassins = assassins.filter(a => !a.removed);
     }
   } catch (err) {
     logMsg(`⚠ 内部エラーを検出したため今フレームをスキップしました: ${err.message}`);
@@ -3792,6 +4074,7 @@ function clearAllUnits() {
   revenants = [];
   spears = [];
   noirkurowls = [];
+  assassins = [];
   for (const p of projectiles) p.el.remove();
   projectiles = [];
   for (const e of impactEffects) e.el.remove();
@@ -3892,6 +4175,8 @@ function applyLoadoutToButtons() {
   els.btnSpawnSpearRight.style.display = loadout.spear ? "" : "none";
   els.btnSpawnNoirkurowlLeft.style.display = loadout.noirkurowl ? "" : "none";
   els.btnSpawnNoirkurowlRight.style.display = loadout.noirkurowl ? "" : "none";
+  els.btnSpawnAssassinLeft.style.display = loadout.assassin ? "" : "none";
+  els.btnSpawnAssassinRight.style.display = loadout.assassin ? "" : "none";
 }
 
 function startBattle() {
@@ -3906,7 +4191,8 @@ function startBattle() {
   loadout.revenant = formationSlots.includes("revenant");
   loadout.spear = formationSlots.includes("spear");
   loadout.noirkurowl = formationSlots.includes("noirkurowl");
-  if (!loadout.soldier && !loadout.kurowl && !loadout.goblin && !loadout.archer && !loadout.catapult && !loadout.brute && !loadout.chief && !loadout.queen && !loadout.revenant && !loadout.spear && !loadout.noirkurowl) {
+  loadout.assassin = formationSlots.includes("assassin");
+  if (!loadout.soldier && !loadout.kurowl && !loadout.goblin && !loadout.archer && !loadout.catapult && !loadout.brute && !loadout.chief && !loadout.queen && !loadout.revenant && !loadout.spear && !loadout.noirkurowl && !loadout.assassin) {
     els.formationWarning.style.display = "block";
     return;
   }
@@ -3981,6 +4267,8 @@ els.btnSpawnSpearLeft.addEventListener("click", () => spawnUnit("spear", "left")
 els.btnSpawnSpearRight.addEventListener("click", () => spawnUnit("spear", "right"));
 els.btnSpawnNoirkurowlLeft.addEventListener("click", () => spawnUnit("noirkurowl", "left"));
 els.btnSpawnNoirkurowlRight.addEventListener("click", () => spawnUnit("noirkurowl", "right"));
+els.btnSpawnAssassinLeft.addEventListener("click", () => spawnUnit("assassin", "left"));
+els.btnSpawnAssassinRight.addEventListener("click", () => spawnUnit("assassin", "right"));
 els.btnReset.addEventListener("click", reset);
 els.btnStartBattle.addEventListener("click", startBattle);
 

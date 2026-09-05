@@ -112,17 +112,17 @@
   }
   .catapult-hp-fill { height: 100%; background: var(--hp-good); width: 100%; }
   .noirkurowl-unit {
-    position: absolute; bottom: 40px; width: 220px; height: 140px;
+    position: absolute; bottom: 40px; width: 140px; height: 95px;
     transform: translateX(-50%); display: none; z-index: 5;
   }
   .noirkurowl-unit img {
     position: absolute; bottom: 0; left: 50%;
-    max-height: 130px; max-width: none;
+    max-height: 82px; max-width: none;
     filter: drop-shadow(0 5px 6px rgba(0,0,0,0.65));
   }
   .noirkurowl-hp {
     position: absolute; top: -10px; left: 50%; transform: translateX(-50%);
-    width: 90px; height: 6px; background: #000; border: 1px solid var(--line-ash);
+    width: 65px; height: 6px; background: #000; border: 1px solid var(--line-ash);
     border-radius: 2px; overflow: hidden;
   }
   .noirkurowl-hp-fill { height: 100%; background: var(--hp-good); width: 100%; }
@@ -2666,13 +2666,15 @@ function pushUnitToKindArray(u) {
 }
 
 // 汎用の一時エフェクトオーバーレイ(咆哮バフの専用エフェクトをユニットに重ねて表示する)
-function attachEffectOverlay(u, frameKeys, durationMs, msPerFrame) {
+function attachEffectOverlay(u, frameKeys, durationMs, msPerFrame, opts) {
+  opts = opts || {};
   if (u.effectOverlay) {
     u.effectOverlay.el.remove();
     u.effectOverlay = null;
   }
   const img = document.createElement("img");
   img.className = "unit-effect-overlay";
+  if (opts.maxHeight) img.style.maxHeight = opts.maxHeight;
   img.src = NOIRKUROWL_FRAMES[frameKeys[0]];
   u.el.unit.appendChild(img);
   u.effectOverlay = {
@@ -2681,7 +2683,8 @@ function attachEffectOverlay(u, frameKeys, durationMs, msPerFrame) {
     frameIndex: 0,
     lastFrameTime: performance.now(),
     msPerFrame: msPerFrame || 120,
-    until: performance.now() + durationMs
+    until: performance.now() + durationMs,
+    loop: opts.loop !== false // 既定はループ(バフ表示用)。false指定で1回再生のみ(咆哮の演出用)
   };
 }
 function tickEffectOverlay(u, now) {
@@ -2694,7 +2697,16 @@ function tickEffectOverlay(u, now) {
   }
   if (now - eo.lastFrameTime >= eo.msPerFrame) {
     eo.lastFrameTime = now;
-    eo.frameIndex = (eo.frameIndex + 1) % eo.frameKeys.length;
+    eo.frameIndex++;
+    if (eo.frameIndex >= eo.frameKeys.length) {
+      if (eo.loop) {
+        eo.frameIndex = 0;
+      } else {
+        eo.el.remove();
+        u.effectOverlay = null;
+        return;
+      }
+    }
     eo.el.src = NOIRKUROWL_FRAMES[eo.frameKeys[eo.frameIndex]];
   }
 }
@@ -2704,7 +2716,7 @@ const NOIRKUROWL_EFFECT_FRAMES = ["effect_1","effect_2","effect_3","effect_4","e
 function applyKurowlRoarBuff(k, now) {
   k.damageCutUntil = now + NOIRKUROWL_CONFIG.roarBuffDurationMs;
   k.damageCutMultiplier = NOIRKUROWL_CONFIG.roarDamageCutMultiplier;
-  attachEffectOverlay(k, NOIRKUROWL_EFFECT_FRAMES, NOIRKUROWL_CONFIG.roarBuffDurationMs, 120);
+  attachEffectOverlay(k, NOIRKUROWL_EFFECT_FRAMES, NOIRKUROWL_CONFIG.roarBuffDurationMs, 120, { loop: true });
   playUnitVoice(k, "warCry");
 }
 
@@ -2746,6 +2758,7 @@ function revertConvertedUnit(e, revertKind, revertTeam) {
   applyUnitDomKindClasses(e);
   setUnitMotion(e, "idle");
   pushUnitToKindArray(e);
+  attachEffectOverlay(e, NOIRKUROWL_EFFECT_FRAMES, NOIRKUROWL_EFFECT_FRAMES.length * 140, 140, { loop: false });
   logMsg(`クロウルへの変身が解けて${UNIT_LABEL_BY_KIND[revertKind]}#${e.id}の姿に戻った。`);
 }
 
@@ -2754,6 +2767,8 @@ function triggerNoirKurowlRoar(u, now) {
   const casterTeam = u.team;
   playUnitVoice(u, "warCry");
   logMsg(`${UNIT_LABEL_BY_KIND[u.kind]}#${u.id}がマップ全域に響く咆哮を放った!`);
+  // 変身(闇を纏い塊になる)の直後、自身にも咆哮の衝撃波エフェクトを1回だけ大きく再生する
+  attachEffectOverlay(u, NOIRKUROWL_EFFECT_FRAMES, NOIRKUROWL_EFFECT_FRAMES.length * 160, 160, { loop: false, maxHeight: "170px" });
 
   for (const k of kurowls.slice()) {
     if (k.team !== casterTeam || k.dead) continue;

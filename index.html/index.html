@@ -1562,7 +1562,7 @@ const VOICE_SETS = {
     death: SOUNDS.brute_pain             // ダウン/死亡時。専用音ができるまで怯みと共用
   },
   human: {
-    warCry: SOUNDS.human_warcry,   // 編成選択プレビュー / 「突撃！」発動時
+    warCry: { src: SOUNDS.human_warcry, maxMs: 900 }, // 編成選択プレビュー / 出撃時 / 「突撃！」発動時。掛け声が長いため0.9秒でカット
     attack: SOUNDS.human_attack,   // 攻撃ヒット時
     pain: SOUNDS.human_dying,      // 被弾・怯み時
     death: SOUNDS.human_death      // 死亡時
@@ -1608,9 +1608,21 @@ function playVoice(voiceCategory, key) {
     src = src[Math.floor(Math.random() * src.length)];
   }
   if (!src) return;
+  // { src, maxMs } 形式の場合は、maxMs経過時点で再生を打ち切る(掛け声が長すぎる場合のカット用)
+  let maxMs = null;
+  if (typeof src === "object") {
+    maxMs = src.maxMs || null;
+    src = src.src;
+  }
+  if (!src) return;
   try {
     const audio = new Audio(src);
     audio.play().catch(() => {}); // 自動再生ブロック等は静かに無視
+    if (maxMs) {
+      setTimeout(() => {
+        try { audio.pause(); } catch (e) { /* noop */ }
+      }, maxMs);
+    }
   } catch (e) { /* 再生できない環境でも処理を止めない */ }
 }
 
@@ -2835,6 +2847,13 @@ function tickQueenSummonFx(now) {
 // =====================================================================
 // 死亡後のユニット(当たり判定・移動・攻撃は行わず、吹き飛ばしモーションのコマ送りと描画だけ継続する)
 // =====================================================================
+function applyProneSizing(u) {
+  // 槍兵のダウン/起き上がり(倒れて槍が横に伸びる構図)は画像の見た目上の横幅が大きくなりすぎるため、
+  // 通常の高さ基準(52px)ではなく横幅の上限を設けて表示サイズを抑える
+  const isProne = u.kind === "spear" && (u.motionKey === "knockback" || u.motionKey === "down" || u.motionKey === "getup");
+  u.el.img.style.maxWidth = isProne ? "80px" : "";
+}
+
 function tickDeadUnitAnimation(u, now) {
   const motion = u.kind === "catapult" ? MOTIONS_BY_KIND[u.kind].destroy : (u.kind === "queen" || u.kind === "revenant") ? MOTIONS_BY_KIND[u.kind].down : MOTIONS_BY_KIND[u.kind].knockback;
   const frameDt = Math.max(0, now - u.lastFrameTime);
@@ -2849,6 +2868,7 @@ function tickDeadUnitAnimation(u, now) {
   const key = motion.frames[idx];
   const frames = FRAMES_BY_KIND[u.kind];
   if (key && frames[key]) u.el.img.src = frames[key];
+  applyProneSizing(u);
   u.el.img.style.transform = u.kind === "revenant"
     ? `translateX(-50%) scaleX(${u.facing === -1 ? 1 : -1})`  // 亡者の素材は左向きが基準のため反転条件が逆
     : `translateX(-50%) scaleX(${u.facing === -1 ? -1 : 1})`;
@@ -3138,6 +3158,7 @@ function tickUnit(u, now) {
   const key = renderMotion.frames[idx];
   const frames = FRAMES_BY_KIND[u.kind];
   if (key && frames[key]) u.el.img.src = frames[key];
+  applyProneSizing(u);
   if (u.kind === "kurowl" || u.kind === "brute" || u.kind === "chief") {
     u.el.img.style.transform = `translateX(-50%) scaleX(${u.facing === -1 ? -1 : 1}) translateY(${-(u.jumpHeightPx || 0)}px)`;
   } else if (u.kind === "revenant") {

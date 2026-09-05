@@ -1634,7 +1634,7 @@ const ASSASSIN_MOTIONS = {
     loop: false,
     frameDurations: [220, 220, 240, 240, 260, 260, 280, 280, 320, 700],
     moveProgressByFrame: [0.10, 0.30, 0.55, 0.75, 0.92, 1.0, 1.0, 1.0, 1.0, 1.0],
-    jumpHeightByFrame: [10, 25, 32, 22, 8, 0, 0, 0, 0, 0], // 対象の頭上を弧を描いて飛び越え、着地する
+    jumpHeightByFrame: [5, 12, 16, 11, 4, 0, 0, 0, 0, 0], // 対象の頭上を弧を描いて飛び越え、着地する
     hitFrames: [7] // 8コマ目(突き刺し・白い斬撃エフェクト)で実際に対象を仕留める
   },
   flinch: { frames: ["flinch_1","flinch_2"], loop: false, frameDurations: [100, 300] },
@@ -2467,8 +2467,10 @@ function damageUnit(u, dmg, sourceLabel, attacker) {
           u.lockedUntil = Number.MAX_SAFE_INTEGER; // アニメーション終了(下部のフレーム終了処理)で次のモーションへ移行するため、タイマーでは解除しない
           setUnitMotion(u, "parry");
           playUnitVoice(u, "guard");
-          // パリィされた側は、致命の一撃を受けるまでの間、怯みモーションのまま完全に硬直させる
-          if (attacker && !attacker.dead) {
+          // パリィされた側は、致命の一撃を受けるまでの間、怯みモーションのまま完全に硬直させる。
+          // ただし相手が既に自分自身のパリィ/致命の一撃モーション中(無敵)の場合は上書きしない
+          // (暗殺亡者同士が互いにパリィし合った際、双方のモーションが壊れて固まる不具合の対策)
+          if (attacker && !attacker.dead && attacker.motionKey !== "parry" && attacker.motionKey !== "parryKill") {
             const holdMs = motionDuration(ASSASSIN_MOTIONS.parry) + motionDuration(ASSASSIN_MOTIONS.parryKill) + 500;
             attacker.lockedMotion = "flinch";
             attacker.lockedUntil = performance.now() + holdMs;
@@ -2483,7 +2485,7 @@ function damageUnit(u, dmg, sourceLabel, attacker) {
         setUnitMotion(u, "guard");
         playUnitVoice(u, "guard");
         logMsg(`${sourceLabel} → ${label}が小盾でガード!ダメージを無効化した。`);
-        if (!isSuperArmoredAttacker(attacker) && attacker && !attacker.dead) {
+        if (!isSuperArmoredAttacker(attacker) && attacker && !attacker.dead && attacker.motionKey !== "parry" && attacker.motionKey !== "parryKill") {
           attacker.lockedMotion = "flinch";
           attacker.lockedUntil = performance.now() + motionDuration(MOTIONS_BY_KIND[attacker.kind].flinch);
           setUnitMotion(attacker, "flinch");
@@ -2607,7 +2609,7 @@ function damageUnit(u, dmg, sourceLabel, attacker) {
       const shieldDmg = breaker ? dmg * 2 : dmg;
       u.shieldHp = Math.max(0, u.shieldHp - shieldDmg);
       logMsg(`${sourceLabel} → ${label}が小盾でガード!盾に<b>${shieldDmg}</b>ダメージ(盾残り${u.shieldHp}/${u.shieldMaxHp})`);
-      if (!breaker && !superArmor && attacker && !attacker.dead) {
+      if (!breaker && !superArmor && attacker && !attacker.dead && attacker.motionKey !== "parry" && attacker.motionKey !== "parryKill") {
         attacker.lockedMotion = "flinch";
         attacker.lockedUntil = performance.now() + motionDuration(MOTIONS_BY_KIND[attacker.kind].flinch);
         setUnitMotion(attacker, "flinch");

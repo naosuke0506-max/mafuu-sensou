@@ -389,7 +389,8 @@ const SPEAR_CONFIG = {
   weight: 62,
   maxHp: 12,              // 兵士(10)よりやや高耐久
   attackLabel: "刺突",
-  voiceCategory: "human"  // 兵士と同じ人間キャラ共通の声セットを流用
+  voiceCategory: "human", // 兵士と同じ人間キャラ共通の声セットを流用
+  retreatStepPx: 28       // 1回の攻撃後に後退する距離(歩幅1回分の目安)
 };
 
 const SOLDIER_FRAMES = {
@@ -3094,6 +3095,12 @@ function tickUnit(u, now) {
       } else {
         const finishedKey = u.motionKey;
         if (u.kind !== "kurowl" && u.kind !== "chief" && u.kind !== "revenant" && finishedKey === "attack") {
+          if (u.kind === "spear") {
+            // 一撃入れた後は歩幅1回分だけ後退し、密着し続けず間合いを取り直す
+            const backFacing = -u.facing;
+            const bounds = combinedUnitBounds(u, backFacing, findNearestTarget(u));
+            u.xPx = Math.min(bounds.max, Math.max(bounds.min, u.xPx + backFacing * SPEAR_CONFIG.retreatStepPx));
+          }
           u.frameIndex = 0;
           u.lastFrameTime = now;
           u.hitAppliedFrames = new Set();

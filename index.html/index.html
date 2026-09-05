@@ -2741,7 +2741,7 @@ function convertToAllyKurowl(e, casterTeam, now) {
   e.lockedMotion = null;
   e.hitAppliedFrames = new Set();
   applyUnitDomKindClasses(e);
-  setUnitMotion(e, "idle");
+  setUnitMotion(e, "walk");
   pushUnitToKindArray(e);
   applyKurowlRoarBuff(e, now);
   logMsg(`ノワール・クロウルの咆哮で${UNIT_LABEL_BY_KIND[revertKind]}#${e.id}がクロウルに変えられ、10秒間だけ味方になった!`);
@@ -2761,7 +2761,7 @@ function revertConvertedUnit(e, revertKind, revertTeam) {
   if (e.effectOverlay) { e.effectOverlay.el.remove(); e.effectOverlay = null; }
   e.damageCutUntil = 0;
   applyUnitDomKindClasses(e);
-  setUnitMotion(e, "idle");
+  setUnitMotion(e, "walk");
   pushUnitToKindArray(e);
   attachEffectOverlay(e, NOIRKUROWL_EFFECT_FRAMES, NOIRKUROWL_EFFECT_FRAMES.length * 140, 140, { loop: false });
   logMsg(`クロウルへの変身が解けて${UNIT_LABEL_BY_KIND[revertKind]}#${e.id}の姿に戻った。`);

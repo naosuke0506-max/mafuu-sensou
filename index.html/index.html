@@ -1633,7 +1633,8 @@ const ASSASSIN_MOTIONS = {
     frames: ["parrykill_1","parrykill_2","parrykill_3","parrykill_4","parrykill_5","parrykill_6","parrykill_7","parrykill_8","parrykill_9","parrykill_10"],
     loop: false,
     frameDurations: [220, 220, 240, 240, 260, 260, 280, 280, 320, 700],
-    moveProgressByFrame: [0.10, 0.30, 0.55, 0.75, 0.92, 1.0, 1.0, 1.0, 1.0, 1.0]
+    moveProgressByFrame: [0.10, 0.30, 0.55, 0.75, 0.92, 1.0, 1.0, 1.0, 1.0, 1.0],
+    hitFrames: [7] // 8コマ目(突き刺し・白い斬撃エフェクト)で実際に対象を仕留める
   },
   flinch: { frames: ["flinch_1","flinch_2"], loop: false, frameDurations: [100, 300] },
   down: {
@@ -2851,6 +2852,21 @@ function triggerBleedProc(target) {
     logMsg(`${label}が出血により倒れた。`);
   }
 }
+// 暗殺亡者:パリィ成功・致命の一撃モーション開始時、対象の背後(向きと逆側)へ回り込む移動を準備する。
+// 対象を実際に仕留めるのは、この後hitFrame(突き刺しのコマ)に到達した時点(executeAssassinParryKill)
+function setupAssassinParryKillMove(u) {
+  const victim = u.parryVictim;
+  if (!victim || victim.dead || victim.isCastle) {
+    u.parryKillStartX = u.xPx;
+    u.parryKillEndX = u.xPx;
+    return;
+  }
+  const victimFacing = victim.facing || victim.defaultFacing || 1;
+  const behindOffsetPx = 70;
+  u.facing = victimFacing;
+  u.parryKillStartX = u.xPx;
+  u.parryKillEndX = Math.min(FIELD.length, Math.max(0, victim.xPx - victimFacing * behindOffsetPx));
+}
 // 暗殺亡者:パリィ成功後の「致命の一撃」を実行する。対象がどんな種類・残りHPでも一撃で仕留める
 function executeAssassinParryKill(u, now) {
   const victim = u.parryVictim;
@@ -2859,13 +2875,6 @@ function executeAssassinParryKill(u, now) {
   const label = `暗殺亡者#${u.id}の「パリィ成功・致命の一撃」`;
   const vLabel = `${UNIT_LABEL_BY_KIND[victim.kind]}#${victim.id}`;
   logMsg(`${label}が炸裂!${vLabel}を一撃で仕留めた。`);
-  // 対象の肩に手を置いたまま宙で回り込み、対象の背後(向いている方向と逆側)へ着地して背中から突き刺す。
-  // 実際の移動は跳躍〜着地コマ(moveProgressByFrame)に沿って徐々に行われる
-  const victimFacing = victim.facing || victim.defaultFacing || 1;
-  const behindOffsetPx = 70;
-  u.facing = victimFacing;
-  u.parryKillStartX = u.xPx;
-  u.parryKillEndX = Math.min(FIELD.length, Math.max(0, victim.xPx - victimFacing * behindOffsetPx));
   victim.hp = 0;
   victim.dead = true;
   victim.isDown = false;
@@ -3750,6 +3759,10 @@ function tickUnit(u, now) {
 
     if (motion.hitFrames && motion.hitFrames.includes(u.frameIndex) && !u.hitAppliedFrames.has(u.frameIndex)) {
       u.hitAppliedFrames.add(u.frameIndex);
+      if (u.kind === "assassin" && u.motionKey === "parryKill") {
+        // パリィ成功・致命の一撃:背後への回り込みが完了し、実際に突き刺すコマで対象を仕留める
+        executeAssassinParryKill(u, now);
+      } else {
       let dmg, label;
       if (u.kind === "kurowl") {
         dmg = u.motionKey === "melee" ? KUROWL_CONFIG.meleeHitDamage : KUROWL_CONFIG.midrangeDamage;
@@ -3838,6 +3851,7 @@ function tickUnit(u, now) {
       } else {
         playUnitVoice(u, "attack");
       }
+      }
     }
 
     if (u.frameIndex >= motion.frames.length) {
@@ -3912,11 +3926,12 @@ function tickUnit(u, now) {
           u.lockedMotion = null;
           evaluateUnitState(u, now); // 通常の間合い判定に戻し、範囲内ならattackへ復帰する
         } else if (u.kind === "assassin" && finishedKey === "parry") {
-          // パリィの受け流しモーション再生完了 → 致命の一撃モーションへ移行し、この瞬間に対象を仕留める
+          // パリィの受け流しモーション再生完了 → 致命の一撃モーションへ移行する。
+          // 実際に対象を仕留めるのは、背後への回り込みが完了する突き刺しのコマ(hitFrames)。
           u.lockedMotion = "parryKill";
           setUnitMotion(u, "parryKill");
           u.lockedUntil = Number.MAX_SAFE_INTEGER; // このモーションの終了もアニメーション完了ベースで検知する
-          executeAssassinParryKill(u, now);
+          setupAssassinParryKillMove(u);
         } else if (u.kind === "assassin" && finishedKey === "parryKill") {
           // 致命の一撃モーション再生完了 → 通常状態へ復帰
           u.lockedMotion = null;

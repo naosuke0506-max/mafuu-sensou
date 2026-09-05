@@ -248,6 +248,19 @@
     letter-spacing: 0.03em;
   }
 
+  .wallet-bar {
+    margin-top: 4px; margin-bottom: 10px; font-size: 12px; color: var(--bone);
+    opacity: 0.85; letter-spacing: 0.02em;
+  }
+  .wallet-bar b { color: var(--claw-glow); font-weight: 600; }
+  button.act.wallet {
+    background: linear-gradient(180deg, #3a2f12, #1c1608);
+    border-color: #a8842f;
+  }
+  button.act.wallet:disabled {
+    opacity: 0.4; cursor: not-allowed;
+  }
+
   .slot-grid {
     margin-top: 10px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;
   }
@@ -318,28 +331,28 @@
   </div>
 
   <div class="controls">
-    <button class="act" id="btnSpawnSoldierRight">兵士を出撃(自軍/右, 50円)</button>
-    <button class="act" id="btnSpawnSoldierLeft">兵士を出撃(敵軍/左, 50円)</button>
-    <button class="act" id="btnSpawnKurowlLeft">クロウルを出撃(敵軍/左, 110円)</button>
-    <button class="act" id="btnSpawnKurowlRight">クロウルを出撃(自軍/右, 110円)</button>
-    <button class="act" id="btnSpawnGoblinRight">ゴブリンを出撃(自軍/右, 40円)</button>
-    <button class="act" id="btnSpawnGoblinLeft">ゴブリンを出撃(敵軍/左, 40円)</button>
-    <button class="act" id="btnSpawnArcherRight">ゴブリン弓兵を出撃(自軍/右, 55円)</button>
-    <button class="act" id="btnSpawnArcherLeft">ゴブリン弓兵を出撃(敵軍/左, 55円)</button>
-    <button class="act" id="btnSpawnCatapultRight">ゴブリンカタパルトを出撃(自軍/右, 135円)</button>
-    <button class="act" id="btnSpawnCatapultLeft">ゴブリンカタパルトを出撃(敵軍/左, 135円)</button>
-    <button class="act" id="btnSpawnBruteRight">獰猛なゴブリンを出撃(自軍/右, 125円)</button>
-    <button class="act" id="btnSpawnBruteLeft">獰猛なゴブリンを出撃(敵軍/左, 125円)</button>
-    <button class="act" id="btnSpawnChiefRight">ゴブリン長を出撃(自軍/右, 155円)</button>
-    <button class="act" id="btnSpawnChiefLeft">ゴブリン長を出撃(敵軍/左, 155円)</button>
-    <button class="act" id="btnSpawnQueenRight">ゴブリンの女王を出撃(自軍/右, 320円)</button>
-    <button class="act" id="btnSpawnQueenLeft">ゴブリンの女王を出撃(敵軍/左, 320円)</button>
-    <button class="act" id="btnSpawnRevenantRight">亡者を出撃(自軍/右, 75円)</button>
-    <button class="act" id="btnSpawnRevenantLeft">亡者を出撃(敵軍/左, 75円)</button>
-    <button class="act" id="btnSpawnSpearRight">槍兵を出撃(自軍/右, 70円)</button>
-    <button class="act" id="btnSpawnSpearLeft">槍兵を出撃(敵軍/左, 70円)</button>
-    <button class="act" id="btnSpawnNoirkurowlRight">ノワール・クロウルを出撃(自軍/右, 450円)</button>
-    <button class="act" id="btnSpawnNoirkurowlLeft">ノワール・クロウルを出撃(敵軍/左, 450円)</button>
+    <button class="act" id="btnSpawnSoldierRight">兵士を出撃(自軍/右, 100円)</button>
+    <button class="act" id="btnSpawnSoldierLeft">兵士を出撃(敵軍/左, 100円)</button>
+    <button class="act" id="btnSpawnKurowlLeft">クロウルを出撃(敵軍/左, 750円)</button>
+    <button class="act" id="btnSpawnKurowlRight">クロウルを出撃(自軍/右, 750円)</button>
+    <button class="act" id="btnSpawnGoblinRight">ゴブリンを出撃(自軍/右, 80円)</button>
+    <button class="act" id="btnSpawnGoblinLeft">ゴブリンを出撃(敵軍/左, 80円)</button>
+    <button class="act" id="btnSpawnArcherRight">ゴブリン弓兵を出撃(自軍/右, 120円)</button>
+    <button class="act" id="btnSpawnArcherLeft">ゴブリン弓兵を出撃(敵軍/左, 120円)</button>
+    <button class="act" id="btnSpawnCatapultRight">ゴブリンカタパルトを出撃(自軍/右, 2400円)</button>
+    <button class="act" id="btnSpawnCatapultLeft">ゴブリンカタパルトを出撃(敵軍/左, 2400円)</button>
+    <button class="act" id="btnSpawnBruteRight">獰猛なゴブリンを出撃(自軍/右, 1800円)</button>
+    <button class="act" id="btnSpawnBruteLeft">獰猛なゴブリンを出撃(敵軍/左, 1800円)</button>
+    <button class="act" id="btnSpawnChiefRight">ゴブリン長を出撃(自軍/右, 3500円)</button>
+    <button class="act" id="btnSpawnChiefLeft">ゴブリン長を出撃(敵軍/左, 3500円)</button>
+    <button class="act" id="btnSpawnQueenRight">ゴブリンの女王を出撃(自軍/右, 12000円)</button>
+    <button class="act" id="btnSpawnQueenLeft">ゴブリンの女王を出撃(敵軍/左, 12000円)</button>
+    <button class="act" id="btnSpawnRevenantRight">亡者を出撃(自軍/右, 250円)</button>
+    <button class="act" id="btnSpawnRevenantLeft">亡者を出撃(敵軍/左, 250円)</button>
+    <button class="act" id="btnSpawnSpearRight">槍兵を出撃(自軍/右, 175円)</button>
+    <button class="act" id="btnSpawnSpearLeft">槍兵を出撃(敵軍/左, 175円)</button>
+    <button class="act" id="btnSpawnNoirkurowlRight">ノワール・クロウルを出撃(自軍/右, 17500円)</button>
+    <button class="act" id="btnSpawnNoirkurowlLeft">ノワール・クロウルを出撃(敵軍/左, 17500円)</button>
     <button class="act charge" id="btnDashSoldier">兵士 全員「突撃！」発動</button>
     <button class="act charge" id="btnDashKurowl">クロウル 全員「突進」発動</button>
     <button class="act charge" id="btnDashGoblin">ゴブリン 全員「突撃！」発動</button>
@@ -350,8 +363,11 @@
     <button class="act charge" id="btnDashRevenant">亡者 全員「突進」発動</button>
     <button class="act charge" id="btnDashSpear">槍兵 全員「突撃！」発動</button>
     <button class="act charge" id="btnDashNoirkurowl">ノワール・クロウル 全員「突進」発動</button>
+    <button class="act wallet" id="btnWalletUp">財布レベルアップ(<span id="walletUpCostText">?</span>円)</button>
     <button class="act reset" id="btnReset">編成に戻る</button>
   </div>
+
+  <div class="wallet-bar" id="walletBar">財布Lv <b id="walletLevelText">0</b> / 上限 <b id="walletCapText">0</b>円 / 調達速度 <b id="walletRateText">0</b>円/秒</div>
 
   <div class="stats" id="statsBox"></div>
 
@@ -406,10 +422,10 @@ const SPEAR_CONFIG = {
   dashSpeedMultiplier: 3,
   dashDurationMs: 3000,
   meleeRange: 95,         // 兵士(60)より長いリーチ
-  meleeHitDamage: 6,      // 兵士(5)よりやや高威力
+  meleeHitDamage: 8,      // コスト175円版
   dashHitDamage: 20,
-  weight: 62,
-  maxHp: 12,              // 兵士(10)よりやや高耐久
+  weight: 65,
+  maxHp: 15,              // コスト175円版
   attackLabel: "刺突",
   voiceCategory: "human", // 兵士と同じ人間キャラ共通の声セットを流用
   retreatStepPx: 28       // 1回の攻撃後に後退する距離(歩幅1回分の目安)
@@ -538,11 +554,11 @@ const NOIRKUROWL_CONFIG = {
   dashSpeedMultiplier: 2.5,
   dashDurationMs: 3000,
   meleeRange: 110,        // 大きな体格に見合った長いリーチ
-  meleeHitDamage: 5,      // 通常コンボ1ヒットあたり
-  attack2HitDamage: 8,    // 第二形態専用コンボ1ヒットあたり(通常より高威力)
+  meleeHitDamage: 30,     // 通常コンボ1ヒットあたり(コスト17,500円版)
+  attack2HitDamage: 45,   // 第二形態専用コンボ1ヒットあたり(コスト17,500円版)
   dashHitDamage: 25,
   weight: 320,            // 全キャラ中最重量
-  maxHp: 100,             // ボスクラスの耐久力
+  maxHp: 600,             // コスト17,500円版(ボスクラスの耐久力)
   attackLabel: "引っ掻き",
   voiceCategory: "noirkurowl", // 専用音声セット
   roarNearRadius: 150,     // 咆哮:これ以下の距離の敵はクロウルに変身させる
@@ -958,10 +974,10 @@ const SOLDIER_CONFIG = {
   dashSpeedMultiplier: 3,
   dashDurationMs: 3000,
   meleeRange: 60,        // 剣の間合い
-  meleeHitDamage: 5,
+  meleeHitDamage: 6,     // コスト100円版
   dashHitDamage: 20,
   weight: 60,
-  maxHp: 10,
+  maxHp: 12,             // コスト100円版
   attackLabel: "刺突",
   voiceCategory: "human" // 人間キャラ共通の声セットを使う(将来の他キャラにも流用可)
 };
@@ -998,14 +1014,14 @@ const KUROWL_CONFIG = {
   bodyLength: 90,
   kurowlSpeed: 62,
   walkSpeed: 62, // 汎用の速度参照用エイリアス
-  kurowlHp: 16,
-  maxHp: 16,
+  kurowlHp: 50,
+  maxHp: 50,
   meleeRange: 72,
   midRangeMin: 180,        // 体長2.0体分(これより近づいたら中距離攻撃はせず接近する)
   midRangeMax: 270,        // 体長3.0体分
-  meleeHitDamage: 3,
+  meleeHitDamage: 4,       // コスト750円版(6連撃×4=24)
   meleeHitFrames: [6, 8, 9, 10, 11, 13],
-  midrangeDamage: 15,
+  midrangeDamage: 22,      // コスト750円版
   midrangeLeapAdvance: 270, // 最大射程(体長3.0体分)まで跳びかかって移動する
   weight: 70,
   dashSpeedMultiplier: 3,
@@ -1045,10 +1061,10 @@ const GOBLIN_CONFIG = {
   dashSpeedMultiplier: 3,
   dashDurationMs: 3000,
   meleeRange: 50,
-  meleeHitDamage: 3,
+  meleeHitDamage: 4,     // コスト80円版
   dashHitDamage: 12,
   weight: 40,
-  maxHp: 6,
+  maxHp: 7,              // コスト80円版
   attackLabel: "打撃",
   voiceCategory: "goblin", // ゴブリン専用の声セット
   evadeJumpDistance: 60      // 回避時に後方へ跳ぶ距離
@@ -1108,18 +1124,18 @@ const BRUTE_CONFIG = {
   dashSpeedMultiplier: 2.5,
   dashDurationMs: 2500,
   meleeRange: 55,
-  meleeHitDamage1: 5, // 1段目(素早い一撃)
-  meleeHitDamage2: 8, // 2段目(叩きつけ・範囲内2体まで攻撃)
+  meleeHitDamage1: 14, // 1段目(素早い一撃)(コスト1,800円版)
+  meleeHitDamage2: 20, // 2段目(叩きつけ・範囲内2体まで攻撃/ガードブレイカー)(コスト1,800円版)
   attack2MultiRadius: 75, // 2段目(叩きつけ)が同時に攻撃できる範囲
   dashHitDamage: 15,
   weight: 90,
-  maxHp: 19,
+  maxHp: 60,             // コスト1,800円版
   attackLabel: "叩きつけ",
   voiceCategory: "brute",
   midRangeMin: 70,
   midRangeMax: 170,
   midrangeLeapAdvance: 130,
-  midrangeDamage: 10,
+  midrangeDamage: 16,    // コスト1,800円版(旧10)
   roarBuffRadius: 170, // 咆哮のバフ範囲(中距離攻撃の射程と同じ)
   roarBuffDurationMs: 5000,
   roarBuffMultiplier: 1.4 // 攻撃力+40%
@@ -1183,17 +1199,17 @@ const CHIEF_CONFIG = {
   dashDurationMs: 2000,
   dashHitDamage: 6,
   meleeRange: 55,
-  meleeHitDamage: 7,
-  weight: 70,
-  maxHp: 16,
-  shieldMaxHp: 42,
+  meleeHitDamage: 16,    // コスト3,500円版
+  weight: 80,            // コスト3,500円版(新規設定)
+  maxHp: 90,             // コスト3,500円版
+  shieldMaxHp: 42,       // 盾HP制は別途廃止予定(ガードブレイカーで一撃破壊に変更予定)
   attackLabel: "斬撃",
   voiceCategory: "chief",
   midRangeMin: 60,
   midRangeMax: 160,
   midrangeLeapAdvance: 110,
-  midrangeDamage1: 9, // 回転斬り(範囲内2体まで攻撃)
-  midrangeDamage2: 12, // 突き刺し
+  midrangeDamage1: 14, // 回転斬り(範囲内2体まで攻撃)(コスト3,500円版)
+  midrangeDamage2: 18, // 突き刺し(コスト3,500円版)
   midrangeMultiRadius: 90, // 回転斬りが同時に攻撃できる範囲
   guardFootstepRange: 45 // 範囲攻撃を肩代わりする「歩幅分」の距離
 };
@@ -1229,10 +1245,10 @@ const ARCHER_CONFIG = {
   dashSpeedMultiplier: 3,
   dashDurationMs: 3000,
   meleeRange: 250,          // 射程250(歩いてこの距離まで近づいたらその場に留まり射撃する)
-  meleeHitDamage: 4,        // 矢の威力(暫定値・要調整)
+  meleeHitDamage: 6,        // コスト120円版
   dashHitDamage: 12,
   weight: 40,               // 通常ゴブリンと同じ体重
-  maxHp: 6,
+  maxHp: 8,                 // コスト120円版
   attackLabel: "矢",
   voiceCategory: "archer"   // 弓を放つ専用の掛け声セット(攻撃音以外はゴブリンと共通)
 };
@@ -1281,11 +1297,11 @@ const CATAPULT_CONFIG = {
   walkSpeed: 38,             // 重量物のため歩行はやや遅め
   meleeRange: 400,           // 最大射程400(歩いてこの距離まで近づいたらその場に留まり射撃する)
   minRange: 250,             // 最小射程250(これより敵が近いと攻撃できず待機する)
-  meleeHitDamage: 15,        // 着弾中心の最大ダメージ(範囲減衰の起点)
+  meleeHitDamage: 35,        // 着弾中心の最大ダメージ(コスト2,400円版)
   splashRadius: 90,          // 着弾地点を中心とした範囲ダメージの半径
-  splashMinDamage: 5,        // 範囲外周でのダメージ(中心からの距離で線形減衰)
+  splashMinDamage: 12,       // 範囲外周でのダメージ(コスト2,400円版)
   weight: 300,               // 兵士5体分の目安
-  maxHp: 25,
+  maxHp: 80,                 // コスト2,400円版
   attackLabel: "岩",
   voiceCategory: "catapult",   // カタパルト専用の発射音・怯み音・破壊音セット
   projectileFlightMs: 700,   // 岩が飛んでいる時間(見た目)
@@ -1408,19 +1424,19 @@ const QUEEN_CONFIG = {
   dashDurationMs: 2500,
   dashHitDamage: 20,
   meleeRange: 65,
-  meleeHitDamage: 14,       // 1段目(単体)
-  meleeHitDamage2: 10,      // 2段目(薙ぎ払い・範囲攻撃)
+  meleeHitDamage: 35,       // 1段目(単体)(コスト12,000円版)
+  meleeHitDamage2: 25,      // 2段目(薙ぎ払い・範囲攻撃/ガードブレイカー)(コスト12,000円版)
   meleeSplashRadius2: 80,   // 2段目の範囲攻撃の半径
   weight: 145,
-  maxHp: 38,
+  maxHp: 400,               // コスト12,000円版
   attackLabel: "杖の叩きつけ",
   voiceCategory: "queen",
   midRangeMin: 100,
   midRangeMax: 220,
-  midrangeDamage: 18,
+  midrangeDamage: 45,       // コスト12,000円版・ガードブレイカー
   midrangeCooldownMs: 15000,         // 中距離攻撃(魔砲弾)の再使用クールタイム
   midrangeSplashRadius: 90,
-  midrangeSplashMinDamage: 6,
+  midrangeSplashMinDamage: 18,  // コスト12,000円版
   midrangeProjectileFlightMs: 550,
   midrangeProjectileArcHeight: 70,   // 放物線の高さ(見た目)
   midrangeLaunchHeightPx: 55,        // 杖の先端の高さ(見た目)
@@ -1518,16 +1534,16 @@ const REVENANT_CONFIG = {
   dashDurationMs: 2200,
   dashHitDamage: 10,
   meleeRange: 58,
-  meleeHitDamage1: 4,  // 横斬り
-  meleeHitDamage2: 5,  // 突き
-  meleeHitDamage3: 6,  // 袈裟斬り
+  meleeHitDamage1: 5,  // 横斬り(コスト250円版)
+  meleeHitDamage2: 5,  // 突き(コスト250円版)
+  meleeHitDamage3: 5,  // 袈裟斬り(コスト250円版)
   weight: 65,
-  maxHp: 20,           // 人間カテゴリの中では高HP
+  maxHp: 32,           // コスト250円版
   attackLabel: "斬撃",
   voiceCategory: "revenant",
   midRangeMin: 120,
   midRangeMax: 280,
-  midrangeDamage: 6,   // クロスボウの矢
+  midrangeDamage: 5,   // クロスボウの矢(コスト250円版)
   guardFootstepRange: 0 // (未使用・予約)
 };
 
@@ -1595,7 +1611,12 @@ const els = {
   rosterPanel: document.getElementById("rosterPanel"),
   btnStartBattle: document.getElementById("btnStartBattle"),
   formationWarning: document.getElementById("formationWarning"),
-  moneyText: document.getElementById("moneyText")
+  moneyText: document.getElementById("moneyText"),
+  btnWalletUp: document.getElementById("btnWalletUp"),
+  walletUpCostText: document.getElementById("walletUpCostText"),
+  walletLevelText: document.getElementById("walletLevelText"),
+  walletCapText: document.getElementById("walletCapText"),
+  walletRateText: document.getElementById("walletRateText")
 };
 
 let soldiers = [];
@@ -1626,33 +1647,50 @@ let loadout = { soldier: true, kurowl: true, goblin: true, archer: true, catapul
 const SOLDIER_QUEUE_GAP = 0; // 味方同士は重なって密集できる(間合いに入れるユニット数を制限しないため)
 const CASTLE_CONFIG = { maxHp: 150 }; // 魔の平原の城HP仕様
 const ECONOMY_CONFIG = {
-  moneyPerSecond: 15,
-  soldierCost: 50,
-  kurowlCost: 110,
-  goblinCost: 40,
-  archerCost: 55,
-  catapultCost: 135, // カタパルト90円 + 搭乗ゴブリン30円 の合計
-  bruteCost: 125,
-  chiefCost: 155,
-  queenCost: 320,
-  revenantCost: 75,
-  spearCost: 70,
-  noirkurowlCost: 450
+  soldierCost: 100,
+  kurowlCost: 750,
+  goblinCost: 80,
+  archerCost: 120,
+  catapultCost: 2400,
+  bruteCost: 1800,
+  chiefCost: 3500,
+  queenCost: 12000,
+  revenantCost: 250,
+  spearCost: 175,
+  assassinCost: 450,
+  noirkurowlCost: 17500
 };
+
+// =====================================================================
+// 財布レベル(にゃんこ大戦争のお財布システム相当):ステージ内でリセットされる一時成長。
+// 所持金を消費してレベルアップすると、所持金上限と資金調達速度(moneyPerSecond)が上がる。
+// 敵ユニットを倒すと、その敵の出撃コストの30%を即座に獲得する。
+// =====================================================================
+const WALLET_LEVELS = [
+  { maxMoney: 1500,  moneyPerSecond: 20  }, // Lv0(初期)
+  { maxMoney: 3000,  moneyPerSecond: 35  }, // Lv1
+  { maxMoney: 6000,  moneyPerSecond: 55  }, // Lv2
+  { maxMoney: 12000, moneyPerSecond: 80  }, // Lv3
+  { maxMoney: 25000, moneyPerSecond: 120 }, // Lv4
+  { maxMoney: 50000, moneyPerSecond: 180 }  // Lv5(最大)
+];
+const WALLET_UPGRADE_COST = [1000, 3000, 8000, 20000, 45000]; // Lv0→1, 1→2, 2→3, 3→4, 4→5 に必要な投資額
+const KILL_REWARD_RATIO = 0.3; // 敵撃破時、出撃コストの何%を獲得するか
+let walletLevel = 0;
 
 const MAX_SLOTS = 9;
 const ROSTER = [
-  { kind: "soldier", name: "兵士", cost: ECONOMY_CONFIG.soldierCost, statsLine: "HP10 / 攻撃力5(刺突) / 体重60", icon: ICON_SOLDIER },
-  { kind: "kurowl", name: "クロウル", cost: ECONOMY_CONFIG.kurowlCost, statsLine: "HP16 / 引っ掻き3×6・中距離15 / 体重70", icon: ICON_KUROWL },
-  { kind: "goblin", name: "ゴブリン", cost: ECONOMY_CONFIG.goblinCost, statsLine: "HP6 / 打撃3 / 体重40 / 初撃を確定回避", icon: ICON_GOBLIN },
-  { kind: "brute", name: "獰猛なゴブリン", cost: ECONOMY_CONFIG.bruteCost, statsLine: "HP19 / 一撃目5・叩きつけ8 / 体重90 / 重量級近接", icon: ICON_BRUTE },
-  { kind: "chief", name: "ゴブリン長", cost: ECONOMY_CONFIG.chiefCost, statsLine: "HP15 / 小盾HP26 / 斬撃7 / 体重70 / ガード持ち", icon: ICON_CHIEF },
-  { kind: "archer", name: "ゴブリン弓兵", cost: ECONOMY_CONFIG.archerCost, statsLine: "HP6 / 矢4 / 体重40 / 射程250(その場で射撃)", icon: ICON_ARCHER },
-  { kind: "catapult", name: "ゴブリンカタパルト", cost: ECONOMY_CONFIG.catapultCost, statsLine: "カタパルトHP25 / 岩15(範囲) / 体重300 / 射程250〜400・破壊後は搭乗ゴブリンが継戦", icon: ICON_CATAPULT },
-  { kind: "queen", name: "ゴブリンの女王", cost: ECONOMY_CONFIG.queenCost, statsLine: "HP38 / 杖14・魔砲弾18(範囲) / 体重115 / 常時スーパーアーマー・デバフ咆哮・召喚持ち", icon: ICON_QUEEN },
-  { kind: "revenant", name: "亡者", cost: ECONOMY_CONFIG.revenantCost, statsLine: "HP20 / 剣4-5-6・矢6 / 体重65 / 移動最遅・近接遠距離を自動で持ち替え", icon: ICON_REVENANT },
-  { kind: "spear", name: "槍兵", cost: ECONOMY_CONFIG.spearCost, statsLine: "HP12 / 刺突6 / 体重62 / 兵士より長いリーチ", icon: ICON_SPEAR },
-  { kind: "noirkurowl", name: "ノワール・クロウル", cost: ECONOMY_CONFIG.noirkurowlCost, statsLine: "HP100 / 引っ掻き5×2 / 体重320 / 全長5m超のボス級・HP50%以下で一度だけ第二形態へ変身し全域咆哮", icon: ICON_NOIRKUROWL }
+  { kind: "soldier", name: "兵士", cost: ECONOMY_CONFIG.soldierCost, statsLine: "HP12 / 攻撃力6(刺突) / 体重60", icon: ICON_SOLDIER },
+  { kind: "kurowl", name: "クロウル", cost: ECONOMY_CONFIG.kurowlCost, statsLine: "HP50 / 引っ掻き4×6・中距離22 / 体重70", icon: ICON_KUROWL },
+  { kind: "goblin", name: "ゴブリン", cost: ECONOMY_CONFIG.goblinCost, statsLine: "HP7 / 打撃4 / 体重40 / 初撃を確定回避", icon: ICON_GOBLIN },
+  { kind: "brute", name: "獰猛なゴブリン", cost: ECONOMY_CONFIG.bruteCost, statsLine: "HP60 / 一撃目14・叩きつけ20(ガードブレイカー) / 体重90 / 重量級近接", icon: ICON_BRUTE },
+  { kind: "chief", name: "ゴブリン長", cost: ECONOMY_CONFIG.chiefCost, statsLine: "HP90 / 斬撃16 / 体重80 / ガード持ち(盾は壊れない・ガードブレイカーのみ一撃破壊)", icon: ICON_CHIEF },
+  { kind: "archer", name: "ゴブリン弓兵", cost: ECONOMY_CONFIG.archerCost, statsLine: "HP8 / 矢6 / 体重40 / 射程250(その場で射撃)", icon: ICON_ARCHER },
+  { kind: "catapult", name: "ゴブリンカタパルト", cost: ECONOMY_CONFIG.catapultCost, statsLine: "カタパルトHP80 / 岩35(範囲) / 体重300 / 射程250〜400・破壊後は搭乗ゴブリンが継戦", icon: ICON_CATAPULT },
+  { kind: "queen", name: "ゴブリンの女王", cost: ECONOMY_CONFIG.queenCost, statsLine: "HP400 / 杖35・魔砲弾45(範囲・ガードブレイカー) / 体重145 / 常時スーパーアーマー・デバフ咆哮・召喚持ち", icon: ICON_QUEEN },
+  { kind: "revenant", name: "亡者", cost: ECONOMY_CONFIG.revenantCost, statsLine: "HP32 / 剣5-5-5・矢5 / 体重65 / 移動最遅・近接遠距離を自動で持ち替え", icon: ICON_REVENANT },
+  { kind: "spear", name: "槍兵", cost: ECONOMY_CONFIG.spearCost, statsLine: "HP15 / 刺突8 / 体重65 / 兵士より長いリーチ", icon: ICON_SPEAR },
+  { kind: "noirkurowl", name: "ノワール・クロウル", cost: ECONOMY_CONFIG.noirkurowlCost, statsLine: "HP600 / 引っ掻き30×2(第二形態45) / 体重320 / 全長5m超のボス級・HP50%以下で一度だけ第二形態へ変身し全域咆哮(ガードブレイカー)", icon: ICON_NOIRKUROWL }
 ];
 let formationSlots = new Array(MAX_SLOTS).fill(null); // 各要素: null | "soldier" | "kurowl" | "goblin" | "archer" | "catapult"
 let selectedRosterKind = null;
@@ -1931,6 +1969,7 @@ function createUnit(kind, side, startXOverride) {
     dead: false,
     deadAt: 0,
     removed: false,
+    rewardGiven: false,
     lockedMotion: null,
     lockedUntil: 0,
     dashUntil: 0,
@@ -3656,8 +3695,11 @@ function tick(now) {
       if (lastMoneyTick === 0) lastMoneyTick = now;
       const moneyDt = Math.max(0, now - lastMoneyTick);
       lastMoneyTick = now;
-      money += (ECONOMY_CONFIG.moneyPerSecond * moneyDt) / 1000;
+      money += (WALLET_LEVELS[walletLevel].moneyPerSecond * moneyDt) / 1000;
+      const walletCap = WALLET_LEVELS[walletLevel].maxMoney;
+      if (money > walletCap) money = walletCap;
       els.moneyText.textContent = Math.floor(money);
+      updateWalletUi();
 
       for (const u of allUnits()) tickUnit(u, now);
       for (const u of allUnits()) tickEffectOverlay(u, now);
@@ -3667,6 +3709,25 @@ function tick(now) {
       tickQueenBoltEffects(now);
       tickQueenRoarFx(now);
       tickQueenSummonFx(now);
+
+      // 敵ユニットを倒した際、出撃コストの一部(KILL_REWARD_RATIO)を即座に獲得する
+      for (const u of allUnits()) {
+        if (u.dead && !u.isCastle && !u.rewardGiven) {
+          u.rewardGiven = true;
+          if (u.team === "enemy") {
+            const enemyCost = ECONOMY_CONFIG[u.kind + "Cost"] || 0;
+            const reward = Math.floor(enemyCost * KILL_REWARD_RATIO);
+            if (reward > 0) {
+              const cap = WALLET_LEVELS[walletLevel].maxMoney;
+              money = Math.min(cap, money + reward);
+              els.moneyText.textContent = Math.floor(money);
+              updateWalletUi();
+              logMsg(`${UNIT_LABEL_BY_KIND[u.kind]}#${u.id}を撃破し、${reward}円を獲得した。`);
+            }
+          }
+        }
+      }
+
       render();
 
       for (const u of allUnits()) {
@@ -3793,6 +3854,7 @@ function reset() {
   initCastles();
   els.log.innerHTML = "";
   money = 0;
+  walletLevel = 0;
   lastMoneyTick = 0;
   els.moneyText.textContent = "0";
   battleActive = false;
@@ -3907,14 +3969,47 @@ function startBattle() {
   initCastles();
   els.log.innerHTML = "";
   money = 0;
+  walletLevel = 0;
   lastMoneyTick = 0;
   els.moneyText.textContent = "0";
+  updateWalletUi();
 
   els.formationScreen.style.display = "none";
   els.battleScreen.style.display = "block";
   battleActive = true;
-  logMsg("戦闘開始。所持金は時間経過で増えていきます。");
+  logMsg("戦闘開始。所持金は時間経過と敵の撃破で増えていきます。財布レベルを上げると上限と調達速度が伸びます。");
 }
+
+// 財布レベルUIの表示を現在の状態に合わせて更新する
+function updateWalletUi() {
+  const cur = WALLET_LEVELS[walletLevel];
+  els.walletLevelText.textContent = walletLevel;
+  els.walletCapText.textContent = cur.maxMoney;
+  els.walletRateText.textContent = cur.moneyPerSecond;
+  const isMax = walletLevel >= WALLET_LEVELS.length - 1;
+  if (isMax) {
+    els.walletUpCostText.textContent = "MAX";
+    els.btnWalletUp.disabled = true;
+  } else {
+    const upCost = WALLET_UPGRADE_COST[walletLevel];
+    els.walletUpCostText.textContent = upCost;
+    els.btnWalletUp.disabled = money < upCost;
+  }
+}
+
+els.btnWalletUp.addEventListener("click", () => {
+  if (walletLevel >= WALLET_LEVELS.length - 1) return;
+  const upCost = WALLET_UPGRADE_COST[walletLevel];
+  if (money < upCost) return;
+  money -= upCost;
+  walletLevel += 1;
+  // レベルアップ直後、所持金が新しい上限を超えていないので基本的にキャップ処理は不要だが念のため
+  const cap = WALLET_LEVELS[walletLevel].maxMoney;
+  if (money > cap) money = cap;
+  els.moneyText.textContent = Math.floor(money);
+  updateWalletUi();
+  logMsg(`財布レベルが${walletLevel}になった。(上限${cap}円・調達速度${WALLET_LEVELS[walletLevel].moneyPerSecond}円/秒)`);
+});
 
 els.btnSpawnSoldierRight.addEventListener("click", () => spawnUnit("soldier", "right"));
 els.btnSpawnSoldierLeft.addEventListener("click", () => spawnUnit("soldier", "left"));

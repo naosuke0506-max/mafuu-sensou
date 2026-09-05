@@ -2456,7 +2456,7 @@ function damageUnit(u, dmg, sourceLabel, attacker) {
           u.parryVictim = attacker || null;
           logMsg(`${sourceLabel} → ${label}が「パリィ」に成功!致命の一撃に繋げる。(この間完全無敵)`);
           u.lockedMotion = "parry";
-          u.lockedUntil = performance.now() + motionDuration(ASSASSIN_MOTIONS.parry);
+          u.lockedUntil = Number.MAX_SAFE_INTEGER; // アニメーション終了(下部のフレーム終了処理)で次のモーションへ移行するため、タイマーでは解除しない
           setUnitMotion(u, "parry");
           playUnitVoice(u, "guard");
           // パリィされた側は、致命の一撃を受けるまでの間、怯みモーションのまま完全に硬直させる
@@ -2848,6 +2848,7 @@ function triggerBleedProc(target) {
 // 暗殺亡者:パリィ成功後の「致命の一撃」を実行する。対象がどんな種類・残りHPでも一撃で仕留める
 function executeAssassinParryKill(u, now) {
   const victim = u.parryVictim;
+  u.parryVictim = null;
   if (!victim || victim.dead || victim.isCastle) return;
   const label = `暗殺亡者#${u.id}の「パリィ成功・致命の一撃」`;
   const vLabel = `${UNIT_LABEL_BY_KIND[victim.kind]}#${victim.id}`;
@@ -3611,17 +3612,6 @@ function tickUnit(u, now) {
       u.secondForm = true;
       evaluateUnitState(u, now);
       triggerNoirKurowlRoar(u, now);
-    } else if (u.lockedMotion === "parry") {
-      // パリィの受け流しモーション完了 → 致命の一撃モーションへ移行し、この瞬間に対象を仕留める
-      u.lockedMotion = "parryKill";
-      setUnitMotion(u, "parryKill");
-      u.lockedUntil = now + motionDuration(ASSASSIN_MOTIONS.parryKill);
-      executeAssassinParryKill(u, now);
-    } else if (u.lockedMotion === "parryKill") {
-      // 致命の一撃モーション完了 → 通常状態へ復帰
-      u.lockedMotion = null;
-      u.parryVictim = null;
-      evaluateUnitState(u, now);
     } else {
       u.lockedMotion = null;
       evaluateUnitState(u, now);
@@ -3893,6 +3883,16 @@ function tickUnit(u, now) {
         } else if (u.kind === "noirkurowl" && finishedKey === "attack2") {
           u.lockedMotion = null;
           evaluateUnitState(u, now); // 通常の間合い判定に戻し、範囲内ならattackへ復帰する
+        } else if (u.kind === "assassin" && finishedKey === "parry") {
+          // パリィの受け流しモーション再生完了 → 致命の一撃モーションへ移行し、この瞬間に対象を仕留める
+          u.lockedMotion = "parryKill";
+          setUnitMotion(u, "parryKill");
+          u.lockedUntil = Number.MAX_SAFE_INTEGER; // このモーションの終了もアニメーション完了ベースで検知する
+          executeAssassinParryKill(u, now);
+        } else if (u.kind === "assassin" && finishedKey === "parryKill") {
+          // 致命の一撃モーション再生完了 → 通常状態へ復帰
+          u.lockedMotion = null;
+          evaluateUnitState(u, now);
         } else {
           evaluateUnitState(u, now);
         }

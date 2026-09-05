@@ -111,6 +111,25 @@
     border-radius: 2px; overflow: hidden;
   }
   .catapult-hp-fill { height: 100%; background: var(--hp-good); width: 100%; }
+  .noirkurowl-unit {
+    position: absolute; bottom: 40px; width: 220px; height: 140px;
+    transform: translateX(-50%); display: none; z-index: 5;
+  }
+  .noirkurowl-unit img {
+    position: absolute; bottom: 0; left: 50%;
+    max-height: 130px; max-width: none;
+    filter: drop-shadow(0 5px 6px rgba(0,0,0,0.65));
+  }
+  .noirkurowl-hp {
+    position: absolute; top: -10px; left: 50%; transform: translateX(-50%);
+    width: 90px; height: 6px; background: #000; border: 1px solid var(--line-ash);
+    border-radius: 2px; overflow: hidden;
+  }
+  .noirkurowl-hp-fill { height: 100%; background: var(--hp-good); width: 100%; }
+  .unit-effect-overlay {
+    position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
+    max-height: 70px; max-width: none; opacity: 0.85; pointer-events: none; z-index: 6;
+  }
   .projectile-unit {
     position: absolute; bottom: 40px; width: 40px; height: 40px;
     transform: translateX(-50%); z-index: 6; pointer-events: none;
@@ -319,6 +338,8 @@
     <button class="act" id="btnSpawnRevenantLeft">亡者を出撃(敵軍/左, 75円)</button>
     <button class="act" id="btnSpawnSpearRight">槍兵を出撃(自軍/右, 70円)</button>
     <button class="act" id="btnSpawnSpearLeft">槍兵を出撃(敵軍/左, 70円)</button>
+    <button class="act" id="btnSpawnNoirkurowlRight">ノワール・クロウルを出撃(自軍/右, 450円)</button>
+    <button class="act" id="btnSpawnNoirkurowlLeft">ノワール・クロウルを出撃(敵軍/左, 450円)</button>
     <button class="act charge" id="btnDashSoldier">兵士 全員「突撃！」発動</button>
     <button class="act charge" id="btnDashKurowl">クロウル 全員「突進」発動</button>
     <button class="act charge" id="btnDashGoblin">ゴブリン 全員「突撃！」発動</button>
@@ -328,6 +349,7 @@
     <button class="act charge" id="btnDashQueen">ゴブリンの女王 全員「突進」発動</button>
     <button class="act charge" id="btnDashRevenant">亡者 全員「突進」発動</button>
     <button class="act charge" id="btnDashSpear">槍兵 全員「突撃！」発動</button>
+    <button class="act charge" id="btnDashNoirkurowl">ノワール・クロウル 全員「突進」発動</button>
     <button class="act reset" id="btnReset">編成に戻る</button>
   </div>
 
@@ -391,6 +413,142 @@ const SPEAR_CONFIG = {
   attackLabel: "刺突",
   voiceCategory: "human", // 兵士と同じ人間キャラ共通の声セットを流用
   retreatStepPx: 28       // 1回の攻撃後に後退する距離(歩幅1回分の目安)
+};
+
+// =====================================================================
+// ノワール・クロウル(ボスキャラ)の定義
+// クロウルのリーダー格、大型・凶暴・高知能の特殊個体。全長5m以上の重量級。
+// HP50%以下で一度だけ第二形態へ変身(完全無敵)し、直後にマップ全域へ咆哮を放つ。
+// 咆哮: 味方クロウル全員に10秒間ダメージカット70%のバフ + 専用エフェクトを付与。
+//       敵は距離帯で効果が変わる(近距離:クロウルに一時変身させ寝返らせる/
+//       中距離:ダメージ+短時間ダウン/遠距離:短時間ダウンのみ)。
+// 第二形態中は通常近接コンボ(attack)の後に専用の追加コンボ(attack2)が接続される。
+// =====================================================================
+const NOIRKUROWL_FRAMES = {
+  "walk_1": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/noirkurowl_repo_upload/walk_1.png",
+  "walk_2": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/noirkurowl_repo_upload/walk_2.png",
+  "walk_3": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/noirkurowl_repo_upload/walk_3.png",
+  "walk_4": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/noirkurowl_repo_upload/walk_4.png",
+  "walk_5": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/noirkurowl_repo_upload/walk_5.png",
+  "dash_1": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/noirkurowl_repo_upload/dash_1.png",
+  "dash_2": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/noirkurowl_repo_upload/dash_2.png",
+  "dash_3": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/noirkurowl_repo_upload/dash_3.png",
+  "dash_4": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/noirkurowl_repo_upload/dash_4.png",
+  "attack1_1": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/noirkurowl_repo_upload/attack1_1.png",
+  "attack1_2": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/noirkurowl_repo_upload/attack1_2.png",
+  "attack1_3": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/noirkurowl_repo_upload/attack1_3.png",
+  "attack1_4": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/noirkurowl_repo_upload/attack1_4.png",
+  "attack1_5": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/noirkurowl_repo_upload/attack1_5.png",
+  "attack1_6": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/noirkurowl_repo_upload/attack1_6.png",
+  "attack1_7": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/noirkurowl_repo_upload/attack1_7.png",
+  "attack1_8": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/noirkurowl_repo_upload/attack1_8.png",
+  "attack1_9": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/noirkurowl_repo_upload/attack1_9.png",
+  "attack1_10": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/noirkurowl_repo_upload/attack1_10.png",
+  "attack1_11": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/noirkurowl_repo_upload/attack1_11.png",
+  "attack2_1": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/noirkurowl_repo_upload/attack2_1.png",
+  "attack2_2": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/noirkurowl_repo_upload/attack2_2.png",
+  "attack2_3": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/noirkurowl_repo_upload/attack2_3.png",
+  "attack2_4": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/noirkurowl_repo_upload/attack2_4.png",
+  "attack2_5": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/noirkurowl_repo_upload/attack2_5.png",
+  "flinch_1": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/noirkurowl_repo_upload/flinch_1.png",
+  "flinch_2": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/noirkurowl_repo_upload/flinch_2.png",
+  "down_1": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/noirkurowl_repo_upload/down_1.png",
+  "down_2": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/noirkurowl_repo_upload/down_2.png",
+  "down_3": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/noirkurowl_repo_upload/down_3.png",
+  "down_4": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/noirkurowl_repo_upload/down_4.png",
+  "down_5": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/noirkurowl_repo_upload/down_5.png",
+  "transform_1": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/noirkurowl_repo_upload/transform_1.png",
+  "transform_2": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/noirkurowl_repo_upload/transform_2.png",
+  "transform_3": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/noirkurowl_repo_upload/transform_3.png",
+  "transform_4": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/noirkurowl_repo_upload/transform_4.png",
+  "transform_5": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/noirkurowl_repo_upload/transform_5.png",
+  "transform_6": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/noirkurowl_repo_upload/transform_6.png",
+  "transform_7": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/noirkurowl_repo_upload/transform_7.png",
+  "transform_8": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/noirkurowl_repo_upload/transform_8.png",
+  "transform_9": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/noirkurowl_repo_upload/transform_9.png",
+  "transform_10": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/noirkurowl_repo_upload/transform_10.png",
+  "transform_11": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/noirkurowl_repo_upload/transform_11.png",
+  "transform_12": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/noirkurowl_repo_upload/transform_12.png",
+  "transform_13": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/noirkurowl_repo_upload/transform_13.png",
+  "transform_14": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/noirkurowl_repo_upload/transform_14.png",
+  "transform_15": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/noirkurowl_repo_upload/transform_15.png",
+  "transform_16": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/noirkurowl_repo_upload/transform_16.png",
+  "transform_17": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/noirkurowl_repo_upload/transform_17.png",
+  "transform_18": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/noirkurowl_repo_upload/transform_18.png",
+  "transform_19": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/noirkurowl_repo_upload/transform_19.png",
+  "transform_20": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/noirkurowl_repo_upload/transform_20.png",
+  "transform_21": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/noirkurowl_repo_upload/transform_21.png",
+  "transform_22": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/noirkurowl_repo_upload/transform_22.png",
+  "transform_23": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/noirkurowl_repo_upload/transform_23.png",
+  "transform_24": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/noirkurowl_repo_upload/transform_24.png",
+  "transform_25": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/noirkurowl_repo_upload/transform_25.png",
+  "transform_26": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/noirkurowl_repo_upload/transform_26.png",
+  "transform_27": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/noirkurowl_repo_upload/transform_27.png",
+  "transform_28": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/noirkurowl_repo_upload/transform_28.png",
+  "transform_29": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/noirkurowl_repo_upload/transform_29.png",
+  "transform_30": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/noirkurowl_repo_upload/transform_30.png",
+  "transform_31": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/noirkurowl_repo_upload/transform_31.png",
+  "effect_1": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/noirkurowl_repo_upload/effect_1.png",
+  "effect_2": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/noirkurowl_repo_upload/effect_2.png",
+  "effect_3": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/noirkurowl_repo_upload/effect_3.png",
+  "effect_4": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/noirkurowl_repo_upload/effect_4.png",
+  "effect_5": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/noirkurowl_repo_upload/effect_5.png",
+  "effect_6": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/noirkurowl_repo_upload/effect_6.png",
+  "effect_7": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/noirkurowl_repo_upload/effect_7.png",
+  "effect_8": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/noirkurowl_repo_upload/effect_8.png"
+};
+
+const NOIRKUROWL_MOTIONS = {
+  idle:  { frames: ["walk_1"], msPerFrame: 700, loop: true },
+  walk:  { frames: ["walk_1", "walk_2", "walk_3", "walk_4", "walk_5"], msPerFrame: 180, loop: true },
+  dash:  { frames: ["dash_1", "dash_2", "dash_3", "dash_4"], msPerFrame: 100, loop: true },
+  attack: {
+    // 通常の近接コンボ(11コマ)。5コマ目と10コマ目でヒット
+    frames: ["attack1_1","attack1_2","attack1_3","attack1_4","attack1_5","attack1_6","attack1_7","attack1_8","attack1_9","attack1_10","attack1_11"],
+    frameDurations: [130,130,120,120,110,130,130,120,120,110,160],
+    hitFrames: [4, 9],
+    loop: false
+  },
+  attack2: {
+    // 第二形態限定で通常コンボの後に接続される追加コンボ(5コマ)
+    frames: ["attack2_1","attack2_2","attack2_3","attack2_4","attack2_5"],
+    frameDurations: [140,140,150,150,200],
+    hitFrames: [2, 4],
+    loop: false
+  },
+  flinch: { frames: ["flinch_1", "flinch_2"], frameDurations: [100, 300], loop: false },
+  knockback: {
+    frames: ["down_1", "down_2", "down_3", "down_4", "down_5"],
+    frameDurations: [300, 400, 500, 600, 700],
+    loop: false
+  },
+  transform: {
+    // HP50%以下で一度だけ発動する第二形態移行(完全無敵)。終了時に咆哮が発動する
+    frames: Array.from({length: 31}, (_, i) => `transform_${i + 1}`),
+    msPerFrame: 150,
+    loop: false
+  }
+};
+
+const NOIRKUROWL_CONFIG = {
+  bodyLength: 150,        // 全長5m以上の目安
+  walkSpeed: 40,          // 重量級のため兵士より遅め
+  dashSpeedMultiplier: 2.5,
+  dashDurationMs: 3000,
+  meleeRange: 110,        // 大きな体格に見合った長いリーチ
+  meleeHitDamage: 5,      // 通常コンボ1ヒットあたり
+  attack2HitDamage: 8,    // 第二形態専用コンボ1ヒットあたり(通常より高威力)
+  dashHitDamage: 25,
+  weight: 320,            // 全キャラ中最重量
+  maxHp: 100,             // ボスクラスの耐久力
+  attackLabel: "引っ掻き",
+  voiceCategory: "creature", // 専用音声が無いため、暫定でクロウルと同じ声セットを流用
+  roarNearRadius: 150,     // 咆哮:これ以下の距離の敵はクロウルに変身させる
+  roarMidRadius: 400,      // 咆哮:これ以下の距離の敵はダメージ+短時間ダウン(これを超えるとダウンのみ)
+  roarDamage: 25,          // 咆哮の中距離帯ダメージ
+  roarDownHoldMs: 2000,    // 咆哮で発生するダウンの保持時間(通常の5秒より短い2秒)
+  roarBuffDurationMs: 10000, // 咆哮で味方クロウルに付与するバフ/敵の変身の持続時間
+  roarDamageCutMultiplier: 0.3 // 咆哮バフ中のクロウルの被ダメージ倍率(70%カット)
 };
 
 const SOLDIER_FRAMES = {
@@ -1314,6 +1472,8 @@ const REVENANT_FRAMES = {
 const ICON_REVENANT = "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/icons/revenant_icon.png";
 // 専用アイコン未作成のため、暫定的に歩行1枚目を編成アイコンとして流用(専用アイコンができ次第 icons/spear_icon.png 等に差し替え)
 const ICON_SPEAR = "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/spear_repo_upload/walk_1.png";
+// 専用アイコン未作成のため、暫定的にダウン(伏せ)絵を編成アイコンとして流用
+const ICON_NOIRKUROWL = "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/noirkurowl_repo_upload/walk_1.png";
 
 const REVENANT_MOTIONS = {
   idle: { frames: ["base_1"], loop: true, msPerFrame: 700 },
@@ -1405,6 +1565,8 @@ const els = {
   btnSpawnRevenantRight: document.getElementById("btnSpawnRevenantRight"),
   btnSpawnSpearLeft: document.getElementById("btnSpawnSpearLeft"),
   btnSpawnSpearRight: document.getElementById("btnSpawnSpearRight"),
+  btnSpawnNoirkurowlLeft: document.getElementById("btnSpawnNoirkurowlLeft"),
+  btnSpawnNoirkurowlRight: document.getElementById("btnSpawnNoirkurowlRight"),
   btnDashSoldier: document.getElementById("btnDashSoldier"),
   btnDashKurowl: document.getElementById("btnDashKurowl"),
   btnDashGoblin: document.getElementById("btnDashGoblin"),
@@ -1414,6 +1576,7 @@ const els = {
   btnDashQueen: document.getElementById("btnDashQueen"),
   btnDashRevenant: document.getElementById("btnDashRevenant"),
   btnDashSpear: document.getElementById("btnDashSpear"),
+  btnDashNoirkurowl: document.getElementById("btnDashNoirkurowl"),
   btnReset: document.getElementById("btnReset"),
   enemyCastleHpFill: document.getElementById("enemyCastleHpFill"),
   enemyCastleHpText: document.getElementById("enemyCastleHpText"),
@@ -1438,6 +1601,7 @@ let chiefs = [];
 let queens = [];
 let revenants = [];
 let spears = [];
+let noirkurowls = [];
 let projectiles = [];    // カタパルトの岩(飛翔中)
 let impactEffects = [];  // 着弾エフェクト(スパーク・砂煙)
 let queenBolts = [];        // 女王の魔砲弾(飛翔中)
@@ -1450,7 +1614,7 @@ let effectIdSeq = 0;
 let enemyCastle = null;
 let allyCastle = null;
 let money = 0;
-let loadout = { soldier: true, kurowl: true, goblin: true, archer: true, catapult: true, brute: true, chief: true, queen: true, revenant: true, spear: true }; // 出撃可能なユニット種別(スロットから導出)
+let loadout = { soldier: true, kurowl: true, goblin: true, archer: true, catapult: true, brute: true, chief: true, queen: true, revenant: true, spear: true, noirkurowl: true }; // 出撃可能なユニット種別(スロットから導出)
 
 const SOLDIER_QUEUE_GAP = 0; // 味方同士は重なって密集できる(間合いに入れるユニット数を制限しないため)
 const CASTLE_CONFIG = { maxHp: 150 }; // 魔の平原の城HP仕様
@@ -1465,7 +1629,8 @@ const ECONOMY_CONFIG = {
   chiefCost: 155,
   queenCost: 320,
   revenantCost: 75,
-  spearCost: 70
+  spearCost: 70,
+  noirkurowlCost: 450
 };
 
 const MAX_SLOTS = 9;
@@ -1479,17 +1644,18 @@ const ROSTER = [
   { kind: "catapult", name: "ゴブリンカタパルト", cost: ECONOMY_CONFIG.catapultCost, statsLine: "カタパルトHP25 / 岩15(範囲) / 体重300 / 射程250〜400・破壊後は搭乗ゴブリンが継戦", icon: ICON_CATAPULT },
   { kind: "queen", name: "ゴブリンの女王", cost: ECONOMY_CONFIG.queenCost, statsLine: "HP38 / 杖14・魔砲弾18(範囲) / 体重115 / 常時スーパーアーマー・デバフ咆哮・召喚持ち", icon: ICON_QUEEN },
   { kind: "revenant", name: "亡者", cost: ECONOMY_CONFIG.revenantCost, statsLine: "HP20 / 剣4-5-6・矢6 / 体重65 / 移動最遅・近接遠距離を自動で持ち替え", icon: ICON_REVENANT },
-  { kind: "spear", name: "槍兵", cost: ECONOMY_CONFIG.spearCost, statsLine: "HP12 / 刺突6 / 体重62 / 兵士より長いリーチ", icon: ICON_SPEAR }
+  { kind: "spear", name: "槍兵", cost: ECONOMY_CONFIG.spearCost, statsLine: "HP12 / 刺突6 / 体重62 / 兵士より長いリーチ", icon: ICON_SPEAR },
+  { kind: "noirkurowl", name: "ノワール・クロウル", cost: ECONOMY_CONFIG.noirkurowlCost, statsLine: "HP100 / 引っ掻き5×2 / 体重320 / 全長5m超のボス級・HP50%以下で一度だけ第二形態へ変身し全域咆哮", icon: ICON_NOIRKUROWL }
 ];
 let formationSlots = new Array(MAX_SLOTS).fill(null); // 各要素: null | "soldier" | "kurowl" | "goblin" | "archer" | "catapult"
 let selectedRosterKind = null;
 let lastMoneyTick = 0;
 let battleActive = false;
 
-const MOTIONS_BY_KIND = { soldier: SOLDIER_MOTIONS, kurowl: KUROWL_MOTIONS, goblin: GOBLIN_MOTIONS, archer: ARCHER_MOTIONS, catapult: CATAPULT_MOTIONS, brute: BRUTE_MOTIONS, chief: CHIEF_MOTIONS, queen: QUEEN_MOTIONS, revenant: REVENANT_MOTIONS, spear: SPEAR_MOTIONS };
-const CONFIG_BY_KIND = { soldier: SOLDIER_CONFIG, kurowl: KUROWL_CONFIG, goblin: GOBLIN_CONFIG, archer: ARCHER_CONFIG, catapult: CATAPULT_CONFIG, brute: BRUTE_CONFIG, chief: CHIEF_CONFIG, queen: QUEEN_CONFIG, revenant: REVENANT_CONFIG, spear: SPEAR_CONFIG };
-const FRAMES_BY_KIND = { soldier: SOLDIER_FRAMES, kurowl: KUROWL_FRAMES, goblin: GOBLIN_FRAMES, archer: ARCHER_FRAMES, catapult: CATAPULT_FRAMES, brute: BRUTE_FRAMES, chief: CHIEF_FRAMES, queen: QUEEN_FRAMES, revenant: REVENANT_FRAMES, spear: SPEAR_FRAMES };
-const UNIT_LABEL_BY_KIND = { soldier: "兵士", kurowl: "クロウル", goblin: "ゴブリン", archer: "ゴブリン弓兵", catapult: "ゴブリンカタパルト", brute: "獰猛なゴブリン", chief: "ゴブリン長", queen: "ゴブリンの女王", revenant: "亡者", spear: "槍兵" };
+const MOTIONS_BY_KIND = { soldier: SOLDIER_MOTIONS, kurowl: KUROWL_MOTIONS, goblin: GOBLIN_MOTIONS, archer: ARCHER_MOTIONS, catapult: CATAPULT_MOTIONS, brute: BRUTE_MOTIONS, chief: CHIEF_MOTIONS, queen: QUEEN_MOTIONS, revenant: REVENANT_MOTIONS, spear: SPEAR_MOTIONS, noirkurowl: NOIRKUROWL_MOTIONS };
+const CONFIG_BY_KIND = { soldier: SOLDIER_CONFIG, kurowl: KUROWL_CONFIG, goblin: GOBLIN_CONFIG, archer: ARCHER_CONFIG, catapult: CATAPULT_CONFIG, brute: BRUTE_CONFIG, chief: CHIEF_CONFIG, queen: QUEEN_CONFIG, revenant: REVENANT_CONFIG, spear: SPEAR_CONFIG, noirkurowl: NOIRKUROWL_CONFIG };
+const FRAMES_BY_KIND = { soldier: SOLDIER_FRAMES, kurowl: KUROWL_FRAMES, goblin: GOBLIN_FRAMES, archer: ARCHER_FRAMES, catapult: CATAPULT_FRAMES, brute: BRUTE_FRAMES, chief: CHIEF_FRAMES, queen: QUEEN_FRAMES, revenant: REVENANT_FRAMES, spear: SPEAR_FRAMES, noirkurowl: NOIRKUROWL_FRAMES };
+const UNIT_LABEL_BY_KIND = { soldier: "兵士", kurowl: "クロウル", goblin: "ゴブリン", archer: "ゴブリン弓兵", catapult: "ゴブリンカタパルト", brute: "獰猛なゴブリン", chief: "ゴブリン長", queen: "ゴブリンの女王", revenant: "亡者", spear: "槍兵", noirkurowl: "ノワール・クロウル" };
 
 // =====================================================================
 // 突撃システム(新):ダウン/起き上がりモーションの補完
@@ -1655,6 +1821,9 @@ function motionLabel(kind, key) {
   if (kind === "revenant") {
     return { idle: "待機", walk: "歩行(クロスボウ)", swordWalk: "歩行(剣)", attack: "斬撃", xbowAttack: "射撃", flinch: "怯み", dash: "突進", down: "ダウン", switchToSword: "剣に持ち替え", switchToCrossbow: "クロスボウに持ち替え" }[key] || key;
   }
+  if (kind === "noirkurowl") {
+    return { idle: "待機", walk: "歩行", attack: "引っ掻き", attack2: "追撃コンボ(第二形態)", flinch: "怯み", dash: "突進", knockback: "吹き飛ばし", transform: "第二形態への変身(無敵)" }[key] || key;
+  }
   return { idle: "待機", walk: "歩行", flinch: "怯み", knockback: "吹き飛ばし", melee: "近接攻撃", midrange: "中距離攻撃", charge: "突進" }[key] || key;
 }
 
@@ -1664,6 +1833,7 @@ function isEngagedMotion(kind, key) {
   if (kind === "chief") return key === "attack" || key === "midrange";
   if (kind === "queen") return key === "attack" || key === "midrange";
   if (kind === "revenant") return key === "attack" || key === "xbowAttack" || key === "switchToSword" || key === "switchToCrossbow";
+  if (kind === "noirkurowl") return key === "attack" || key === "attack2" || key === "transform";
   return key === "attack"; // soldier / goblin など近接攻撃タイプ共通
 }
 
@@ -1671,9 +1841,9 @@ function isEngagedMotion(kind, key) {
 // ユニット(兵士・クロウル共通)のDOM生成
 // =====================================================================
 function createUnitDom(kind) {
-  const unitClass = kind === "kurowl" ? "kurowl-unit" : kind === "catapult" ? "catapult-unit" : kind === "queen" ? "soldier-unit queen-unit" : "soldier-unit";
-  const hpWrapClass = kind === "kurowl" ? "kurowl-hp" : kind === "catapult" ? "catapult-hp" : "soldier-hp";
-  const hpFillClass = kind === "kurowl" ? "kurowl-hp-fill" : kind === "catapult" ? "catapult-hp-fill" : "soldier-hp-fill";
+  const unitClass = kind === "kurowl" ? "kurowl-unit" : kind === "catapult" ? "catapult-unit" : kind === "noirkurowl" ? "noirkurowl-unit" : kind === "queen" ? "soldier-unit queen-unit" : "soldier-unit";
+  const hpWrapClass = kind === "kurowl" ? "kurowl-hp" : kind === "catapult" ? "catapult-hp" : kind === "noirkurowl" ? "noirkurowl-hp" : "soldier-hp";
+  const hpFillClass = kind === "kurowl" ? "kurowl-hp-fill" : kind === "catapult" ? "catapult-hp-fill" : kind === "noirkurowl" ? "noirkurowl-hp-fill" : "soldier-hp-fill";
 
   const unit = document.createElement("div");
   unit.className = unitClass;
@@ -1698,6 +1868,19 @@ function createUnitDom(kind) {
   els.field.appendChild(unit);
 
   return { unit, stateLabel, hpFill, img };
+}
+
+// ユニットのkindが変化した場合(咆哮によるクロウル変身/復帰)に、DOMの見た目(サイズ・HPバー)を
+// 対応するkindのものに更新する
+function applyUnitDomKindClasses(u) {
+  const kind = u.kind;
+  const unitClass = kind === "kurowl" ? "kurowl-unit" : kind === "catapult" ? "catapult-unit" : kind === "noirkurowl" ? "noirkurowl-unit" : kind === "queen" ? "soldier-unit queen-unit" : "soldier-unit";
+  const hpWrapClass = kind === "kurowl" ? "kurowl-hp" : kind === "catapult" ? "catapult-hp" : kind === "noirkurowl" ? "noirkurowl-hp" : "soldier-hp";
+  const hpFillClass = kind === "kurowl" ? "kurowl-hp-fill" : kind === "catapult" ? "catapult-hp-fill" : kind === "noirkurowl" ? "noirkurowl-hp-fill" : "soldier-hp-fill";
+  u.el.unit.className = unitClass;
+  u.el.unit.style.display = "block";
+  u.el.hpFill.parentElement.className = hpWrapClass;
+  u.el.hpFill.className = hpFillClass;
 }
 
 // =====================================================================
@@ -1752,7 +1935,7 @@ function createUnit(kind, side, startXOverride) {
     debuffMultiplier: 1,
     el
   };
-  const targetArr = kind === "kurowl" ? kurowls : kind === "goblin" ? goblins : kind === "archer" ? archers : kind === "catapult" ? catapults : kind === "brute" ? brutes : kind === "chief" ? chiefs : kind === "queen" ? queens : kind === "revenant" ? revenants : kind === "spear" ? spears : soldiers;
+  const targetArr = kind === "kurowl" ? kurowls : kind === "goblin" ? goblins : kind === "archer" ? archers : kind === "catapult" ? catapults : kind === "brute" ? brutes : kind === "chief" ? chiefs : kind === "queen" ? queens : kind === "revenant" ? revenants : kind === "spear" ? spears : kind === "noirkurowl" ? noirkurowls : soldiers;
   targetArr.push(u);
   el.unit.style.display = "block";
   setUnitMotion(u, "walk");
@@ -1781,7 +1964,7 @@ function updateCastleUI(castle, fillEl, textEl) {
 // 共通ヘルパー
 // =====================================================================
 function allUnits() {
-  return soldiers.concat(kurowls, goblins, archers, catapults, brutes, chiefs, queens, revenants, spears);
+  return soldiers.concat(kurowls, goblins, archers, catapults, brutes, chiefs, queens, revenants, spears, noirkurowls);
 }
 
 function dist(a, b) {
@@ -2031,6 +2214,11 @@ function damageUnit(u, dmg, sourceLabel, attacker) {
   if (u.dead) return;
   const label = `${UNIT_LABEL_BY_KIND[u.kind]}#${u.id}`;
 
+  // ノワール・クロウルの咆哮バフ中: 被ダメージをカットする(全キャラ共通の仕組み)
+  if (u.damageCutUntil && performance.now() < u.damageCutUntil) {
+    dmg = Math.round(dmg * (u.damageCutMultiplier != null ? u.damageCutMultiplier : 1));
+  }
+
   // ゴブリンの特殊能力: 出撃後、最初に受ける攻撃を必ず1回だけ完全回避する
   if (u.kind === "goblin" && !u.hasEvaded && u.motionKey !== "dash" && !u.isDown) {
     u.hasEvaded = true;
@@ -2042,6 +2230,45 @@ function damageUnit(u, dmg, sourceLabel, attacker) {
     // 自分の向きと逆(後方)へ跳躍して距離を取る
     const pushDir = u.facing === 1 ? -1 : 1;
     u.xPx = Math.min(FIELD.length, Math.max(0, u.xPx + pushDir * GOBLIN_CONFIG.evadeJumpDistance));
+    return;
+  }
+
+  if (u.kind === "noirkurowl") {
+    if (u.motionKey === "transform") {
+      logMsg(`${sourceLabel} → ${label}は変身中のため完全無敵、ダメージを無効化した。`);
+      return;
+    }
+    if (u.motionKey === "dash") {
+      logMsg(`${sourceLabel} → ${label}は突進中のため無敵、ダメージを無効化した。`);
+      return;
+    }
+    const motions = MOTIONS_BY_KIND[u.kind];
+    u.hp = Math.max(0, u.hp - dmg);
+    logMsg(`${sourceLabel} → ${label}に<b>${dmg}</b>ダメージ(残り${u.hp.toFixed(0)})`);
+    if (u.hp <= 0) {
+      u.dead = true;
+      u.isDown = false;
+      u.deadAt = performance.now();
+      u.lockedMotion = null;
+      setUnitMotion(u, "knockback");
+      u.removeAt = u.deadAt + motionDuration(motions.knockback);
+      playUnitVoice(u, "death");
+      logMsg(`${label}が倒れた。`);
+    } else if (!u.hasTransformed && u.hp <= u.maxHp / 2) {
+      u.hasTransformed = true;
+      u.isDown = false;
+      u.lockedMotion = "transform";
+      u.lockedUntil = performance.now() + motionDuration(motions.transform);
+      setUnitMotion(u, "transform");
+      logMsg(`${label}のHPが半分以下になり、第二形態への変身を開始した!(変身中は完全無敵)`);
+    } else if (u.isDown) {
+      logMsg(`${label}はダウン中のため怯まず、そのまま倒れ続けている。`);
+    } else {
+      u.lockedMotion = "flinch";
+      u.lockedUntil = performance.now() + motionDuration(motions.flinch);
+      setUnitMotion(u, "flinch");
+      playUnitVoice(u, "pain");
+    }
     return;
   }
 
@@ -2410,6 +2637,146 @@ function applyDamageTo(target, dmg, sourceLabel, attacker) {
 }
 
 // =====================================================================
+// ノワール・クロウル: 第二形態移行完了時に一度だけ発動する全域咆哮
+// =====================================================================
+
+// unit.kind に対応する管理配列を返す/そこから取り除く/そこへ加える(咆哮によるクロウル変身・復帰で使用)
+function arrayForKind(kind) {
+  switch (kind) {
+    case "soldier": return soldiers;
+    case "kurowl": return kurowls;
+    case "goblin": return goblins;
+    case "archer": return archers;
+    case "catapult": return catapults;
+    case "brute": return brutes;
+    case "chief": return chiefs;
+    case "queen": return queens;
+    case "revenant": return revenants;
+    case "spear": return spears;
+    case "noirkurowl": return noirkurowls;
+    default: return soldiers;
+  }
+}
+function removeUnitFromItsArray(u) {
+  const arr = arrayForKind(u.kind);
+  const idx = arr.indexOf(u);
+  if (idx !== -1) arr.splice(idx, 1);
+}
+function pushUnitToKindArray(u) {
+  arrayForKind(u.kind).push(u);
+}
+
+// 汎用の一時エフェクトオーバーレイ(咆哮バフの専用エフェクトをユニットに重ねて表示する)
+function attachEffectOverlay(u, frameKeys, durationMs, msPerFrame) {
+  if (u.effectOverlay) {
+    u.effectOverlay.el.remove();
+    u.effectOverlay = null;
+  }
+  const img = document.createElement("img");
+  img.className = "unit-effect-overlay";
+  img.src = NOIRKUROWL_FRAMES[frameKeys[0]];
+  u.el.unit.appendChild(img);
+  u.effectOverlay = {
+    el: img,
+    frameKeys,
+    frameIndex: 0,
+    lastFrameTime: performance.now(),
+    msPerFrame: msPerFrame || 120,
+    until: performance.now() + durationMs
+  };
+}
+function tickEffectOverlay(u, now) {
+  const eo = u.effectOverlay;
+  if (!eo) return;
+  if (now >= eo.until || u.dead || u.removed) {
+    eo.el.remove();
+    u.effectOverlay = null;
+    return;
+  }
+  if (now - eo.lastFrameTime >= eo.msPerFrame) {
+    eo.lastFrameTime = now;
+    eo.frameIndex = (eo.frameIndex + 1) % eo.frameKeys.length;
+    eo.el.src = NOIRKUROWL_FRAMES[eo.frameKeys[eo.frameIndex]];
+  }
+}
+const NOIRKUROWL_EFFECT_FRAMES = ["effect_1","effect_2","effect_3","effect_4","effect_5","effect_6","effect_7","effect_8"];
+
+// 咆哮で見方クロウルに与えるバフ: 10秒間ダメージカット70% + 専用エフェクト + アイコンタップ時の咆哮ボイス
+function applyKurowlRoarBuff(k, now) {
+  k.damageCutUntil = now + NOIRKUROWL_CONFIG.roarBuffDurationMs;
+  k.damageCutMultiplier = NOIRKUROWL_CONFIG.roarDamageCutMultiplier;
+  attachEffectOverlay(k, NOIRKUROWL_EFFECT_FRAMES, NOIRKUROWL_CONFIG.roarBuffDurationMs, 120);
+  playUnitVoice(k, "warCry");
+}
+
+// 咆哮の至近距離帯: 敵をクロウルに変身させ、10秒間だけ味方にする(バフ状態で)。その後は元の姿に戻す
+function convertToAllyKurowl(e, casterTeam, now) {
+  if (!e || e.dead || e.isCastle || e.removed) return;
+  const revertKind = e.kind;
+  const revertTeam = e.team;
+  removeUnitFromItsArray(e);
+  e.kind = "kurowl";
+  e.team = casterTeam;
+  e.defaultFacing = casterTeam === "left" ? 1 : (e.side === "left" ? 1 : -1);
+  e.maxHp = KUROWL_CONFIG.maxHp;
+  e.hp = KUROWL_CONFIG.maxHp;
+  e.isDown = false;
+  e.dashUntil = 0;
+  e.lockedMotion = null;
+  e.hitAppliedFrames = new Set();
+  applyUnitDomKindClasses(e);
+  setUnitMotion(e, "idle");
+  pushUnitToKindArray(e);
+  applyKurowlRoarBuff(e, now);
+  logMsg(`ノワール・クロウルの咆哮で${UNIT_LABEL_BY_KIND[revertKind]}#${e.id}がクロウルに変えられ、10秒間だけ味方になった!`);
+  setTimeout(() => revertConvertedUnit(e, revertKind, revertTeam), NOIRKUROWL_CONFIG.roarBuffDurationMs);
+}
+function revertConvertedUnit(e, revertKind, revertTeam) {
+  if (!e || e.removed || e.dead) return; // 既に死亡/撤去済みならそのまま(死亡処理に任せる)
+  removeUnitFromItsArray(e);
+  e.kind = revertKind;
+  e.team = revertTeam;
+  e.maxHp = CONFIG_BY_KIND[revertKind].maxHp;
+  e.hp = e.maxHp; // 元の姿に戻る際は全回復する
+  e.isDown = false;
+  e.dashUntil = 0;
+  e.lockedMotion = null;
+  e.hitAppliedFrames = new Set();
+  if (e.effectOverlay) { e.effectOverlay.el.remove(); e.effectOverlay = null; }
+  e.damageCutUntil = 0;
+  applyUnitDomKindClasses(e);
+  setUnitMotion(e, "idle");
+  pushUnitToKindArray(e);
+  logMsg(`クロウルへの変身が解けて${UNIT_LABEL_BY_KIND[revertKind]}#${e.id}の姿に戻った。`);
+}
+
+// 咆哮本体: 味方クロウル全員にバフ、敵は距離帯に応じて変身/ダメージ+ダウン/ダウンのみ
+function triggerNoirKurowlRoar(u, now) {
+  const casterTeam = u.team;
+  playUnitVoice(u, "warCry");
+  logMsg(`${UNIT_LABEL_BY_KIND[u.kind]}#${u.id}がマップ全域に響く咆哮を放った!`);
+
+  for (const k of kurowls.slice()) {
+    if (k.team !== casterTeam || k.dead) continue;
+    applyKurowlRoarBuff(k, now);
+  }
+
+  const enemies = allUnits().filter(t => t.team !== casterTeam && !t.dead && !t.isCastle && !t.removed);
+  for (const e of enemies) {
+    const d = Math.abs(e.xPx - u.xPx);
+    const label = `${UNIT_LABEL_BY_KIND[u.kind]}#${u.id}の咆哮`;
+    if (d <= NOIRKUROWL_CONFIG.roarNearRadius) {
+      convertToAllyKurowl(e, casterTeam, now);
+    } else if (d <= NOIRKUROWL_CONFIG.roarMidRadius) {
+      applyDamageTo(e, NOIRKUROWL_CONFIG.roarDamage, label, u);
+      if (!e.dead) knockDown(e, label, NOIRKUROWL_CONFIG.roarDownHoldMs);
+    } else {
+      knockDown(e, label, NOIRKUROWL_CONFIG.roarDownHoldMs);
+    }
+  }
+}
+
+// =====================================================================
 // 突撃/突進の激突判定(新システム)
 // 最初に触れた1体は無条件でダウンさせる(ダメージなし)。突撃モーション中に
 // ダウンしていない敵とさらに接触した場合のみ衝突判定:
@@ -2434,15 +2801,16 @@ function findNextChargeTarget(u) {
   return candidates[0];
 }
 
-function knockDown(u, sourceLabel) {
+function knockDown(u, sourceLabel, holdMs) {
   if (!u || u.isCastle || u.dead) return;
+  const hold = (holdMs != null) ? holdMs : DOWN_HOLD_MS;
   u.isDown = true;
   u.dashUntil = 0; // 自分がダウンする場合は突撃状態も終了させる
   setUnitMotion(u, "down");
   u.lockedMotion = "down";
-  u.lockedUntil = performance.now() + motionDuration(MOTIONS_BY_KIND[u.kind].down) + DOWN_HOLD_MS;
+  u.lockedUntil = performance.now() + motionDuration(MOTIONS_BY_KIND[u.kind].down) + hold;
   playUnitVoice(u, "pain");
-  logMsg(`${sourceLabel} → ${UNIT_LABEL_BY_KIND[u.kind]}#${u.id}がダウンした!(${(DOWN_HOLD_MS / 1000).toFixed(0)}秒間無防備)`);
+  logMsg(`${sourceLabel} → ${UNIT_LABEL_BY_KIND[u.kind]}#${u.id}がダウンした!(${(hold / 1000).toFixed(0)}秒間無防備)`);
 }
 
 function triggerFlinch(u, sourceLabel) {
@@ -2870,8 +3238,8 @@ function tickDeadUnitAnimation(u, now) {
   const frames = FRAMES_BY_KIND[u.kind];
   if (key && frames[key]) u.el.img.src = frames[key];
   applyProneSizing(u);
-  u.el.img.style.transform = u.kind === "revenant"
-    ? `translateX(-50%) scaleX(${u.facing === -1 ? 1 : -1})`  // 亡者の素材は左向きが基準のため反転条件が逆
+  u.el.img.style.transform = (u.kind === "revenant" || u.kind === "noirkurowl")
+    ? `translateX(-50%) scaleX(${u.facing === -1 ? 1 : -1})`  // 亡者・ノワール・クロウルの素材は左向きが基準のため反転条件が逆
     : `translateX(-50%) scaleX(${u.facing === -1 ? -1 : 1})`;
   u.el.hpFill.style.width = "0%";
 }
@@ -2945,7 +3313,7 @@ function tickUnit(u, now) {
   // 兵士/ゴブリンなど近接タイプは攻撃中でも継続的に再評価してよい(自身は移動しないため)が、
   // クロウルの中距離/近接攻撃は自ら移動・演出するモーションなので、
   // walk中のみ再評価し、攻撃モーションは最後まで中断せず再生し切る
-  if ((u.kind !== "kurowl" || u.motionKey === "walk") && !(u.kind === "brute" && u.motionKey === "midrange") && !(u.kind === "chief" && (u.motionKey === "midrange" || u.motionKey === "attack")) && !(u.kind === "revenant" && (u.motionKey === "attack" || u.motionKey === "xbowAttack" || u.motionKey === "switchToSword" || u.motionKey === "switchToCrossbow"))) {
+  if ((u.kind !== "kurowl" || u.motionKey === "walk") && !(u.kind === "brute" && u.motionKey === "midrange") && !(u.kind === "chief" && (u.motionKey === "midrange" || u.motionKey === "attack")) && !(u.kind === "revenant" && (u.motionKey === "attack" || u.motionKey === "xbowAttack" || u.motionKey === "switchToSword" || u.motionKey === "switchToCrossbow")) && !(u.kind === "noirkurowl" && (u.motionKey === "attack2" || u.motionKey === "transform"))) {
     evaluateUnitState(u, now);
   }
 
@@ -3039,6 +3407,9 @@ function tickUnit(u, now) {
       } else if (u.kind === "revenant" && u.motionKey === "xbowAttack") {
         dmg = REVENANT_CONFIG.midrangeDamage;
         label = `亡者#${u.id}の矢`;
+      } else if (u.kind === "noirkurowl" && u.motionKey === "attack2") {
+        dmg = NOIRKUROWL_CONFIG.attack2HitDamage;
+        label = `ノワール・クロウル#${u.id}の追撃コンボ(第二形態)`;
       } else {
         dmg = cfg.meleeHitDamage;
         label = `${UNIT_LABEL_BY_KIND[u.kind]}#${u.id}の${cfg.attackLabel}`;
@@ -3094,7 +3465,7 @@ function tickUnit(u, now) {
         u.frameIndex = 0;
       } else {
         const finishedKey = u.motionKey;
-        if (u.kind !== "kurowl" && u.kind !== "chief" && u.kind !== "revenant" && finishedKey === "attack") {
+        if (u.kind !== "kurowl" && u.kind !== "chief" && u.kind !== "revenant" && u.kind !== "noirkurowl" && finishedKey === "attack") {
           if (u.kind === "spear") {
             // 一撃入れた後は歩幅1回分だけ後退し、密着し続けず間合いを取り直す
             const backFacing = -u.facing;
@@ -3152,6 +3523,19 @@ function tickUnit(u, now) {
             u.lastFrameTime = now;
             u.hitAppliedFrames = new Set();
           }
+        } else if (u.kind === "noirkurowl" && finishedKey === "attack") {
+          u.frameIndex = 0;
+          u.lastFrameTime = now;
+          u.hitAppliedFrames = new Set();
+          if (u.secondForm) setUnitMotion(u, "attack2"); // 第二形態なら追撃コンボへ接続
+        } else if (u.kind === "noirkurowl" && finishedKey === "attack2") {
+          u.lockedMotion = null;
+          evaluateUnitState(u, now); // 通常の間合い判定に戻し、範囲内ならattackへ復帰する
+        } else if (u.kind === "noirkurowl" && finishedKey === "transform") {
+          u.lockedMotion = null;
+          u.secondForm = true;
+          evaluateUnitState(u, now);
+          triggerNoirKurowlRoar(u, now); // 変身完了と同時に全域咆哮を発動
         } else {
           evaluateUnitState(u, now);
         }
@@ -3168,8 +3552,8 @@ function tickUnit(u, now) {
   applyProneSizing(u);
   if (u.kind === "kurowl" || u.kind === "brute" || u.kind === "chief") {
     u.el.img.style.transform = `translateX(-50%) scaleX(${u.facing === -1 ? -1 : 1}) translateY(${-(u.jumpHeightPx || 0)}px)`;
-  } else if (u.kind === "revenant") {
-    // 亡者の素材は左向きが基準(他キャラは右向き基準)のため、反転条件が逆になる
+  } else if (u.kind === "revenant" || u.kind === "noirkurowl") {
+    // 亡者・ノワール・クロウルの素材は左向きが基準(他キャラは右向き基準)のため、反転条件が逆になる
     u.el.img.style.transform = `translateX(-50%) scaleX(${u.facing === -1 ? 1 : -1})`;
   } else {
     u.el.img.style.transform = `translateX(-50%) scaleX(${u.facing === -1 ? -1 : 1})`;
@@ -3226,6 +3610,7 @@ function tick(now) {
       els.moneyText.textContent = Math.floor(money);
 
       for (const u of allUnits()) tickUnit(u, now);
+      for (const u of allUnits()) tickEffectOverlay(u, now);
       tickProjectiles(now);
       tickImpactEffects(now);
       tickQueenBolts(now);
@@ -3259,6 +3644,7 @@ function tick(now) {
       queens = queens.filter(q => !q.removed);
       revenants = revenants.filter(r => !r.removed);
       spears = spears.filter(s => !s.removed);
+      noirkurowls = noirkurowls.filter(n => !n.removed);
     }
   } catch (err) {
     logMsg(`⚠ 内部エラーを検出したため今フレームをスキップしました: ${err.message}`);
@@ -3299,10 +3685,11 @@ function spawnUnit(kind, side) {
   }
   if (kind === "revenant") playUnitVoice(u, "warCry");
   if (kind === "spear") playUnitVoice(u, "warCry");
+  if (kind === "noirkurowl") playUnitVoice(u, "warCry");
 }
 
 function dashAll(kind) {
-  const list = kind === "kurowl" ? kurowls : kind === "goblin" ? goblins : kind === "archer" ? archers : kind === "brute" ? brutes : kind === "chief" ? chiefs : kind === "queen" ? queens : kind === "revenant" ? revenants : kind === "spear" ? spears : soldiers;
+  const list = kind === "kurowl" ? kurowls : kind === "goblin" ? goblins : kind === "archer" ? archers : kind === "brute" ? brutes : kind === "chief" ? chiefs : kind === "queen" ? queens : kind === "revenant" ? revenants : kind === "spear" ? spears : kind === "noirkurowl" ? noirkurowls : soldiers;
   const targets = list.filter(u => u.spawned && !u.dead && !u.isDown);
   if (!targets.length) return;
   const cfg = CONFIG_BY_KIND[kind];
@@ -3335,6 +3722,7 @@ function clearAllUnits() {
   queens = [];
   revenants = [];
   spears = [];
+  noirkurowls = [];
   for (const p of projectiles) p.el.remove();
   projectiles = [];
   for (const e of impactEffects) e.el.remove();
@@ -3368,7 +3756,7 @@ function renderRoster() {
     const el = document.createElement("div");
     el.className = "roster-item" + (selectedRosterKind === item.kind ? " selected" : "");
     el.innerHTML = `
-      <img class="roster-icon${item.kind === "revenant" ? " icon-flip" : ""}" src="${item.icon}" alt="${item.name}" onerror="this.onerror=null; window.__iconFallback && window.__iconFallback(this, '${item.icon}');">
+      <img class="roster-icon${(item.kind === "revenant" || item.kind === "noirkurowl") ? " icon-flip" : ""}" src="${item.icon}" alt="${item.name}" onerror="this.onerror=null; window.__iconFallback && window.__iconFallback(this, '${item.icon}');">
       <div class="roster-body">
         <div class="r-name">${item.name}</div>
         <div class="r-cost">コスト ${item.cost}円</div>
@@ -3395,7 +3783,7 @@ function renderSlots() {
     el.className = "slot" + (kind ? " filled" : "");
     if (kind) {
       const item = ROSTER.find(r => r.kind === kind);
-      el.innerHTML = `<img class="slot-icon${item.kind === "revenant" ? " icon-flip" : ""}" src="${item.icon}" alt="${item.name}" onerror="this.onerror=null; window.__iconFallback && window.__iconFallback(this, '${item.icon}');"><div class="slot-cost">${item.cost}円</div>`;
+      el.innerHTML = `<img class="slot-icon${(item.kind === "revenant" || item.kind === "noirkurowl") ? " icon-flip" : ""}" src="${item.icon}" alt="${item.name}" onerror="this.onerror=null; window.__iconFallback && window.__iconFallback(this, '${item.icon}');"><div class="slot-cost">${item.cost}円</div>`;
     } else {
       el.innerHTML = `<div class="slot-plus">＋</div>`;
     }
@@ -3441,6 +3829,9 @@ function applyLoadoutToButtons() {
   els.btnSpawnSpearLeft.style.display = loadout.spear ? "" : "none";
   els.btnSpawnSpearRight.style.display = loadout.spear ? "" : "none";
   els.btnDashSpear.style.display = loadout.spear ? "" : "none";
+  els.btnSpawnNoirkurowlLeft.style.display = loadout.noirkurowl ? "" : "none";
+  els.btnSpawnNoirkurowlRight.style.display = loadout.noirkurowl ? "" : "none";
+  els.btnDashNoirkurowl.style.display = loadout.noirkurowl ? "" : "none";
 }
 
 function startBattle() {
@@ -3454,7 +3845,8 @@ function startBattle() {
   loadout.queen = formationSlots.includes("queen");
   loadout.revenant = formationSlots.includes("revenant");
   loadout.spear = formationSlots.includes("spear");
-  if (!loadout.soldier && !loadout.kurowl && !loadout.goblin && !loadout.archer && !loadout.catapult && !loadout.brute && !loadout.chief && !loadout.queen && !loadout.revenant && !loadout.spear) {
+  loadout.noirkurowl = formationSlots.includes("noirkurowl");
+  if (!loadout.soldier && !loadout.kurowl && !loadout.goblin && !loadout.archer && !loadout.catapult && !loadout.brute && !loadout.chief && !loadout.queen && !loadout.revenant && !loadout.spear && !loadout.noirkurowl) {
     els.formationWarning.style.display = "block";
     return;
   }
@@ -3494,6 +3886,8 @@ els.btnSpawnRevenantLeft.addEventListener("click", () => spawnUnit("revenant", "
 els.btnSpawnRevenantRight.addEventListener("click", () => spawnUnit("revenant", "right"));
 els.btnSpawnSpearLeft.addEventListener("click", () => spawnUnit("spear", "left"));
 els.btnSpawnSpearRight.addEventListener("click", () => spawnUnit("spear", "right"));
+els.btnSpawnNoirkurowlLeft.addEventListener("click", () => spawnUnit("noirkurowl", "left"));
+els.btnSpawnNoirkurowlRight.addEventListener("click", () => spawnUnit("noirkurowl", "right"));
 els.btnDashSoldier.addEventListener("click", () => dashAll("soldier"));
 els.btnDashKurowl.addEventListener("click", () => dashAll("kurowl"));
 els.btnDashGoblin.addEventListener("click", () => dashAll("goblin"));
@@ -3503,6 +3897,7 @@ els.btnDashBrute.addEventListener("click", () => dashAll("brute"));
 els.btnDashQueen.addEventListener("click", () => dashAll("queen"));
 els.btnDashRevenant.addEventListener("click", () => dashAll("revenant"));
 els.btnDashSpear.addEventListener("click", () => dashAll("spear"));
+els.btnDashNoirkurowl.addEventListener("click", () => dashAll("noirkurowl"));
 els.btnReset.addEventListener("click", reset);
 els.btnStartBattle.addEventListener("click", startBattle);
 

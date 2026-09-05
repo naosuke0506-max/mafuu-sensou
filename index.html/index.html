@@ -2459,6 +2459,13 @@ function damageUnit(u, dmg, sourceLabel, attacker) {
           u.lockedUntil = performance.now() + motionDuration(ASSASSIN_MOTIONS.parry);
           setUnitMotion(u, "parry");
           playUnitVoice(u, "guard");
+          // パリィされた側は、致命の一撃を受けるまでの間、怯みモーションのまま完全に硬直させる
+          if (attacker && !attacker.dead) {
+            const holdMs = motionDuration(ASSASSIN_MOTIONS.parry) + motionDuration(ASSASSIN_MOTIONS.parryKill) + 500;
+            attacker.lockedMotion = "flinch";
+            attacker.lockedUntil = performance.now() + holdMs;
+            setUnitMotion(attacker, "flinch");
+          }
           return;
         }
         // パリィ失敗: 下の通常ダメージ処理へ進む

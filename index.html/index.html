@@ -312,7 +312,7 @@
 <div class="wrap" id="battleScreen" style="display:none">
   <p class="eyebrow">魔封戦争 &mdash; 魔の平原</p>
   <h1>戦闘フィールド試作(兵士・クロウル・ゴブリン・ゴブリン弓兵)</h1>
-  <p class="sub">兵士は「出撃」を押すたびに1体ずつ追加出撃します。敵がいなくなると相手の城へ進軍して攻撃します。「突撃/突進」中は完全無敵で、最初に触れた敵を無条件でダウンさせます(ダメージなし)。ダウン中の敵は5秒間無防備になります。</p>
+  <p class="sub">兵士は「出撃」を押すたびに1体ずつ追加出撃します。敵がいなくなると相手の城へ進軍して攻撃します。</p>
 
   <div class="money-bar">所持金: <b id="moneyText">0</b>円</div>
 
@@ -353,16 +353,6 @@
     <button class="act" id="btnSpawnSpearLeft">槍兵を出撃(敵軍/左, 175円)</button>
     <button class="act" id="btnSpawnNoirkurowlRight">ノワール・クロウルを出撃(自軍/右, 17500円)</button>
     <button class="act" id="btnSpawnNoirkurowlLeft">ノワール・クロウルを出撃(敵軍/左, 17500円)</button>
-    <button class="act charge" id="btnDashSoldier">兵士 全員「突撃！」発動</button>
-    <button class="act charge" id="btnDashKurowl">クロウル 全員「突進」発動</button>
-    <button class="act charge" id="btnDashGoblin">ゴブリン 全員「突撃！」発動</button>
-    <button class="act charge" id="btnDashArcher">ゴブリン弓兵 全員「突撃！」発動</button>
-    <button class="act charge" id="btnDashChief">ゴブリン長 全員「突撃！」発動</button>
-    <button class="act charge" id="btnDashBrute">獰猛なゴブリン 全員「突撃！」発動</button>
-    <button class="act charge" id="btnDashQueen">ゴブリンの女王 全員「突進」発動</button>
-    <button class="act charge" id="btnDashRevenant">亡者 全員「突進」発動</button>
-    <button class="act charge" id="btnDashSpear">槍兵 全員「突撃！」発動</button>
-    <button class="act charge" id="btnDashNoirkurowl">ノワール・クロウル 全員「突進」発動</button>
     <button class="act wallet" id="btnWalletUp">財布レベルアップ(<span id="walletUpCostText">?</span>円)</button>
     <button class="act reset" id="btnReset">編成に戻る</button>
   </div>
@@ -1590,16 +1580,6 @@ const els = {
   btnSpawnSpearRight: document.getElementById("btnSpawnSpearRight"),
   btnSpawnNoirkurowlLeft: document.getElementById("btnSpawnNoirkurowlLeft"),
   btnSpawnNoirkurowlRight: document.getElementById("btnSpawnNoirkurowlRight"),
-  btnDashSoldier: document.getElementById("btnDashSoldier"),
-  btnDashKurowl: document.getElementById("btnDashKurowl"),
-  btnDashGoblin: document.getElementById("btnDashGoblin"),
-  btnDashArcher: document.getElementById("btnDashArcher"),
-  btnDashBrute: document.getElementById("btnDashBrute"),
-  btnDashChief: document.getElementById("btnDashChief"),
-  btnDashQueen: document.getElementById("btnDashQueen"),
-  btnDashRevenant: document.getElementById("btnDashRevenant"),
-  btnDashSpear: document.getElementById("btnDashSpear"),
-  btnDashNoirkurowl: document.getElementById("btnDashNoirkurowl"),
   btnReset: document.getElementById("btnReset"),
   enemyCastleHpFill: document.getElementById("enemyCastleHpFill"),
   enemyCastleHpText: document.getElementById("enemyCastleHpText"),
@@ -3799,28 +3779,6 @@ function spawnUnit(kind, side) {
   if (kind === "noirkurowl") playUnitVoice(u, "warCry");
 }
 
-function dashAll(kind) {
-  const list = kind === "kurowl" ? kurowls : kind === "goblin" ? goblins : kind === "archer" ? archers : kind === "brute" ? brutes : kind === "chief" ? chiefs : kind === "queen" ? queens : kind === "revenant" ? revenants : kind === "spear" ? spears : kind === "noirkurowl" ? noirkurowls : soldiers;
-  const targets = list.filter(u => u.spawned && !u.dead && !u.isDown);
-  if (!targets.length) return;
-  const cfg = CONFIG_BY_KIND[kind];
-  const dashKey = kind === "kurowl" ? "charge" : "dash";
-  const abilityName = kind === "kurowl" ? "突進" : "突撃！";
-  logMsg(`${UNIT_LABEL_BY_KIND[kind]}全員(${targets.length}体)の「${abilityName}」一斉発動 → 3秒間完全無敵で加速し、触れた敵をダウンさせる。`);
-  const now = performance.now();
-  for (const u of targets) {
-    u.lockedMotion = dashKey;
-    u.lockedUntil = now + cfg.dashDurationMs;
-    u.dashUntil = now + cfg.dashDurationMs;
-    u.dashHitTargets = new Set();
-    setUnitMotion(u, dashKey);
-    // 複数体が一斉に叫ぶことで声が重なるよう、わずかにタイミングをずらして再生
-    const delay = Math.floor(Math.random() * 150);
-    const dashVoiceKey = (kind === "brute" || kind === "chief" || kind === "queen" || kind === "revenant") ? "dash" : "warCry";
-    setTimeout(() => playUnitVoice(u, dashVoiceKey), delay);
-  }
-}
-
 function clearAllUnits() {
   for (const u of allUnits()) u.el.unit.remove();
   soldiers = [];
@@ -3928,22 +3886,12 @@ function applyLoadoutToButtons() {
   els.btnSpawnChiefLeft.style.display = loadout.chief ? "" : "none";
   els.btnSpawnQueenRight.style.display = loadout.queen ? "" : "none";
   els.btnSpawnQueenLeft.style.display = loadout.queen ? "" : "none";
-  els.btnDashSoldier.style.display = loadout.soldier ? "" : "none";
-  els.btnDashKurowl.style.display = loadout.kurowl ? "" : "none";
-  els.btnDashGoblin.style.display = loadout.goblin ? "" : "none";
-  els.btnDashArcher.style.display = loadout.archer ? "" : "none";
-  els.btnDashBrute.style.display = loadout.brute ? "" : "none";
-  els.btnDashChief.style.display = loadout.chief ? "" : "none";
-  els.btnDashQueen.style.display = loadout.queen ? "" : "none";
   els.btnSpawnRevenantLeft.style.display = loadout.revenant ? "" : "none";
   els.btnSpawnRevenantRight.style.display = loadout.revenant ? "" : "none";
-  els.btnDashRevenant.style.display = loadout.revenant ? "" : "none";
   els.btnSpawnSpearLeft.style.display = loadout.spear ? "" : "none";
   els.btnSpawnSpearRight.style.display = loadout.spear ? "" : "none";
-  els.btnDashSpear.style.display = loadout.spear ? "" : "none";
   els.btnSpawnNoirkurowlLeft.style.display = loadout.noirkurowl ? "" : "none";
   els.btnSpawnNoirkurowlRight.style.display = loadout.noirkurowl ? "" : "none";
-  els.btnDashNoirkurowl.style.display = loadout.noirkurowl ? "" : "none";
 }
 
 function startBattle() {
@@ -4033,16 +3981,6 @@ els.btnSpawnSpearLeft.addEventListener("click", () => spawnUnit("spear", "left")
 els.btnSpawnSpearRight.addEventListener("click", () => spawnUnit("spear", "right"));
 els.btnSpawnNoirkurowlLeft.addEventListener("click", () => spawnUnit("noirkurowl", "left"));
 els.btnSpawnNoirkurowlRight.addEventListener("click", () => spawnUnit("noirkurowl", "right"));
-els.btnDashSoldier.addEventListener("click", () => dashAll("soldier"));
-els.btnDashKurowl.addEventListener("click", () => dashAll("kurowl"));
-els.btnDashGoblin.addEventListener("click", () => dashAll("goblin"));
-els.btnDashArcher.addEventListener("click", () => dashAll("archer"));
-els.btnDashChief.addEventListener("click", () => dashAll("chief"));
-els.btnDashBrute.addEventListener("click", () => dashAll("brute"));
-els.btnDashQueen.addEventListener("click", () => dashAll("queen"));
-els.btnDashRevenant.addEventListener("click", () => dashAll("revenant"));
-els.btnDashSpear.addEventListener("click", () => dashAll("spear"));
-els.btnDashNoirkurowl.addEventListener("click", () => dashAll("noirkurowl"));
 els.btnReset.addEventListener("click", reset);
 els.btnStartBattle.addEventListener("click", startBattle);
 

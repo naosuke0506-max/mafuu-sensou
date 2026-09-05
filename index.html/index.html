@@ -1634,6 +1634,7 @@ const ASSASSIN_MOTIONS = {
     loop: false,
     frameDurations: [220, 220, 240, 240, 260, 260, 280, 280, 320, 700],
     moveProgressByFrame: [0.10, 0.30, 0.55, 0.75, 0.92, 1.0, 1.0, 1.0, 1.0, 1.0],
+    jumpHeightByFrame: [40, 90, 110, 90, 30, 0, 0, 0, 0, 0], // 対象の頭上を弧を描いて飛び越え、着地する
     hitFrames: [7] // 8コマ目(突き刺し・白い斬撃エフェクト)で実際に対象を仕留める
   },
   flinch: { frames: ["flinch_1","flinch_2"], loop: false, frameDurations: [100, 300] },
@@ -3732,7 +3733,11 @@ function tickUnit(u, now) {
       const raw = u.parryKillStartX + (u.parryKillEndX - u.parryKillStartX) * progress;
       u.xPx = Math.min(FIELD.length, Math.max(0, raw));
     }
-  } else if (u.kind === "kurowl" || u.kind === "brute" || u.kind === "chief") {
+    const pkHeights = motion.jumpHeightByFrame || [];
+    const pkPrevH = i > 0 ? (pkHeights[i - 1] || 0) : 0;
+    const pkNextH = pkHeights[i] || 0;
+    u.jumpHeightPx = pkPrevH + (pkNextH - pkPrevH) * withinFrameFrac;
+  } else if (u.kind === "kurowl" || u.kind === "brute" || u.kind === "chief" || u.kind === "assassin") {
     u.jumpHeightPx = 0;
   }
 

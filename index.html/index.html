@@ -3957,7 +3957,7 @@ function tickUnit(u, now) {
   const frames = FRAMES_BY_KIND[u.kind];
   if (key && frames[key]) u.el.img.src = frames[key];
   applyProneSizing(u);
-  if (u.kind === "kurowl" || u.kind === "brute" || u.kind === "chief") {
+  if (u.kind === "kurowl" || u.kind === "brute" || u.kind === "chief" || u.kind === "assassin") {
     u.el.img.style.transform = `translateX(-50%) scaleX(${u.facing === -1 ? -1 : 1}) translateY(${-(u.jumpHeightPx || 0)}px)`;
   } else if (u.kind === "revenant" || u.kind === "noirkurowl") {
     // 亡者・ノワール・クロウルの素材は左向きが基準(他キャラは右向き基準)のため、反転条件が逆になる

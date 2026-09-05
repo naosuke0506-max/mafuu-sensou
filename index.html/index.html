@@ -1544,7 +1544,7 @@ const REVENANT_CONFIG = {
 
 // =====================================================================
 // 暗殺亡者の定義:対人型・高火力・低HP・高機動力のアタッカー。近接専用(遠近切り替えなし)。
-// パリィ不可の攻撃を受けた場合は小盾でガード。パリィ可能な攻撃を受けた場合は確率(40%)でパリィが発動し、
+// パリィ不可の攻撃を受けた場合は小盾でガード。パリィ可能な攻撃を受けた場合は必ずパリィが発動し、
 // 成功すると相手を一撃で仕留める「パリィ成功・致命の一撃」に繋がる(この間は完全無敵)。
 // 近接攻撃がヒットすると相手の出血蓄積値が8%溜まり、100%に達すると出血が発生する。
 // =====================================================================
@@ -1647,7 +1647,7 @@ const ASSASSIN_CONFIG = {
   maxHp: 16,
   attackLabel: "刺突",
   voiceCategory: "human", // 専用音声セット未制作のため人間キャラ共通の声セットを暫定流用
-  parryChance: 0.4,       // パリィ可能な攻撃を受けた際の発動確率(40%)
+  parryChance: 1.0,       // パリィ可能な攻撃を受けた際は必ずパリィする(100%)
   bleedPerHit: 8,         // 近接攻撃1ヒットあたりの出血蓄積値(%)
   guardHoldMs: 350
 };
@@ -1788,7 +1788,7 @@ const ROSTER = [
   { kind: "revenant", name: "亡者", cost: ECONOMY_CONFIG.revenantCost, statsLine: "HP32 / 剣5-5-5・矢5 / 体重65 / 移動最遅・近接遠距離を自動で持ち替え", icon: ICON_REVENANT },
   { kind: "spear", name: "槍兵", cost: ECONOMY_CONFIG.spearCost, statsLine: "HP15 / 刺突8 / 体重65 / 兵士より長いリーチ", icon: ICON_SPEAR },
   { kind: "noirkurowl", name: "ノワール・クロウル", cost: ECONOMY_CONFIG.noirkurowlCost, statsLine: "HP600 / 引っ掻き30×2(第二形態45) / 体重320 / 全長5m超のボス級・HP50%以下で一度だけ第二形態へ変身し全域咆哮(ガードブレイカー)", icon: ICON_NOIRKUROWL },
-  { kind: "assassin", name: "暗殺亡者", cost: ECONOMY_CONFIG.assassinCost, statsLine: "HP16 / 刺突10 / 体重55 / 高機動アタッカー・パリィ可能な攻撃を40%で受け流し致命の一撃(即死)、それ以外はガード。攻撃ヒットで出血蓄積+8%", icon: ICON_ASSASSIN }
+  { kind: "assassin", name: "暗殺亡者", cost: ECONOMY_CONFIG.assassinCost, statsLine: "HP16 / 刺突10 / 体重55 / 高機動アタッカー・パリィ可能な攻撃は必ず受け流し致命の一撃(即死)、それ以外はガード。攻撃ヒットで出血蓄積+8%", icon: ICON_ASSASSIN }
 ];
 let formationSlots = new Array(MAX_SLOTS).fill(null); // 各要素: null | "soldier" | "kurowl" | "goblin" | "archer" | "catapult"
 let selectedRosterKind = null;

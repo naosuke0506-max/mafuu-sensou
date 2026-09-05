@@ -2854,6 +2854,11 @@ function executeAssassinParryKill(u, now) {
   const label = `暗殺亡者#${u.id}の「パリィ成功・致命の一撃」`;
   const vLabel = `${UNIT_LABEL_BY_KIND[victim.kind]}#${victim.id}`;
   logMsg(`${label}が炸裂!${vLabel}を一撃で仕留めた。`);
+  // 対象の肩に手を置いたまま回り込み、対象の背後(向いている方向と逆側)へ着地して背中から突き刺す
+  const victimFacing = victim.facing || victim.defaultFacing || 1;
+  const behindOffsetPx = 22;
+  u.facing = victimFacing;
+  u.xPx = Math.min(FIELD.length, Math.max(0, victim.xPx - victimFacing * behindOffsetPx));
   victim.hp = 0;
   victim.dead = true;
   victim.isDown = false;
@@ -3637,7 +3642,9 @@ function tickUnit(u, now) {
   }
 
   const target = (u.motionKey === dashKey ? findNextChargeTarget(u) : null) || findNearestTarget(u);
-  u.facing = target ? computeFacing(u, target, u.defaultFacing) : u.defaultFacing;
+  if (!(u.kind === "assassin" && (u.motionKey === "parry" || u.motionKey === "parryKill"))) {
+    u.facing = target ? computeFacing(u, target, u.defaultFacing) : u.defaultFacing;
+  }
 
   const moveDt = Math.max(0, now - u.lastMoveTime);
   u.lastMoveTime = now;

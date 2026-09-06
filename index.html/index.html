@@ -1324,7 +1324,8 @@ const CATAPULT_CONFIG = {
   attackLabel: "岩",
   voiceCategory: "catapult",   // カタパルト専用の発射音・怯み音・破壊音セット
   projectileFlightMs: 700,   // 岩が飛んでいる時間(見た目)
-  projectileArcHeight: 90    // 放物線の高さ(見た目)
+  projectileArcHeight: 90,   // 放物線の高さ(見た目)
+  isGuardBreaker: true       // 着弾がガードブレイカー属性を持つ
 };
 
 // =====================================================================
@@ -1983,7 +1984,7 @@ const WALLET_LEVELS = [
   { maxMoney: 25000, moneyPerSecond: 120 }, // Lv4
   { maxMoney: 50000, moneyPerSecond: 180 }  // Lv5(最大)
 ];
-const WALLET_UPGRADE_COST = [1000, 3000, 8000, 20000, 45000]; // Lv0→1, 1→2, 2→3, 3→4, 4→5 に必要な投資額
+const WALLET_UPGRADE_COST = [1000, 2000, 4000, 8000, 16000]; // Lv0→1, 1→2, 2→3, 3→4, 4→5 に必要な投資額(各レベルの所持金上限を超えないように設定)
 const KILL_REWARD_RATIO = 0.3; // 敵撃破時、出撃コストの何%を獲得するか
 let walletLevel = 0;
 
@@ -3650,6 +3651,7 @@ function spawnProjectile(u, target, label) {
   projectiles.push({
     id: ++projectileIdSeq,
     team: u.team,
+    attacker: u,
     xStart: u.xPx,
     xTarget: target.xPx,
     startTime: performance.now(),
@@ -3662,7 +3664,7 @@ function spawnProjectile(u, target, label) {
   });
 }
 
-function resolveSplashDamage(xImpact, attackerTeam, label, buffMultiplier) {
+function resolveSplashDamage(xImpact, attackerTeam, label, buffMultiplier, attacker) {
   const mult = buffMultiplier || 1;
   const cfg = CONFIG_BY_KIND.catapult;
   for (const unit of allUnits()) {
@@ -3673,9 +3675,9 @@ function resolveSplashDamage(xImpact, attackerTeam, label, buffMultiplier) {
     const dmg = Math.round((cfg.meleeHitDamage - (cfg.meleeHitDamage - cfg.splashMinDamage) * frac) * mult);
     const guardian = findGuardianChief(unit, attackerTeam);
     if (guardian) {
-      applyDamageTo(guardian, dmg, label + "(範囲攻撃を肩代わり)");
+      applyDamageTo(guardian, dmg, label + "(範囲攻撃を肩代わり)", attacker);
     } else {
-      applyDamageTo(unit, dmg, label);
+      applyDamageTo(unit, dmg, label, attacker);
     }
   }
   for (const castle of [enemyCastle, allyCastle]) {
@@ -3720,7 +3722,7 @@ function tickProjectiles(now) {
     p.el.style.transform = `translateX(-50%) translateY(${-arc}px)`;
     if (t >= 1 && !p.resolved) {
       p.resolved = true;
-      resolveSplashDamage(p.xTarget, p.team, p.label, p.buffMultiplier);
+      resolveSplashDamage(p.xTarget, p.team, p.label, p.buffMultiplier, p.attacker);
       spawnImpactEffect(p.xTarget);
       p.el.remove();
     }
@@ -3763,6 +3765,7 @@ function spawnQueenBolt(u, target, label) {
   queenBolts.push({
     id: ++projectileIdSeq,
     team: u.team,
+    attacker: u,
     xStart: launchX,
     xTarget: target.xPx,
     startTime: performance.now(),
@@ -3788,9 +3791,9 @@ function resolveQueenMeleeSplash(u, dmg, label) {
     if (Math.abs(unit.xPx - u.xPx) > cfg.meleeSplashRadius2) continue;
     const guardian = findGuardianChief(unit, u.team);
     if (guardian) {
-      applyDamageTo(guardian, dmg, label + "(範囲攻撃を肩代わり)");
+      applyDamageTo(guardian, dmg, label + "(範囲攻撃を肩代わり)", u);
     } else {
-      applyDamageTo(unit, dmg, label);
+      applyDamageTo(unit, dmg, label, u);
     }
   }
   for (const castle of [enemyCastle, allyCastle]) {
@@ -3809,9 +3812,9 @@ function resolveHalberdMeleeSplash(u, dmg, label) {
     if (Math.abs(unit.xPx - u.xPx) > cfg.midrangeSplashRadius) continue;
     const guardian = findGuardianChief(unit, u.team);
     if (guardian) {
-      applyDamageTo(guardian, dmg, label + "(範囲攻撃を肩代わり)");
+      applyDamageTo(guardian, dmg, label + "(範囲攻撃を肩代わり)", u);
     } else {
-      applyDamageTo(unit, dmg, label);
+      applyDamageTo(unit, dmg, label, u);
     }
   }
   for (const castle of [enemyCastle, allyCastle]) {
@@ -3821,7 +3824,7 @@ function resolveHalberdMeleeSplash(u, dmg, label) {
   }
 }
 
-function resolveQueenSplashDamage(xImpact, attackerTeam, label, mult) {
+function resolveQueenSplashDamage(xImpact, attackerTeam, label, mult, attacker) {
   const cfg = QUEEN_CONFIG;
   for (const unit of allUnits()) {
     if (unit.dead || unit.team === attackerTeam) continue;
@@ -3831,9 +3834,9 @@ function resolveQueenSplashDamage(xImpact, attackerTeam, label, mult) {
     const dmg = Math.round((cfg.midrangeDamage - (cfg.midrangeDamage - cfg.midrangeSplashMinDamage) * frac) * (mult || 1));
     const guardian = findGuardianChief(unit, attackerTeam);
     if (guardian) {
-      applyDamageTo(guardian, dmg, label + "(範囲攻撃を肩代わり)");
+      applyDamageTo(guardian, dmg, label + "(範囲攻撃を肩代わり)", attacker);
     } else {
-      applyDamageTo(unit, dmg, label);
+      applyDamageTo(unit, dmg, label, attacker);
     }
   }
   for (const castle of [enemyCastle, allyCastle]) {
@@ -3885,7 +3888,7 @@ function tickQueenBolts(now) {
     }
     if (t >= 1 && !p.resolved) {
       p.resolved = true;
-      resolveQueenSplashDamage(p.xTarget, p.team, p.label, p.mult);
+      resolveQueenSplashDamage(p.xTarget, p.team, p.label, p.mult, p.attacker);
       spawnQueenBoltImpact(p.xTarget);
       p.el.remove();
     }

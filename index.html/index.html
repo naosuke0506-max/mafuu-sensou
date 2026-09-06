@@ -928,7 +928,16 @@ const SOUNDS = {
   "goblin_pain": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/audio/goblin_pain.mp3",
   "goblin_evade": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/audio/goblin_evade.mp3",
   "goblin_attack": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/audio/goblin_attack.mp3",
-  "goblin_death": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/audio/goblin_death.mp3"
+  "goblin_death": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/audio/goblin_death.mp3",
+  "assassin_warcry": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/audio/assassin_warcry.opus",
+  "assassin_icon": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/audio/assassin_icon.opus",
+  "assassin_attack": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/audio/assassin_attack.opus",
+  "assassin_guard": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/audio/assassin_guard.opus",
+  "assassin_parry": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/audio/assassin_parry.opus",
+  "assassin_shieldbreak": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/audio/assassin_shieldbreak.opus",
+  "assassin_pain": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/audio/assassin_pain.opus",
+  "assassin_death": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/audio/assassin_death.opus",
+  "bleed_effect": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/audio/bleed_effect.opus"
 };
 
 
@@ -1652,7 +1661,7 @@ const ASSASSIN_CONFIG = {
   weight: 55,
   maxHp: 16,
   attackLabel: "刺突",
-  voiceCategory: "human", // 専用音声セット未制作のため人間キャラ共通の声セットを暫定流用
+  voiceCategory: "assassin", // 専用音声セット(ElevenLabsで生成)
   parryChance: 1.0,       // パリィ可能な攻撃を受けた際は必ずパリィする(100%)
   bleedPerHit: 8,         // 近接攻撃1ヒットあたりの出血蓄積値(%)
   guardHoldMs: 350
@@ -1846,6 +1855,16 @@ const VOICE_SETS = {
     shieldbreak: SOUNDS.chief_pain,        // 盾破壊時。専用音ができるまで怯みと共用
     pain: SOUNDS.chief_pain,               // 被弾・怯み時
     death: SOUNDS.chief_death              // 死亡時
+  },
+  assassin: {
+    warCry: SOUNDS.assassin_warcry,        // 出撃時
+    iconPreview: SOUNDS.assassin_icon,     // 編成画面でアイコンをタップした時
+    attack: SOUNDS.assassin_attack,        // 近接攻撃ヒット時
+    guard: SOUNDS.assassin_guard,          // ガード成功時
+    parry: SOUNDS.assassin_parry,          // パリィ成功時
+    shieldbreak: SOUNDS.assassin_shieldbreak, // 盾破壊時
+    pain: SOUNDS.assassin_pain,            // 被弾・怯み時
+    death: SOUNDS.assassin_death           // 死亡時
   },
   queen: {
     warCry: SOUNDS.queen_warcry,           // 出撃時の雄叫び
@@ -2466,7 +2485,7 @@ function damageUnit(u, dmg, sourceLabel, attacker) {
           u.lockedMotion = "parry";
           u.lockedUntil = Number.MAX_SAFE_INTEGER; // アニメーション終了(下部のフレーム終了処理)で次のモーションへ移行するため、タイマーでは解除しない
           setUnitMotion(u, "parry");
-          playUnitVoice(u, "guard");
+          playUnitVoice(u, "parry");
           // パリィされた側は、致命の一撃を受けるまでの間、怯みモーションのまま完全に硬直させる。
           // ただし相手が既に自分自身のパリィ/致命の一撃モーション中(無敵)の場合は上書きしない
           // (暗殺亡者同士が互いにパリィし合った際、双方のモーションが壊れて固まる不具合の対策)
@@ -2831,9 +2850,16 @@ function applyBleedStack(target, amount) {
     triggerBleedProc(target);
   }
 }
+function playBleedSound() {
+  try {
+    const audio = new Audio(SOUNDS.bleed_effect);
+    audio.play().catch(() => {});
+  } catch (e) { /* 再生できない環境でも処理を止めない */ }
+}
 function showBleedVisual(target) {
   if (!target || !target.el || !target.el.unit) return;
   attachEffectOverlay(target, ASSASSIN_BLEED_FRAMES, 2000, 90, { loop: false }, ASSASSIN_FRAMES);
+  playBleedSound();
 }
 function triggerBleedProc(target) {
   if (!target || target.dead || target.isCastle) return;

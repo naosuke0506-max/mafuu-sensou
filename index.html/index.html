@@ -910,6 +910,13 @@ const SOUNDS = {
   "revenant_midrange": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/audio/revenant_midrange.opus",
   "revenant_pain": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/audio/revenant_pain.opus",
   "revenant_death": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/audio/revenant_death.opus",
+  "crowman_warcry": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/audio/crowman_warcry.opus",
+  "crowman_attack": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/audio/crowman_attack.opus",
+  "crowman_pain": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/audio/crowman_pain.opus",
+  "crowman_transform": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/audio/crowman_transform.opus",
+  "crowman_roar": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/audio/crowman_roar.opus",
+  "crowman_attack2": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/audio/crowman_attack2.opus",
+  "crowman_death": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/audio/crowman_death.opus",
   "catapult_destroy_1": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/audio/catapult_destroy_1.mp3",
   "catapult_destroy_2": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/audio/catapult_destroy_2.mp3",
   "catapult_destroy_3": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/audio/catapult_destroy_3.mp3",
@@ -1958,7 +1965,7 @@ const CROWMAN_CONFIG = {
   weight: 25,
   maxHp: 25,                 // 通常形態のまま(変身してもHPは変わらない)
   attackLabel: "引っ掻き",
-  voiceCategory: "noirkurowl", // 専用音声ができるまでノワール・クロウルの音声セットを流用
+  voiceCategory: "crowman", // 専用音声セット
   secondFormDamageMultiplier: 0.3 // 凶暴化形態は常時、被ダメージがこの倍率になる(70%カット)
 };
 
@@ -2238,6 +2245,16 @@ const VOICE_SETS = {
     death: SOUNDS.noirkurowl_death,     // 死亡時
     roar: SOUNDS.noirkurowl_roar,       // 第二形態発動時のマップ全域への咆哮(専用の巨大な咆哮音)
     effect: SOUNDS.noirkurowl_effect    // 特殊エフェクト(暗黒の渦→衝撃波)発生時の効果音
+  },
+  crowman: {
+    warCry: SOUNDS.crowman_warcry,       // 出撃時 / 編成選択プレビュー(通常形態の弱々しい鳴き声)
+    iconPreview: SOUNDS.crowman_warcry,
+    attack: SOUNDS.crowman_attack,       // 通常形態の近接攻撃(引っ掻き)ヒット時
+    pain: SOUNDS.crowman_pain,           // 被弾・怯み時(通常形態)
+    transform: SOUNDS.crowman_transform, // 心臓捕食(変身)開始時
+    roar: SOUNDS.crowman_roar,           // 凶暴化形態へ移行が完了した瞬間の雄叫び
+    attack2: SOUNDS.crowman_attack2,     // 凶暴化形態の近接5連斬りヒット時
+    death: SOUNDS.crowman_death          // 死亡時(通常・凶暴化共通)
   },
   goblin: {
     warCry: SOUNDS.goblin_warcry,  // 編成選択プレビュー / 「突撃！」発動時
@@ -3424,6 +3441,7 @@ function triggerCrowmanAwakening(now) {
     u.lockedMotion = "transform";
     u.lockedUntil = now + motionDuration(CROWMAN_MOTIONS.transform);
     setUnitMotion(u, "transform");
+    playUnitVoice(u, "transform");
     logMsg(`鴉人#${u.id}が心臓を捕食し、凶暴化形態へ移行を開始した!(変身中は完全無敵)`);
   }
 }
@@ -4259,6 +4277,7 @@ function tickUnit(u, now) {
       u.secondForm = true;
       evaluateUnitState(u, now);
       if (u.kind === "noirkurowl") triggerNoirKurowlRoar(u, now);
+      if (u.kind === "crowman") playUnitVoice(u, "roar");
     } else {
       u.lockedMotion = null;
       evaluateUnitState(u, now);
@@ -4512,6 +4531,9 @@ function tickUnit(u, now) {
         playUnitVoice(u, "midrangeAttack");
       } else if (u.kind === "halberd" && u.motionKey === "midrange") {
         playUnitVoice(u, "midrangeAttack");
+      } else if (u.kind === "crowman" && u.motionKey === "attack2") {
+        // 5連続ヒットの声は最初の1回だけ再生する(1.5秒の連続音として作成済みのため)
+        if (u.frameIndex === 3) playUnitVoice(u, "attack2");
       } else {
         playUnitVoice(u, "attack");
       }

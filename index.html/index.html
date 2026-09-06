@@ -192,7 +192,7 @@
 
   /* 斧槍亡者は身長2.3m程度で兵士より一回り大きいため、表示を大きくする */
   .halberd-unit img {
-    max-height: 70px;
+    max-height: 65px;
   }
 
   /* 女王の召喚魔法陣:通常のimpact-unitの3倍サイズ、位置を低めに表示 */
@@ -1730,9 +1730,10 @@ const ELITE_MOTIONS = {
   walk: { frames: ["walk_1","walk_2","walk_3","walk_4","walk_5","walk_6"], loop: true, msPerFrame: 130 },
   attack: {
     // 振りかぶり(0-2)→盾殴り(3、命中)→構え直し(4)→剣斬り(5-6、命中)→後隙(7-8)
+    // 隙が少なすぎたため全体的に動作を遅くし、各コマの後隙を増やしている
     frames: ["attack_1","attack_2","attack_3","attack_4","attack_5","attack_6","attack_7","attack_8","attack_9"],
     loop: false,
-    frameDurations: [130, 130, 130, 110, 130, 110, 130, 160, 220],
+    frameDurations: [170, 170, 170, 150, 190, 150, 190, 240, 380],
     hitFrames: [3, 5]
   },
   guard: { frames: ["guard_1","guard_2","guard_3","guard_4","guard_5"], loop: true, msPerFrame: 150 },
@@ -2687,8 +2688,28 @@ function damageUnit(u, dmg, sourceLabel, attacker) {
 
   // 精鋭の亡者兵士:硬い鉄の盾でガード。ガードブレイカーを受けても1回では壊れず、2回受けてようやく破壊される
   if (u.kind === "elite") {
+    // ガード無効効果(相手の近接1段目・盾殴りなど):ガード中でも構わず強制的に怯ませる。
+    // 盾は壊さず、HPダメージも与えない。
+    if (!u.isDown && isGuardNullifierAttacker(attacker)) {
+      logMsg(`${sourceLabel} → ${label}のガードは意味を成さず、無理矢理怯まされた!(ダメージなし)`);
+      u.lockedMotion = "flinch";
+      u.lockedUntil = performance.now() + motionDuration(ELITE_MOTIONS.flinch);
+      setUnitMotion(u, "flinch");
+      playUnitVoice(u, "pain");
+      return;
+    }
     const guardableState = !u.isDown && (u.motionKey === "idle" || u.motionKey === "walk" || u.motionKey === "attack");
     if (guardableState && !u.shieldBroken) {
+      const ultimate = isUltimateGuardBreakerAttacker(attacker);
+      if (ultimate) {
+        u.shieldBroken = true;
+        logMsg(`${sourceLabel} → ${label}の鉄の盾は最強のガードブレイカーを受け、一撃で粉砕された!`);
+        u.lockedMotion = "shieldbreak";
+        u.lockedUntil = performance.now() + motionDuration(ELITE_MOTIONS.shieldbreak);
+        setUnitMotion(u, "shieldbreak");
+        playUnitVoice(u, "shieldbreak");
+        return;
+      }
       const breaker = isGuardBreakerAttacker(attacker);
       if (breaker) {
         u.guardBreakerHitsTaken = (u.guardBreakerHitsTaken || 0) + 1;
@@ -2745,9 +2766,18 @@ function damageUnit(u, dmg, sourceLabel, attacker) {
       logMsg(`${sourceLabel} → ${label}はパリィモーション中で完全無敵、ダメージを無効化した。`);
       return;
     }
+    // ガード無効効果:ガード中でも構わず強制的に怯ませる。盾は壊さず、HPダメージも与えない。
+    if (!u.isDown && isGuardNullifierAttacker(attacker)) {
+      logMsg(`${sourceLabel} → ${label}のガードは意味を成さず、無理矢理怯まされた!(ダメージなし)`);
+      u.lockedMotion = "flinch";
+      u.lockedUntil = performance.now() + motionDuration(ASSASSIN_MOTIONS.flinch);
+      setUnitMotion(u, "flinch");
+      playUnitVoice(u, "pain");
+      return;
+    }
     const guardableState = !u.isDown && (u.motionKey === "idle" || u.motionKey === "walk" || u.motionKey === "attack");
     if (guardableState) {
-      const breaker = isGuardBreakerAttacker(attacker);
+      const breaker = isGuardBreakerAttacker(attacker) || isUltimateGuardBreakerAttacker(attacker);
       if (breaker && !u.shieldBroken) {
         u.shieldBroken = true;
         logMsg(`${sourceLabel} → ${label}の小盾はガードブレイカーを受け、一撃で破壊された!`);
@@ -2885,12 +2915,32 @@ function damageUnit(u, dmg, sourceLabel, attacker) {
       logMsg(`${sourceLabel} → ${label}はバックステップ中で無敵、ダメージを無効化した。`);
       return;
     }
+    // ガード無効効果:ガード中でも構わず強制的に怯ませる。盾は壊さず、HPダメージも与えない。
+    if (isGuardNullifierAttacker(attacker)) {
+      logMsg(`${sourceLabel} → ${label}のガードは意味を成さず、無理矢理怯まされた!(ダメージなし)`);
+      u.lockedMotion = "flinch";
+      u.lockedUntil = performance.now() + motionDuration(CHIEF_MOTIONS.flinch);
+      setUnitMotion(u, "flinch");
+      playUnitVoice(u, "pain");
+      return;
+    }
     // 無敵時間以外に攻撃を受けた場合は、近接・中距離攻撃中でも動作を中断してガードする
     const guardable = !u.shieldBroken && (u.motionKey === "idle" || u.motionKey === "walk" || u.motionKey === "attack" || u.motionKey === "midrange");
     if (guardable) {
       const piercing = isShieldPiercingAttacker(attacker);
       const breaker = isGuardBreakerAttacker(attacker);
       const superArmor = isSuperArmoredAttacker(attacker);
+      const ultimate = isUltimateGuardBreakerAttacker(attacker);
+      if (ultimate) {
+        u.shieldHp = 0;
+        u.shieldBroken = true;
+        logMsg(`${sourceLabel} → ${label}の小盾は最強のガードブレイカーを受け、一撃で粉砕された!`);
+        u.lockedMotion = "shieldbreak";
+        u.lockedUntil = performance.now() + motionDuration(CHIEF_MOTIONS.shieldbreak);
+        setUnitMotion(u, "shieldbreak");
+        playUnitVoice(u, "shieldbreak");
+        return;
+      }
       if (piercing) {
         u.shieldHp = 0;
         u.shieldBroken = true;
@@ -3127,10 +3177,28 @@ function isShieldPiercingAttacker(attacker) {
   if (!attacker) return false;
   return !!(CONFIG_BY_KIND[attacker.kind] && CONFIG_BY_KIND[attacker.kind].isShieldPiercing);
 }
+// ガード無効効果:ガードしている(またはガード可能な)相手を、盾やHPにダメージを与えることなく
+// 強制的に怯ませる。精鋭の亡者兵士の近接1段目(盾殴り)・獰猛なゴブリンの中距離攻撃・
+// 斧槍亡者の中距離攻撃(薙ぎ払い)が該当する。
+function isGuardNullifierAttacker(attacker) {
+  if (!attacker) return false;
+  if (attacker.kind === "elite") return attacker.motionKey === "attack" && attacker.frameIndex === 3;
+  if (attacker.kind === "brute") return attacker.motionKey === "midrange";
+  if (attacker.kind === "halberd") return attacker.motionKey === "midrange";
+  return false;
+}
+// 最強ガードブレイカー:盾の耐久回数(guardBreakerHitsToBreak等)に関係なく、どんなに硬い盾でも
+// 一撃で粉砕する。現状はノワール・クロウルの咆哮(第二形態への変身完了時に発動)のみが該当。
+function isUltimateGuardBreakerAttacker(attacker) {
+  if (!attacker) return false;
+  if (attacker.kind === "noirkurowl" && attacker.motionKey === "transform") return true;
+  return false;
+}
 // 暗殺亡者のパリィ可否判定:攻撃側の種類・モーションごとに個別のフラグを持つ
-// パリィ可能: 兵士・ゴブリン・ゴブリン長の通常攻撃、クロウルの中距離攻撃、亡者の近接攻撃、暗殺亡者の攻撃
+// パリィ可能: 兵士・ゴブリン・ゴブリン長の通常攻撃、クロウルの中距離攻撃、亡者の近接攻撃、暗殺亡者の攻撃、
+//            精鋭の亡者兵士の近接2段目(剣斬り)
 // パリィ不可: クロウルの近接攻撃、ゴブリン弓兵、ゴブリンカタパルト、獰猛なゴブリン、ゴブリンの女王、亡者のクロスボウ攻撃、
-//            ノワール・クロウル、槍兵(現時点で未指定のため安全側でパリィ不可扱い)
+//            ノワール・クロウル、槍兵、斧槍亡者、精鋭の亡者兵士の近接1段目(盾殴り、現時点で未指定のため安全側でパリィ不可扱い)
 function isAttackParryable(attacker) {
   if (!attacker) return false;
   switch (attacker.kind) {
@@ -3143,6 +3211,8 @@ function isAttackParryable(attacker) {
       return attacker.motionKey === "midrange";
     case "revenant":
       return attacker.motionKey === "attack";
+    case "elite":
+      return attacker.motionKey === "attack" && attacker.frameIndex === 5;
     default:
       return false;
   }

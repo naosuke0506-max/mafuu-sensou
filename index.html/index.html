@@ -939,7 +939,14 @@ const SOUNDS = {
   "assassin_shieldbreak": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/audio/assassin_shieldbreak.opus",
   "assassin_pain": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/audio/assassin_pain.opus",
   "assassin_death": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/audio/assassin_death.opus",
-  "bleed_effect": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/audio/bleed_effect.opus"
+  "bleed_effect": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/audio/bleed_effect.opus",
+  "elite_warcry": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/audio/elite_warcry.opus",
+  "elite_icon": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/audio/elite_icon.opus",
+  "elite_attack": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/audio/elite_attack.opus",
+  "elite_guard": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/audio/elite_guard.opus",
+  "elite_shieldbreak": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/audio/elite_shieldbreak.opus",
+  "elite_pain": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/audio/elite_pain.opus",
+  "elite_death": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/audio/elite_death.opus"
 };
 
 
@@ -1743,7 +1750,7 @@ const ELITE_CONFIG = {
   weight: 75,
   maxHp: 60,
   attackLabel: "斬撃",
-  voiceCategory: "human", // 専用音声セット未制作のため人間キャラ共通の声セットを暫定流用
+  voiceCategory: "elite", // 専用音声セット(ElevenLabsで生成)
   guardBreakerHitsToBreak: 2, // 硬い鉄の盾:ガードブレイカーを2回受けるまで壊れない
   guardHoldMs: 350
 };
@@ -1952,6 +1959,15 @@ const VOICE_SETS = {
     shieldbreak: SOUNDS.assassin_shieldbreak, // 盾破壊時
     pain: SOUNDS.assassin_pain,            // 被弾・怯み時
     death: SOUNDS.assassin_death           // 死亡時
+  },
+  elite: {
+    warCry: SOUNDS.elite_warcry,           // 出撃時
+    iconPreview: SOUNDS.elite_icon,        // 編成画面でアイコンをタップした時
+    attack: SOUNDS.elite_attack,           // 近接攻撃ヒット時(盾殴り・剣斬り共通)
+    guard: SOUNDS.elite_guard,             // ガード成功時
+    shieldbreak: SOUNDS.elite_shieldbreak, // 盾破壊時
+    pain: SOUNDS.elite_pain,               // 被弾・怯み時
+    death: SOUNDS.elite_death              // 死亡時
   },
   queen: {
     warCry: SOUNDS.queen_warcry,           // 出撃時の雄叫び

@@ -1977,14 +1977,14 @@ const ECONOMY_CONFIG = {
 // 敵ユニットを倒すと、その敵の出撃コストの30%を即座に獲得する。
 // =====================================================================
 const WALLET_LEVELS = [
-  { maxMoney: 1500,  moneyPerSecond: 20  }, // Lv0(初期)
-  { maxMoney: 3000,  moneyPerSecond: 35  }, // Lv1
-  { maxMoney: 6000,  moneyPerSecond: 55  }, // Lv2
-  { maxMoney: 12000, moneyPerSecond: 80  }, // Lv3
-  { maxMoney: 25000, moneyPerSecond: 120 }, // Lv4
-  { maxMoney: 50000, moneyPerSecond: 180 }  // Lv5(最大)
+  { maxMoney: 1500,  moneyPerSecond: 30  }, // Lv0(初期)
+  { maxMoney: 3000,  moneyPerSecond: 50  }, // Lv1
+  { maxMoney: 6000,  moneyPerSecond: 80  }, // Lv2
+  { maxMoney: 12000, moneyPerSecond: 130 }, // Lv3
+  { maxMoney: 25000, moneyPerSecond: 200 }, // Lv4
+  { maxMoney: 50000, moneyPerSecond: 300 }  // Lv5(最大)
 ];
-const WALLET_UPGRADE_COST = [1000, 2000, 4000, 8000, 16000]; // Lv0→1, 1→2, 2→3, 3→4, 4→5 に必要な投資額(各レベルの所持金上限を超えないように設定)
+const WALLET_UPGRADE_COST = [600, 1200, 2400, 4800, 10000]; // Lv0→1, 1→2, 2→3, 3→4, 4→5 に必要な投資額(各レベルの所持金上限の40%程度に設定し、無理なく到達できるようにしている)
 const KILL_REWARD_RATIO = 0.3; // 敵撃破時、出撃コストの何%を獲得するか
 let walletLevel = 0;
 

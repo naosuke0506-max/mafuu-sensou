@@ -190,6 +190,11 @@
     max-height: 78px;
   }
 
+  /* 斧槍亡者は身長2.3m程度で兵士より一回り大きいため、表示を大きくする */
+  .halberd-unit img {
+    max-height: 70px;
+  }
+
   /* 女王の召喚魔法陣:通常のimpact-unitの3倍サイズ、位置を低めに表示 */
   .queen-summonfx-unit {
     position: absolute; bottom: 10px; width: 360px; height: 270px;
@@ -2229,7 +2234,7 @@ function isEngagedMotion(kind, key) {
 // ユニット(兵士・クロウル共通)のDOM生成
 // =====================================================================
 function createUnitDom(kind) {
-  const unitClass = kind === "kurowl" ? "kurowl-unit" : kind === "catapult" ? "catapult-unit" : kind === "noirkurowl" ? "noirkurowl-unit" : kind === "queen" ? "soldier-unit queen-unit" : "soldier-unit";
+  const unitClass = kind === "kurowl" ? "kurowl-unit" : kind === "catapult" ? "catapult-unit" : kind === "noirkurowl" ? "noirkurowl-unit" : kind === "queen" ? "soldier-unit queen-unit" : kind === "halberd" ? "soldier-unit halberd-unit" : "soldier-unit";
   const hpWrapClass = kind === "kurowl" ? "kurowl-hp" : kind === "catapult" ? "catapult-hp" : kind === "noirkurowl" ? "noirkurowl-hp" : "soldier-hp";
   const hpFillClass = kind === "kurowl" ? "kurowl-hp-fill" : kind === "catapult" ? "catapult-hp-fill" : kind === "noirkurowl" ? "noirkurowl-hp-fill" : "soldier-hp-fill";
 
@@ -2262,7 +2267,7 @@ function createUnitDom(kind) {
 // 対応するkindのものに更新する
 function applyUnitDomKindClasses(u) {
   const kind = u.kind;
-  const unitClass = kind === "kurowl" ? "kurowl-unit" : kind === "catapult" ? "catapult-unit" : kind === "noirkurowl" ? "noirkurowl-unit" : kind === "queen" ? "soldier-unit queen-unit" : "soldier-unit";
+  const unitClass = kind === "kurowl" ? "kurowl-unit" : kind === "catapult" ? "catapult-unit" : kind === "noirkurowl" ? "noirkurowl-unit" : kind === "queen" ? "soldier-unit queen-unit" : kind === "halberd" ? "soldier-unit halberd-unit" : "soldier-unit";
   const hpWrapClass = kind === "kurowl" ? "kurowl-hp" : kind === "catapult" ? "catapult-hp" : kind === "noirkurowl" ? "noirkurowl-hp" : "soldier-hp";
   const hpFillClass = kind === "kurowl" ? "kurowl-hp-fill" : kind === "catapult" ? "catapult-hp-fill" : kind === "noirkurowl" ? "noirkurowl-hp-fill" : "soldier-hp-fill";
   u.el.unit.className = unitClass;
@@ -3951,8 +3956,8 @@ function tickDeadUnitAnimation(u, now) {
   const frames = FRAMES_BY_KIND[u.kind];
   if (key && frames[key]) u.el.img.src = frames[key];
   applyProneSizing(u);
-  u.el.img.style.transform = (u.kind === "revenant" || u.kind === "noirkurowl" || u.kind === "halberd")
-    ? `translateX(-50%) scaleX(${u.facing === -1 ? 1 : -1})`  // 亡者・ノワール・クロウル・斧槍亡者の素材は左向きが基準のため反転条件が逆
+  u.el.img.style.transform = (u.kind === "revenant" || u.kind === "noirkurowl")
+    ? `translateX(-50%) scaleX(${u.facing === -1 ? 1 : -1})`  // 亡者・ノワール・クロウルの素材は左向きが基準のため反転条件が逆
     : `translateX(-50%) scaleX(${u.facing === -1 ? -1 : 1})`;
   u.el.hpFill.style.width = "0%";
 }
@@ -4338,8 +4343,8 @@ function tickUnit(u, now) {
   applyProneSizing(u);
   if (u.kind === "kurowl" || u.kind === "brute" || u.kind === "chief" || u.kind === "assassin") {
     u.el.img.style.transform = `translateX(-50%) scaleX(${u.facing === -1 ? -1 : 1}) translateY(${-(u.jumpHeightPx || 0)}px)`;
-  } else if (u.kind === "revenant" || u.kind === "noirkurowl" || u.kind === "halberd") {
-    // 亡者・ノワール・クロウル・斧槍亡者の素材は左向きが基準(他キャラは右向き基準)のため、反転条件が逆になる
+  } else if (u.kind === "revenant" || u.kind === "noirkurowl") {
+    // 亡者・ノワール・クロウルの素材は左向きが基準(他キャラは右向き基準)のため、反転条件が逆になる
     u.el.img.style.transform = `translateX(-50%) scaleX(${u.facing === -1 ? 1 : -1})`;
   } else {
     u.el.img.style.transform = `translateX(-50%) scaleX(${u.facing === -1 ? -1 : 1})`;
@@ -4549,7 +4554,7 @@ function renderRoster() {
     const el = document.createElement("div");
     el.className = "roster-item" + (selectedRosterKind === item.kind ? " selected" : "");
     el.innerHTML = `
-      <img class="roster-icon${(item.kind === "revenant" || item.kind === "noirkurowl" || item.kind === "halberd") ? " icon-flip" : ""}" src="${item.icon}" alt="${item.name}" onerror="this.onerror=null; window.__iconFallback && window.__iconFallback(this, '${item.icon}');">
+      <img class="roster-icon${(item.kind === "revenant" || item.kind === "noirkurowl") ? " icon-flip" : ""}" src="${item.icon}" alt="${item.name}" onerror="this.onerror=null; window.__iconFallback && window.__iconFallback(this, '${item.icon}');">
       <div class="roster-body">
         <div class="r-name">${item.name}</div>
         <div class="r-cost">コスト ${item.cost}円</div>
@@ -4576,7 +4581,7 @@ function renderSlots() {
     el.className = "slot" + (kind ? " filled" : "");
     if (kind) {
       const item = ROSTER.find(r => r.kind === kind);
-      el.innerHTML = `<img class="slot-icon${(item.kind === "revenant" || item.kind === "noirkurowl" || item.kind === "halberd") ? " icon-flip" : ""}" src="${item.icon}" alt="${item.name}" onerror="this.onerror=null; window.__iconFallback && window.__iconFallback(this, '${item.icon}');"><div class="slot-cost">${item.cost}円</div>`;
+      el.innerHTML = `<img class="slot-icon${(item.kind === "revenant" || item.kind === "noirkurowl") ? " icon-flip" : ""}" src="${item.icon}" alt="${item.name}" onerror="this.onerror=null; window.__iconFallback && window.__iconFallback(this, '${item.icon}');"><div class="slot-cost">${item.cost}円</div>`;
     } else {
       el.innerHTML = `<div class="slot-plus">＋</div>`;
     }

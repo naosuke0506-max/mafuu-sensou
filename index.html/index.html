@@ -355,6 +355,8 @@
     <button class="act" id="btnSpawnNoirkurowlLeft">ノワール・クロウルを出撃(敵軍/左, 17500円)</button>
     <button class="act" id="btnSpawnAssassinRight">暗殺亡者を出撃(自軍/右, 450円)</button>
     <button class="act" id="btnSpawnAssassinLeft">暗殺亡者を出撃(敵軍/左, 450円)</button>
+    <button class="act" id="btnSpawnEliteRight">精鋭の亡者兵士を出撃(自軍/右, 600円)</button>
+    <button class="act" id="btnSpawnEliteLeft">精鋭の亡者兵士を出撃(敵軍/左, 600円)</button>
     <button class="act wallet" id="btnWalletUp">財布レベルアップ(<span id="walletUpCostText">?</span>円)</button>
     <button class="act reset" id="btnReset">編成に戻る</button>
   </div>
@@ -1667,7 +1669,87 @@ const ASSASSIN_CONFIG = {
   guardHoldMs: 350
 };
 
+// =====================================================================
+// 精鋭の亡者兵士の定義:亡者の上位互換となる高HP・ガード持ちの重装アンデッド騎士。
+// 盾は硬い鉄製で、ゴブリン長・暗殺亡者と異なりガードブレイカーを1回受けただけでは壊れず、
+// 2回目のガードブレイカーでようやく破壊される。近接攻撃は盾殴り→剣斬りの2段コンボ。
+// =====================================================================
+const ELITE_FRAMES = {
+  "walk_1": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/elite_repo_upload/elite_walk_01.png",
+  "walk_2": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/elite_repo_upload/elite_walk_02.png",
+  "walk_3": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/elite_repo_upload/elite_walk_03.png",
+  "walk_4": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/elite_repo_upload/elite_walk_04.png",
+  "walk_5": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/elite_repo_upload/elite_walk_05.png",
+  "walk_6": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/elite_repo_upload/elite_walk_06.png",
+  "attack_1": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/elite_repo_upload/elite_attack_01.png",
+  "attack_2": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/elite_repo_upload/elite_attack_02.png",
+  "attack_3": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/elite_repo_upload/elite_attack_03.png",
+  "attack_4": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/elite_repo_upload/elite_attack_04.png",
+  "attack_5": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/elite_repo_upload/elite_attack_05.png",
+  "attack_6": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/elite_repo_upload/elite_attack_06.png",
+  "attack_7": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/elite_repo_upload/elite_attack_07.png",
+  "attack_8": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/elite_repo_upload/elite_attack_08.png",
+  "attack_9": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/elite_repo_upload/elite_attack_09.png",
+  "guard_1": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/elite_repo_upload/elite_guard_01.png",
+  "guard_2": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/elite_repo_upload/elite_guard_02.png",
+  "guard_3": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/elite_repo_upload/elite_guard_03.png",
+  "guard_4": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/elite_repo_upload/elite_guard_04.png",
+  "guard_5": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/elite_repo_upload/elite_guard_05.png",
+  "shieldbreak_1": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/elite_repo_upload/elite_shieldbreak_01.png",
+  "shieldbreak_2": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/elite_repo_upload/elite_shieldbreak_02.png",
+  "shieldbreak_3": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/elite_repo_upload/elite_shieldbreak_03.png",
+  "shieldbreak_4": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/elite_repo_upload/elite_shieldbreak_04.png",
+  "shieldbreak_5": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/elite_repo_upload/elite_shieldbreak_05.png",
+  "flinch_1": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/elite_repo_upload/elite_flinch_01.png",
+  "flinch_2": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/elite_repo_upload/elite_flinch_02.png",
+  "flinch_3": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/elite_repo_upload/elite_flinch_03.png",
+  "down_1": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/elite_repo_upload/elite_down_01.png",
+  "down_2": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/elite_repo_upload/elite_down_02.png",
+  "down_3": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/elite_repo_upload/elite_down_03.png",
+  "down_4": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/elite_repo_upload/elite_down_04.png",
+  "down_5": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/elite_repo_upload/elite_down_05.png"
+};
+const ICON_ELITE = "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/icons/elite.png";
+
+const ELITE_MOTIONS = {
+  idle: { frames: ["walk_1"], loop: true, msPerFrame: 600 },
+  walk: { frames: ["walk_1","walk_2","walk_3","walk_4","walk_5","walk_6"], loop: true, msPerFrame: 130 },
+  attack: {
+    // 振りかぶり(0-2)→盾殴り(3、命中)→構え直し(4)→剣斬り(5-6、命中)→後隙(7-8)
+    frames: ["attack_1","attack_2","attack_3","attack_4","attack_5","attack_6","attack_7","attack_8","attack_9"],
+    loop: false,
+    frameDurations: [130, 130, 130, 110, 130, 110, 130, 160, 220],
+    hitFrames: [3, 5]
+  },
+  guard: { frames: ["guard_1","guard_2","guard_3","guard_4","guard_5"], loop: true, msPerFrame: 150 },
+  shieldbreak: {
+    frames: ["shieldbreak_1","shieldbreak_2","shieldbreak_3","shieldbreak_4","shieldbreak_5"],
+    loop: false,
+    frameDurations: [120, 140, 160, 180, 450]
+  },
+  flinch: { frames: ["flinch_1","flinch_2","flinch_3"], loop: false, frameDurations: [100, 150, 300] },
+  down: {
+    frames: ["down_1","down_2","down_3","down_4","down_5"],
+    loop: false,
+    frameDurations: [150, 200, 250, 300, 5000]
+  }
+};
+
+const ELITE_CONFIG = {
+  walkSpeed: 60,          // 兵士(55)よりやや速い
+  meleeRange: 62,
+  meleeHitDamage1: 8,     // 1段目:盾殴り
+  meleeHitDamage2: 12,    // 2段目:剣斬り
+  weight: 75,
+  maxHp: 60,
+  attackLabel: "斬撃",
+  voiceCategory: "human", // 専用音声セット未制作のため人間キャラ共通の声セットを暫定流用
+  guardBreakerHitsToBreak: 2, // 硬い鉄の盾:ガードブレイカーを2回受けるまで壊れない
+  guardHoldMs: 350
+};
+
 function motionDuration(m) {
+  if (m.frameDurations) return m.frameDurations.reduce((a, b) => a + b, 0);
   return m.frames.length * m.msPerFrame;
 }
 
@@ -1711,6 +1793,8 @@ const els = {
   btnSpawnNoirkurowlRight: document.getElementById("btnSpawnNoirkurowlRight"),
   btnSpawnAssassinLeft: document.getElementById("btnSpawnAssassinLeft"),
   btnSpawnAssassinRight: document.getElementById("btnSpawnAssassinRight"),
+  btnSpawnEliteLeft: document.getElementById("btnSpawnEliteLeft"),
+  btnSpawnEliteRight: document.getElementById("btnSpawnEliteRight"),
   btnReset: document.getElementById("btnReset"),
   enemyCastleHpFill: document.getElementById("enemyCastleHpFill"),
   enemyCastleHpText: document.getElementById("enemyCastleHpText"),
@@ -1742,6 +1826,7 @@ let revenants = [];
 let spears = [];
 let noirkurowls = [];
 let assassins = [];
+let elites = [];
 let projectiles = [];    // カタパルトの岩(飛翔中)
 let impactEffects = [];  // 着弾エフェクト(スパーク・砂煙)
 let queenBolts = [];        // 女王の魔砲弾(飛翔中)
@@ -1754,7 +1839,7 @@ let effectIdSeq = 0;
 let enemyCastle = null;
 let allyCastle = null;
 let money = 0;
-let loadout = { soldier: true, kurowl: true, goblin: true, archer: true, catapult: true, brute: true, chief: true, queen: true, revenant: true, spear: true, noirkurowl: true, assassin: true }; // 出撃可能なユニット種別(スロットから導出)
+let loadout = { soldier: true, kurowl: true, goblin: true, archer: true, catapult: true, brute: true, chief: true, queen: true, revenant: true, spear: true, noirkurowl: true, assassin: true, elite: true }; // 出撃可能なユニット種別(スロットから導出)
 
 const SOLDIER_QUEUE_GAP = 0; // 味方同士は重なって密集できる(間合いに入れるユニット数を制限しないため)
 const CASTLE_CONFIG = { maxHp: 150 }; // 魔の平原の城HP仕様
@@ -1770,6 +1855,7 @@ const ECONOMY_CONFIG = {
   revenantCost: 250,
   spearCost: 175,
   assassinCost: 450,
+  eliteCost: 600,
   noirkurowlCost: 17500
 };
 
@@ -1803,17 +1889,18 @@ const ROSTER = [
   { kind: "revenant", name: "亡者", cost: ECONOMY_CONFIG.revenantCost, statsLine: "HP32 / 剣5-5-5・矢5 / 体重65 / 移動最遅・近接遠距離を自動で持ち替え", icon: ICON_REVENANT },
   { kind: "spear", name: "槍兵", cost: ECONOMY_CONFIG.spearCost, statsLine: "HP15 / 刺突8 / 体重65 / 兵士より長いリーチ", icon: ICON_SPEAR },
   { kind: "noirkurowl", name: "ノワール・クロウル", cost: ECONOMY_CONFIG.noirkurowlCost, statsLine: "HP600 / 引っ掻き30×2(第二形態45) / 体重320 / 全長5m超のボス級・HP50%以下で一度だけ第二形態へ変身し全域咆哮(ガードブレイカー)", icon: ICON_NOIRKUROWL },
-  { kind: "assassin", name: "暗殺亡者", cost: ECONOMY_CONFIG.assassinCost, statsLine: "HP16 / 刺突10 / 体重55 / 高機動アタッカー・パリィ可能な攻撃は必ず受け流し致命の一撃(即死)、それ以外はガード。攻撃ヒットで出血蓄積+8%", icon: ICON_ASSASSIN }
+  { kind: "assassin", name: "暗殺亡者", cost: ECONOMY_CONFIG.assassinCost, statsLine: "HP16 / 刺突10 / 体重55 / 高機動アタッカー・パリィ可能な攻撃は必ず受け流し致命の一撃(即死)、それ以外はガード。攻撃ヒットで出血蓄積+8%", icon: ICON_ASSASSIN },
+  { kind: "elite", name: "精鋭の亡者兵士", cost: ECONOMY_CONFIG.eliteCost, statsLine: "HP60 / 盾殴り8・剣斬り12 / 体重75 / 亡者の上位互換・重装ガード持ち。鉄の盾はガードブレイカーを2回受けるまで壊れない", icon: ICON_ELITE }
 ];
 let formationSlots = new Array(MAX_SLOTS).fill(null); // 各要素: null | "soldier" | "kurowl" | "goblin" | "archer" | "catapult"
 let selectedRosterKind = null;
 let lastMoneyTick = 0;
 let battleActive = false;
 
-const MOTIONS_BY_KIND = { soldier: SOLDIER_MOTIONS, kurowl: KUROWL_MOTIONS, goblin: GOBLIN_MOTIONS, archer: ARCHER_MOTIONS, catapult: CATAPULT_MOTIONS, brute: BRUTE_MOTIONS, chief: CHIEF_MOTIONS, queen: QUEEN_MOTIONS, revenant: REVENANT_MOTIONS, spear: SPEAR_MOTIONS, noirkurowl: NOIRKUROWL_MOTIONS, assassin: ASSASSIN_MOTIONS };
-const CONFIG_BY_KIND = { soldier: SOLDIER_CONFIG, kurowl: KUROWL_CONFIG, goblin: GOBLIN_CONFIG, archer: ARCHER_CONFIG, catapult: CATAPULT_CONFIG, brute: BRUTE_CONFIG, chief: CHIEF_CONFIG, queen: QUEEN_CONFIG, revenant: REVENANT_CONFIG, spear: SPEAR_CONFIG, noirkurowl: NOIRKUROWL_CONFIG, assassin: ASSASSIN_CONFIG };
-const FRAMES_BY_KIND = { soldier: SOLDIER_FRAMES, kurowl: KUROWL_FRAMES, goblin: GOBLIN_FRAMES, archer: ARCHER_FRAMES, catapult: CATAPULT_FRAMES, brute: BRUTE_FRAMES, chief: CHIEF_FRAMES, queen: QUEEN_FRAMES, revenant: REVENANT_FRAMES, spear: SPEAR_FRAMES, noirkurowl: NOIRKUROWL_FRAMES, assassin: ASSASSIN_FRAMES };
-const UNIT_LABEL_BY_KIND = { soldier: "兵士", kurowl: "クロウル", goblin: "ゴブリン", archer: "ゴブリン弓兵", catapult: "ゴブリンカタパルト", brute: "獰猛なゴブリン", chief: "ゴブリン長", queen: "ゴブリンの女王", revenant: "亡者", spear: "槍兵", noirkurowl: "ノワール・クロウル", assassin: "暗殺亡者" };
+const MOTIONS_BY_KIND = { soldier: SOLDIER_MOTIONS, kurowl: KUROWL_MOTIONS, goblin: GOBLIN_MOTIONS, archer: ARCHER_MOTIONS, catapult: CATAPULT_MOTIONS, brute: BRUTE_MOTIONS, chief: CHIEF_MOTIONS, queen: QUEEN_MOTIONS, revenant: REVENANT_MOTIONS, spear: SPEAR_MOTIONS, noirkurowl: NOIRKUROWL_MOTIONS, assassin: ASSASSIN_MOTIONS, elite: ELITE_MOTIONS };
+const CONFIG_BY_KIND = { soldier: SOLDIER_CONFIG, kurowl: KUROWL_CONFIG, goblin: GOBLIN_CONFIG, archer: ARCHER_CONFIG, catapult: CATAPULT_CONFIG, brute: BRUTE_CONFIG, chief: CHIEF_CONFIG, queen: QUEEN_CONFIG, revenant: REVENANT_CONFIG, spear: SPEAR_CONFIG, noirkurowl: NOIRKUROWL_CONFIG, assassin: ASSASSIN_CONFIG, elite: ELITE_CONFIG };
+const FRAMES_BY_KIND = { soldier: SOLDIER_FRAMES, kurowl: KUROWL_FRAMES, goblin: GOBLIN_FRAMES, archer: ARCHER_FRAMES, catapult: CATAPULT_FRAMES, brute: BRUTE_FRAMES, chief: CHIEF_FRAMES, queen: QUEEN_FRAMES, revenant: REVENANT_FRAMES, spear: SPEAR_FRAMES, noirkurowl: NOIRKUROWL_FRAMES, assassin: ASSASSIN_FRAMES, elite: ELITE_FRAMES };
+const UNIT_LABEL_BY_KIND = { soldier: "兵士", kurowl: "クロウル", goblin: "ゴブリン", archer: "ゴブリン弓兵", catapult: "ゴブリンカタパルト", brute: "獰猛なゴブリン", chief: "ゴブリン長", queen: "ゴブリンの女王", revenant: "亡者", spear: "槍兵", noirkurowl: "ノワール・クロウル", assassin: "暗殺亡者", elite: "精鋭の亡者兵士" };
 
 // =====================================================================
 // 突撃システム(新):ダウン/起き上がりモーションの補完
@@ -2003,6 +2090,9 @@ function motionLabel(kind, key) {
   if (kind === "assassin") {
     return { idle: "待機", walk: "歩行", attack: "刺突", flinch: "怯み", down: "ダウン", guard: "ガード", shieldbreak: "小盾破壊", parry: "パリィ", parryKill: "パリィ成功・致命の一撃" }[key] || key;
   }
+  if (kind === "elite") {
+    return { idle: "待機", walk: "歩行", attack: "斬撃", flinch: "怯み", down: "ダウン", guard: "ガード", shieldbreak: "盾破壊" }[key] || key;
+  }
   return { idle: "待機", walk: "歩行", flinch: "怯み", knockback: "吹き飛ばし", melee: "近接攻撃", midrange: "中距離攻撃", charge: "突進" }[key] || key;
 }
 
@@ -2117,9 +2207,10 @@ function createUnit(kind, side, startXOverride) {
     parryVictim: null,      // 暗殺亡者:パリィ成功時に致命の一撃で仕留める対象
     parryKillStartX: null,  // 暗殺亡者:致命の一撃で跳躍を開始した位置
     parryKillEndX: null,    // 暗殺亡者:致命の一撃で着地する(対象の背後の)位置
+    guardBreakerHitsTaken: 0, // 精鋭の亡者兵士:硬い鉄の盾がこれまでに受けたガードブレイカーの回数
     el
   };
-  const targetArr = kind === "kurowl" ? kurowls : kind === "goblin" ? goblins : kind === "archer" ? archers : kind === "catapult" ? catapults : kind === "brute" ? brutes : kind === "chief" ? chiefs : kind === "queen" ? queens : kind === "revenant" ? revenants : kind === "spear" ? spears : kind === "noirkurowl" ? noirkurowls : kind === "assassin" ? assassins : soldiers;
+  const targetArr = kind === "kurowl" ? kurowls : kind === "goblin" ? goblins : kind === "archer" ? archers : kind === "catapult" ? catapults : kind === "brute" ? brutes : kind === "chief" ? chiefs : kind === "queen" ? queens : kind === "revenant" ? revenants : kind === "spear" ? spears : kind === "noirkurowl" ? noirkurowls : kind === "assassin" ? assassins : kind === "elite" ? elites : soldiers;
   targetArr.push(u);
   el.unit.style.display = "block";
   setUnitMotion(u, "walk");
@@ -2148,7 +2239,7 @@ function updateCastleUI(castle, fillEl, textEl) {
 // 共通ヘルパー
 // =====================================================================
 function allUnits() {
-  return soldiers.concat(kurowls, goblins, archers, catapults, brutes, chiefs, queens, revenants, spears, noirkurowls, assassins);
+  return soldiers.concat(kurowls, goblins, archers, catapults, brutes, chiefs, queens, revenants, spears, noirkurowls, assassins, elites);
 }
 
 function dist(a, b) {
@@ -2453,6 +2544,60 @@ function damageUnit(u, dmg, sourceLabel, attacker) {
     } else {
       u.lockedMotion = "flinch";
       u.lockedUntil = performance.now() + motionDuration(motions.flinch);
+      setUnitMotion(u, "flinch");
+      playUnitVoice(u, "pain");
+    }
+    return;
+  }
+
+  // 精鋭の亡者兵士:硬い鉄の盾でガード。ガードブレイカーを受けても1回では壊れず、2回受けてようやく破壊される
+  if (u.kind === "elite") {
+    const guardableState = !u.isDown && (u.motionKey === "idle" || u.motionKey === "walk" || u.motionKey === "attack");
+    if (guardableState && !u.shieldBroken) {
+      const breaker = isGuardBreakerAttacker(attacker);
+      if (breaker) {
+        u.guardBreakerHitsTaken = (u.guardBreakerHitsTaken || 0) + 1;
+        if (u.guardBreakerHitsTaken >= ELITE_CONFIG.guardBreakerHitsToBreak) {
+          u.shieldBroken = true;
+          logMsg(`${sourceLabel} → ${label}の鉄の盾がガードブレイカーを${u.guardBreakerHitsTaken}回受けて、ついに破壊された!`);
+          u.lockedMotion = "shieldbreak";
+          u.lockedUntil = performance.now() + motionDuration(ELITE_MOTIONS.shieldbreak);
+          setUnitMotion(u, "shieldbreak");
+          playUnitVoice(u, "shieldbreak");
+          return;
+        }
+        logMsg(`${sourceLabel} → ${label}の鉄の盾がガードブレイカーを受けたが耐えた!(${u.guardBreakerHitsTaken}/${ELITE_CONFIG.guardBreakerHitsToBreak})`);
+      }
+      u.lockedMotion = "guard";
+      u.lockedUntil = performance.now() + ELITE_CONFIG.guardHoldMs;
+      setUnitMotion(u, "guard");
+      playUnitVoice(u, "guard");
+      logMsg(`${sourceLabel} → ${label}が鉄の盾でガード!ダメージを無効化した。`);
+      if (!breaker && !isSuperArmoredAttacker(attacker) && attacker && !attacker.dead && attacker.motionKey !== "parry" && attacker.motionKey !== "parryKill") {
+        attacker.lockedMotion = "flinch";
+        attacker.lockedUntil = performance.now() + motionDuration(MOTIONS_BY_KIND[attacker.kind].flinch);
+        setUnitMotion(attacker, "flinch");
+        logMsg(`${UNIT_LABEL_BY_KIND[attacker.kind]}#${attacker.id}はガードされて怯んだ。`);
+      }
+      return;
+    }
+    // 通常ダメージ処理(盾破壊済み・ガード不可の状態)
+    u.hp = Math.max(0, u.hp - dmg);
+    logMsg(`${sourceLabel} → ${label}に<b>${dmg}</b>ダメージ(残り${u.hp.toFixed(0)})`);
+    if (u.hp <= 0) {
+      u.dead = true;
+      u.isDown = false;
+      u.deadAt = performance.now();
+      u.lockedMotion = null;
+      setUnitMotion(u, "down");
+      u.removeAt = u.deadAt + motionDuration(ELITE_MOTIONS.down);
+      playUnitVoice(u, "death");
+      logMsg(`${label}が倒れた。`);
+    } else if (u.isDown) {
+      logMsg(`${label}はダウン中のため怯まず、そのまま倒れ続けている。`);
+    } else {
+      u.lockedMotion = "flinch";
+      u.lockedUntil = performance.now() + motionDuration(ELITE_MOTIONS.flinch);
       setUnitMotion(u, "flinch");
       playUnitVoice(u, "pain");
     }
@@ -3015,6 +3160,7 @@ function arrayForKind(kind) {
     case "spear": return spears;
     case "noirkurowl": return noirkurowls;
     case "assassin": return assassins;
+    case "elite": return elites;
     default: return soldiers;
   }
 }
@@ -3613,7 +3759,7 @@ function applyProneSizing(u) {
 }
 
 function tickDeadUnitAnimation(u, now) {
-  const motion = u.kind === "catapult" ? MOTIONS_BY_KIND[u.kind].destroy : (u.kind === "queen" || u.kind === "revenant" || u.kind === "assassin") ? MOTIONS_BY_KIND[u.kind].down : MOTIONS_BY_KIND[u.kind].knockback;
+  const motion = u.kind === "catapult" ? MOTIONS_BY_KIND[u.kind].destroy : (u.kind === "queen" || u.kind === "revenant" || u.kind === "assassin" || u.kind === "elite") ? MOTIONS_BY_KIND[u.kind].down : MOTIONS_BY_KIND[u.kind].knockback;
   const frameDt = Math.max(0, now - u.lastFrameTime);
   const curDuration = (motion.frameDurations ? motion.frameDurations[u.frameIndex] : null) || motion.msPerFrame;
 
@@ -3807,6 +3953,10 @@ function tickUnit(u, now) {
         // hitFrames: [1, 8] → index1が1段目(素早い一撃)、index8が2段目(叩きつけ)
         dmg = u.frameIndex === 1 ? BRUTE_CONFIG.meleeHitDamage1 : BRUTE_CONFIG.meleeHitDamage2;
         label = `獰猛なゴブリン#${u.id}の${u.frameIndex === 1 ? "一撃目" : "叩きつけ"}`;
+      } else if (u.kind === "elite" && u.motionKey === "attack") {
+        // hitFrames: [3, 5] → index3が盾殴り、index5が剣斬り
+        dmg = u.frameIndex === 3 ? ELITE_CONFIG.meleeHitDamage1 : ELITE_CONFIG.meleeHitDamage2;
+        label = `精鋭の亡者兵士#${u.id}の${u.frameIndex === 3 ? "盾殴り" : "剣斬り"}`;
       } else if (u.kind === "chief" && u.motionKey === "midrange") {
         dmg = u.frameIndex === 6 ? CHIEF_CONFIG.midrangeDamage1 : CHIEF_CONFIG.midrangeDamage2;
         label = u.frameIndex === 6 ? `ゴブリン長#${u.id}の回転斬り` : `ゴブリン長#${u.id}の突き刺し`;
@@ -4103,6 +4253,7 @@ function tick(now) {
       spears = spears.filter(s => !s.removed);
       noirkurowls = noirkurowls.filter(n => !n.removed);
       assassins = assassins.filter(a => !a.removed);
+      elites = elites.filter(e => !e.removed);
     }
   } catch (err) {
     logMsg(`⚠ 内部エラーを検出したため今フレームをスキップしました: ${err.message}`);
@@ -4160,6 +4311,7 @@ function clearAllUnits() {
   spears = [];
   noirkurowls = [];
   assassins = [];
+  elites = [];
   for (const p of projectiles) p.el.remove();
   projectiles = [];
   for (const e of impactEffects) e.el.remove();
@@ -4262,6 +4414,8 @@ function applyLoadoutToButtons() {
   els.btnSpawnNoirkurowlRight.style.display = loadout.noirkurowl ? "" : "none";
   els.btnSpawnAssassinLeft.style.display = loadout.assassin ? "" : "none";
   els.btnSpawnAssassinRight.style.display = loadout.assassin ? "" : "none";
+  els.btnSpawnEliteLeft.style.display = loadout.elite ? "" : "none";
+  els.btnSpawnEliteRight.style.display = loadout.elite ? "" : "none";
 }
 
 function startBattle() {
@@ -4277,7 +4431,8 @@ function startBattle() {
   loadout.spear = formationSlots.includes("spear");
   loadout.noirkurowl = formationSlots.includes("noirkurowl");
   loadout.assassin = formationSlots.includes("assassin");
-  if (!loadout.soldier && !loadout.kurowl && !loadout.goblin && !loadout.archer && !loadout.catapult && !loadout.brute && !loadout.chief && !loadout.queen && !loadout.revenant && !loadout.spear && !loadout.noirkurowl && !loadout.assassin) {
+  loadout.elite = formationSlots.includes("elite");
+  if (!loadout.soldier && !loadout.kurowl && !loadout.goblin && !loadout.archer && !loadout.catapult && !loadout.brute && !loadout.chief && !loadout.queen && !loadout.revenant && !loadout.spear && !loadout.noirkurowl && !loadout.assassin && !loadout.elite) {
     els.formationWarning.style.display = "block";
     return;
   }
@@ -4354,6 +4509,8 @@ els.btnSpawnNoirkurowlLeft.addEventListener("click", () => spawnUnit("noirkurowl
 els.btnSpawnNoirkurowlRight.addEventListener("click", () => spawnUnit("noirkurowl", "right"));
 els.btnSpawnAssassinLeft.addEventListener("click", () => spawnUnit("assassin", "left"));
 els.btnSpawnAssassinRight.addEventListener("click", () => spawnUnit("assassin", "right"));
+els.btnSpawnEliteLeft.addEventListener("click", () => spawnUnit("elite", "left"));
+els.btnSpawnEliteRight.addEventListener("click", () => spawnUnit("elite", "right"));
 els.btnReset.addEventListener("click", reset);
 els.btnStartBattle.addEventListener("click", startBattle);
 

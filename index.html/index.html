@@ -2107,7 +2107,7 @@ const PAUPER_MOTIONS = {
   attack: {
     frames: ["attack_1", "attack_2", "attack_3", "attack_4", "attack_5", "attack_6", "attack_7", "attack_8", "attack_9", "attack_10", "attack_11"],
     loop: false,
-    frameDurations: [100, 90, 90, 80, 80, 70, 70, 70, 70, 90, 150],
+    frameDurations: [156, 141, 141, 125, 125, 109, 109, 109, 109, 141, 235],
     hitFrames: [8]
   },
   flinch: { frames: ["flinch_1", "flinch_2", "flinch_3"], frameDurations: [100, 150, 300], loop: false },
@@ -2123,7 +2123,7 @@ const PAUPER_CONFIG = {
   meleeRange: 65,
   meleeHitDamage: 18,      // 単発の突き刺し
   weight: 45,
-  maxHp: 30,
+  maxHp: 54,
   attackLabel: "突き刺し",
   voiceCategory: "revenant", // 専用音声ができるまで亡者の音声セットを流用
   bleedPerHit: 5            // 近接攻撃1ヒットあたりの出血蓄積値(%)
@@ -2396,7 +2396,7 @@ const ROSTER = [
   { kind: "crowman", name: "鴉人", cost: ECONOMY_CONFIG.crowmanCost, statsLine: "HP25 / 通常時は引っ掻き6・低速で非力 / 体重25 / 敵味方問わず出血発生や咆哮が発動すると、フィールド上の鴉人が一斉に心臓を捕食して凶暴化。凶暴化後は高速移動+5連続交差斬り(各7ダメージ・出血蓄積+4%)の高火力コンボ・常時スーパーアーマー・被ダメージ70%カット", icon: ICON_CROWMAN },
   { kind: "thrall", name: "奴隷亡者", cost: ECONOMY_CONFIG.thrallCost, statsLine: "HP45 / 跳躍斧撃9・14(中距離〜近距離対応)、吹き矢6(特殊効果なし) / 体重60 / 亡者の下位種・小柄で機動力が高い。近接専用モーションは持たず、跳躍斧撃と吹き矢を距離に応じて自動で使い分け。跳躍斧撃はパリィ可能・ガードなし・出血付与なし", icon: ICON_THRALL },
   { kind: "cagespider", name: "籠蜘蛛", cost: ECONOMY_CONFIG.cagespiderCost, statsLine: "HP90 / 掴み乱打5×8連(近接)、糞団子7(中距離・命中ごとに毒25%蓄積、100%で最大HPの15%ダメージ) / 体重110 / 大型・低速の重量級。近接遠距離を距離に応じて自動で使い分け。パリィ不可・ガードなし", icon: ICON_CAGESPIDER },
-  { kind: "pauper", name: "貧困亡者", cost: ECONOMY_CONFIG.pauperCost, statsLine: "HP30 / 突き刺し18(単発・出血蓄積5%) / 体重45 / 亡者の下位種、移動速度は標準的。パリィ不可・ガードなし", icon: ICON_PAUPER }
+  { kind: "pauper", name: "貧困亡者", cost: ECONOMY_CONFIG.pauperCost, statsLine: "HP54 / 突き刺し18(単発・出血蓄積5%) / 体重45 / 亡者の下位種、移動速度は標準的。パリィ不可・ガードなし", icon: ICON_PAUPER }
 ];
 let formationSlots = new Array(MAX_SLOTS).fill(null); // 各要素: null | "soldier" | "kurowl" | "goblin" | "archer" | "catapult"
 let selectedRosterKind = null;

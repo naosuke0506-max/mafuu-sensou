@@ -1068,16 +1068,16 @@ const KUROWL_MOTIONS = {
 
 const KUROWL_CONFIG = {
   bodyLength: 90,
-  kurowlSpeed: 62,
-  walkSpeed: 62, // 汎用の速度参照用エイリアス
-  kurowlHp: 50,
-  maxHp: 50,
+  kurowlSpeed: 55,         // 移動速度は普通
+  walkSpeed: 55, // 汎用の速度参照用エイリアス
+  kurowlHp: 115,           // HP高め
+  maxHp: 115,
   meleeRange: 72,
   midRangeMin: 180,        // 体長2.0体分(これより近づいたら中距離攻撃はせず接近する)
   midRangeMax: 270,        // 体長3.0体分
-  meleeHitDamage: 4,       // コスト750円版(6連撃×4=24)
+  meleeHitDamage: 10,      // コスト750円版・攻撃力高め(6連撃×10=60)、近接はガード無効
   meleeHitFrames: [6, 8, 9, 10, 11, 13],
-  midrangeDamage: 22,      // コスト750円版
+  midrangeDamage: 38,      // コスト750円版・中距離攻撃力高め
   midrangeLeapAdvance: 270, // 最大射程(体長3.0体分)まで跳びかかって移動する
   weight: 70,
   dashSpeedMultiplier: 3,
@@ -1120,7 +1120,7 @@ const GOBLIN_CONFIG = {
   meleeHitDamage: 4,     // コスト80円版
   dashHitDamage: 12,
   weight: 40,
-  maxHp: 7,              // コスト80円版
+  maxHp: 12,             // コスト80円版・普通より少し低め
   attackLabel: "打撃",
   voiceCategory: "goblin", // ゴブリン専用の声セット
   evadeJumpDistance: 60      // 回避時に後方へ跳ぶ距離
@@ -1146,7 +1146,7 @@ const BRUTE_MOTIONS = {
     ],
     loop: false,
     // 前半(atk1)は速い一撃、後半(atk2)は叩きつけの大振り。2段目のヒット後(impact〜recover)は余韻を長めに
-    frameDurations: [150, 150, 150, 180, 180, 180, 120, 120, 120, 280, 280, 280, 420, 420],
+    frameDurations: [150, 150, 150, 180, 180, 180, 120, 120, 120, 280, 280, 280, 600, 600],
     hitFrames: [1, 8]
   },
   // 出撃時に必ず1回行う咆哮(ゴブリン族へのバフ判定あり・スーパーアーマー)
@@ -1160,7 +1160,7 @@ const BRUTE_MOTIONS = {
   midrange: {
     frames: ["roar_1", "roar_2", "roar_3", "jump_1", "jump_2", "jump_3", "jump_4"],
     loop: false,
-    frameDurations: [220, 220, 260, 160, 200, 180, 260],
+    frameDurations: [220, 220, 260, 160, 200, 180, 500],
     // 咆哮中(index0〜2)は移動しない。跳躍(index3〜6)で前進する
     moveProgressByFrame: [0, 0, 0, 0.15, 0.55, 0.9, 1],
     jumpHeightByFrame: [0, 0, 0, 8, 30, 20, 0],
@@ -1176,26 +1176,26 @@ const BRUTE_MOTIONS = {
 };
 
 const BRUTE_CONFIG = {
-  walkSpeed: 42,
+  walkSpeed: 42,          // 遅め
   dashSpeedMultiplier: 2.5,
   dashDurationMs: 2500,
   meleeRange: 55,
-  meleeHitDamage1: 14, // 1段目(素早い一撃)(コスト1,800円版)
-  meleeHitDamage2: 20, // 2段目(叩きつけ・範囲内2体まで攻撃/ガードブレイカー)(コスト1,800円版)
+  meleeHitDamage1: 18, // 1段目(素早い一撃)・攻撃力は普通より高い
+  meleeHitDamage2: 28, // 2段目(叩きつけ・範囲内2体まで攻撃/ガードブレイカー)
   attack2MultiRadius: 75, // 2段目(叩きつけ)が同時に攻撃できる範囲
   dashHitDamage: 15,
   weight: 90,
-  maxHp: 60,             // コスト1,800円版
+  maxHp: 130,             // HP高め
   attackLabel: "叩きつけ",
   voiceCategory: "brute",
   midRangeMin: 70,
   midRangeMax: 170,
   midrangeLeapAdvance: 130,
-  midrangeDamage: 16,    // コスト1,800円版(旧10)
+  midrangeDamage: 24,    // ガードブレイカー
   roarBuffRadius: 170, // 咆哮のバフ範囲(中距離攻撃の射程と同じ)
   roarBuffDurationMs: 5000,
   roarBuffMultiplier: 1.4, // 攻撃力+40%
-  isGuardBreaker: true // 近接2段目(叩きつけ)がガードブレイカー属性を持つ
+  isGuardBreaker: true // 近接2段目(叩きつけ)と中距離攻撃がガードブレイカー属性を持つ(1段目は対象外)
 };
 
 // ゴブリン族としてバフを受けられる種別(獰猛なゴブリン自身も含む)
@@ -1251,15 +1251,14 @@ const CHIEF_MOTIONS = {
 };
 
 const CHIEF_CONFIG = {
-  walkSpeed: 55,
+  walkSpeed: 55,          // 移動速度は普通
   dashSpeedMultiplier: 2.2,
   dashDurationMs: 2000,
   dashHitDamage: 6,
   meleeRange: 55,
-  meleeHitDamage: 16,    // コスト3,500円版
+  meleeHitDamage: 24,    // コスト3,500円版・攻撃力高い
   weight: 80,            // コスト3,500円版(新規設定)
-  maxHp: 90,             // コスト3,500円版
-  shieldMaxHp: 42,       // 盾HP制は別途廃止予定(ガードブレイカーで一撃破壊に変更予定)
+  maxHp: 160,             // コスト3,500円版・普通よりは高いHP
   attackLabel: "斬撃",
   voiceCategory: "chief",
   midRangeMin: 60,
@@ -1298,14 +1297,14 @@ const ARCHER_MOTIONS = {
 };
 
 const ARCHER_CONFIG = {
-  walkSpeed: 60,
+  walkSpeed: 65,             // 早め
   dashSpeedMultiplier: 3,
   dashDurationMs: 3000,
   meleeRange: 250,          // 射程250(歩いてこの距離まで近づいたらその場に留まり射撃する)
-  meleeHitDamage: 6,        // コスト120円版
+  meleeHitDamage: 6,        // コスト120円版・攻撃力低め
   dashHitDamage: 12,
   weight: 40,               // 通常ゴブリンと同じ体重
-  maxHp: 8,                 // コスト120円版
+  maxHp: 16,                 // コスト120円版・普通より少し低め
   attackLabel: "矢",
   voiceCategory: "archer"   // 弓を放つ専用の掛け声セット(攻撃音以外はゴブリンと共通)
 };
@@ -1354,11 +1353,11 @@ const CATAPULT_CONFIG = {
   walkSpeed: 38,             // 重量物のため歩行はやや遅め
   meleeRange: 400,           // 最大射程400(歩いてこの距離まで近づいたらその場に留まり射撃する)
   minRange: 250,             // 最小射程250(これより敵が近いと攻撃できず待機する)
-  meleeHitDamage: 35,        // 着弾中心の最大ダメージ(コスト2,400円版)
+  meleeHitDamage: 45,        // 着弾中心の最大ダメージ(コスト2,400円版)・攻撃力は普通より高い
   splashRadius: 90,          // 着弾地点を中心とした範囲ダメージの半径
-  splashMinDamage: 12,       // 範囲外周でのダメージ(コスト2,400円版)
+  splashMinDamage: 18,       // 範囲外周でのダメージ(コスト2,400円版)
   weight: 300,               // 兵士5体分の目安
-  maxHp: 80,                 // コスト2,400円版
+  maxHp: 130,                // コスト2,400円版・HP高め
   attackLabel: "岩",
   voiceCategory: "catapult",   // カタパルト専用の発射音・怯み音・破壊音セット
   projectileFlightMs: 700,   // 岩が飛んでいる時間(見た目)
@@ -2216,15 +2215,15 @@ const CROWMAN_MOTIONS = {
 };
 
 const CROWMAN_CONFIG = {
-  walkSpeed: 20,             // 通常形態:軍団最低クラスの遅さ
+  walkSpeed: 15,              // 通常形態:軍団最低クラスの遅さ(全キャラ中最も遅い)
   walkSpeed2: 75,            // 凶暴化形態:軍団屈指の速さ
-  meleeRange: 55,
+  meleeRange: 75,            // 通常形態:リーチ長め
   meleeRange2: 60,
-  meleeHitDamage: 6,         // 通常形態:非力
-  meleeHitDamage2: 7,        // 凶暴化形態:5連続ヒットそれぞれ(合計35)
-  bleedPerHit2: 4,           // 凶暴化形態の近接攻撃1ヒットあたりの出血蓄積値(%)
+  meleeHitDamage: 6,         // 通常形態:攻撃力は普通
+  meleeHitDamage2: 9,        // 凶暴化形態:5連続ヒットそれぞれ(合計45)・攻撃力高い
+  bleedPerHit2: 12,          // 凶暴化形態の近接攻撃1ヒットあたりの出血蓄積値(%)・多め
   weight: 25,
-  maxHp: 25,                 // 通常形態のまま(変身してもHPは変わらない)
+  maxHp: 45,                 // 通常形態は普通よりは低いHP(変身してもHPは変わらない)
   attackLabel: "引っ掻き",
   voiceCategory: "crowman", // 専用音声セット
   secondFormDamageMultiplier: 0.3 // 凶暴化形態は常時、被ダメージがこの倍率になる(70%カット)
@@ -2394,12 +2393,12 @@ let walletLevel = 0;
 const MAX_SLOTS = 9;
 const ROSTER = [
   { kind: "soldier", name: "兵士", cost: ECONOMY_CONFIG.soldierCost, statsLine: "HP12 / 攻撃力6(刺突) / 体重60", icon: ICON_SOLDIER },
-  { kind: "kurowl", name: "クロウル", cost: ECONOMY_CONFIG.kurowlCost, statsLine: "HP50 / 引っ掻き4×6・中距離22 / 体重70", icon: ICON_KUROWL },
-  { kind: "goblin", name: "ゴブリン", cost: ECONOMY_CONFIG.goblinCost, statsLine: "HP7 / 打撃4 / 体重40 / 初撃を確定回避", icon: ICON_GOBLIN },
-  { kind: "brute", name: "獰猛なゴブリン", cost: ECONOMY_CONFIG.bruteCost, statsLine: "HP60 / 一撃目14・叩きつけ20(ガードブレイカー) / 体重90 / 重量級近接", icon: ICON_BRUTE },
-  { kind: "chief", name: "ゴブリン長", cost: ECONOMY_CONFIG.chiefCost, statsLine: "HP90 / 斬撃16 / 体重80 / ガード持ち(盾は壊れない・ガードブレイカーのみ一撃破壊)", icon: ICON_CHIEF },
-  { kind: "archer", name: "ゴブリン弓兵", cost: ECONOMY_CONFIG.archerCost, statsLine: "HP8 / 矢6 / 体重40 / 射程250(その場で射撃)", icon: ICON_ARCHER },
-  { kind: "catapult", name: "ゴブリンカタパルト", cost: ECONOMY_CONFIG.catapultCost, statsLine: "カタパルトHP80 / 岩35(範囲) / 体重300 / 射程250〜400・破壊後は搭乗ゴブリンが継戦", icon: ICON_CATAPULT },
+  { kind: "kurowl", name: "クロウル", cost: ECONOMY_CONFIG.kurowlCost, statsLine: "HP115 / 引っ掻き10×6(ガード無効)・中距離38 / 体重70 / HP・攻撃力ともに高め。近接は6連撃で長時間拘束できるが、単体に張り付く間は無防備で複数戦に弱い", icon: ICON_KUROWL },
+  { kind: "goblin", name: "ゴブリン", cost: ECONOMY_CONFIG.goblinCost, statsLine: "HP12 / 打撃4 / 体重40 / 移動速め・安価で数を揃えやすく初撃を確定回避。リーチの長い敵・範囲攻撃・中距離攻撃・連続攻撃・遠距離攻撃に弱い", icon: ICON_GOBLIN },
+  { kind: "brute", name: "獰猛なゴブリン", cost: ECONOMY_CONFIG.bruteCost, statsLine: "HP130 / 一撃目18・叩きつけ28(ガードブレイカー)、中距離24(ガードブレイカー) / 体重90 / HP・攻撃力高めの重量級。移動は遅めだが隙の大きい攻撃をしっかり当てるスタイル", icon: ICON_BRUTE },
+  { kind: "chief", name: "ゴブリン長", cost: ECONOMY_CONFIG.chiefCost, statsLine: "HP160 / 斬撃24 / 体重80 / 普通よりHP高め・攻撃力高い。ガード持ち(クールタイム1秒)、ガードブレイカーを受けると盾が一撃で破壊され以後ガード不可", icon: ICON_CHIEF },
+  { kind: "archer", name: "ゴブリン弓兵", cost: ECONOMY_CONFIG.archerCost, statsLine: "HP16 / 矢6(低め) / 体重40 / 移動速め・射程250(その場で射撃)", icon: ICON_ARCHER },
+  { kind: "catapult", name: "ゴブリンカタパルト", cost: ECONOMY_CONFIG.catapultCost, statsLine: "カタパルトHP130 / 岩45(範囲・ガードブレイカー) / 体重300 / HP高め・移動遅め・射程250〜400・破壊後は搭乗ゴブリンが継戦", icon: ICON_CATAPULT },
   { kind: "queen", name: "ゴブリンの女王", cost: ECONOMY_CONFIG.queenCost, statsLine: "HP400 / 杖35・薙ぎ払い25・魔砲弾45(いずれも範囲・ガードブレイカー) / 体重145 / 常時スーパーアーマー・デバフ咆哮・召喚持ち", icon: ICON_QUEEN },
   { kind: "revenant", name: "亡者", cost: ECONOMY_CONFIG.revenantCost, statsLine: "HP65 / 剣5-5-5(近接)・クロスボウ18(中距離・ゆっくりだが単発高威力) / 体重65 / HP高めで移動は最遅。近接遠距離を状況に応じて自動で持ち替える臨機応変型", icon: ICON_REVENANT },
   { kind: "spear", name: "槍兵", cost: ECONOMY_CONFIG.spearCost, statsLine: "HP15 / 刺突8 / 体重65 / 兵士より長いリーチ", icon: ICON_SPEAR },
@@ -2407,7 +2406,7 @@ const ROSTER = [
   { kind: "assassin", name: "暗殺亡者", cost: ECONOMY_CONFIG.assassinCost, statsLine: "HP16 / 刺突10 / 体重55 / 高機動アタッカー・パリィ可能な攻撃は受け流し致命の一撃(即死、クールタイム20秒)、それ以外はガード(クールタイム2秒)。攻撃ヒットで出血蓄積+15%。ガードブレイカーを受けると盾が破壊されパリィもガードも不可に。強い単体には滅法強いが複数には弱い", icon: ICON_ASSASSIN },
   { kind: "elite", name: "精鋭の亡者兵士", cost: ECONOMY_CONFIG.eliteCost, statsLine: "HP88 / 盾殴り8(ガード無効)・剣斬り12 / 体重75 / 亡者の上位互換・重装ガード持ち(クールタイム1秒)。ガードブレイカーを受けると盾が一撃で破壊されガード不可に。複数体揃うと鉄壁だが、リーチは短めでガードブレイカー・ガード無効に弱い", icon: ICON_ELITE },
   { kind: "halberd", name: "斧槍亡者", cost: ECONOMY_CONFIG.halberdCost, statsLine: "HP105 / 突き8・振り下ろし18、中距離は踏み込み薙ぎ払い38(範囲内の敵を人数無制限で同時ヒット・隙は大きいがガード無効+2倍怯み) / 体重85 / リーチが長く移動速度も速い範囲攻撃アタッカー。近接・中距離ともにスーパーアーマー。数的不利に強いがガードと遠距離攻撃、強い単体の敵に弱い", icon: ICON_HALBERD },
-  { kind: "crowman", name: "鴉人", cost: ECONOMY_CONFIG.crowmanCost, statsLine: "HP25 / 通常時は引っ掻き6・低速で非力 / 体重25 / 敵味方問わず出血発生や咆哮が発動すると、フィールド上の鴉人が一斉に心臓を捕食して凶暴化。凶暴化後は高速移動+5連続交差斬り(各7ダメージ・出血蓄積+4%)の高火力コンボ・常時スーパーアーマー・被ダメージ70%カット", icon: ICON_CROWMAN },
+  { kind: "crowman", name: "鴉人", cost: ECONOMY_CONFIG.crowmanCost, statsLine: "HP45(普通より低め) / 通常時は引っ掻き6(攻撃力は普通)・リーチ長め・移動速度は全キャラ中最低 / 体重25 / 敵味方問わず出血発生や咆哮が発動すると、フィールド上の鴉人が一斉に心臓を捕食して凶暴化。凶暴化後は高速移動+5連続交差斬り(各9ダメージ・出血蓄積+12%)の高火力コンボ・常時スーパーアーマー・被ダメージ70%カット", icon: ICON_CROWMAN },
   { kind: "thrall", name: "奴隷亡者", cost: ECONOMY_CONFIG.thrallCost, statsLine: "HP52 / 跳躍斧撃10・16(中距離〜近距離対応)、吹き矢5(低ダメージ・命中で毒15%蓄積、100%で毒状態) / 体重60 / 亡者の下位種・素早くトリッキー。ガードされると2倍の時間怯む。パリィされやすく遠距離にも弱い", icon: ICON_THRALL },
   { kind: "cagespider", name: "籠蜘蛛", cost: ECONOMY_CONFIG.cagespiderCost, statsLine: "HP150 / 掴み乱打6×8連・間合い短め(近接)、糞団子3(中距離・控えめな直接火力、命中ごとに毒25%蓄積・100%で毒状態=180秒間1秒毎に最大HPの約0.1%のダメージ) / 体重110 / 軍団最低クラスの移動速度で前線の壁に。怯むと大きな隙。パリィ不可・ガードなし", icon: ICON_CAGESPIDER },
   { kind: "pauper", name: "貧困亡者", cost: ECONOMY_CONFIG.pauperCost, statsLine: "HP54 / 突き刺し18(単発・出血蓄積5%) / 体重45 / 亡者の下位種、移動速度は標準的。パリィ不可・ガードなし", icon: ICON_PAUPER }
@@ -2760,8 +2759,8 @@ function createUnit(kind, side, startXOverride) {
     hasEvaded: false,
     midrangeStartX: 0,
     jumpHeightPx: 0,
-    shieldHp: kind === "chief" ? cfg.shieldMaxHp : 0,
-    shieldMaxHp: kind === "chief" ? cfg.shieldMaxHp : 0,
+    shieldHp: 0,
+    shieldMaxHp: 0,
     shieldBroken: false,
     roarCooldownUntil: 0,   // 女王:デバフ咆哮の次回発動可能時刻
     midrangeCooldownUntil: 0, // 女王:中距離攻撃(魔砲弾)の次回発動可能時刻
@@ -3405,7 +3404,8 @@ function damageUnit(u, dmg, sourceLabel, attacker) {
       return;
     }
     // 無敵時間以外に攻撃を受けた場合は、近接・中距離攻撃中でも動作を中断してガードする
-    const guardable = !u.shieldBroken && (u.motionKey === "idle" || u.motionKey === "walk" || u.motionKey === "attack" || u.motionKey === "midrange");
+    const guardOnCooldown = u.guardCooldownUntil && performance.now() < u.guardCooldownUntil;
+    const guardable = !u.shieldBroken && !guardOnCooldown && (u.motionKey === "idle" || u.motionKey === "walk" || u.motionKey === "attack" || u.motionKey === "midrange");
     if (guardable) {
       const piercing = isShieldPiercingAttacker(attacker);
       const breaker = isGuardBreakerAttacker(attacker);
@@ -3431,26 +3431,27 @@ function damageUnit(u, dmg, sourceLabel, attacker) {
         playUnitVoice(u, "shieldbreak");
         return;
       }
-      setUnitMotion(u, "guard");
-      u.lockedMotion = "guard";
-      u.lockedUntil = performance.now() + 350; // ガードポーズを少し保持してから通常状態に戻す
-      playUnitVoice(u, "guard");
-      const shieldDmg = breaker ? dmg * 2 : dmg;
-      u.shieldHp = Math.max(0, u.shieldHp - shieldDmg);
-      logMsg(`${sourceLabel} → ${label}が小盾でガード!盾に<b>${shieldDmg}</b>ダメージ(盾残り${u.shieldHp}/${u.shieldMaxHp})`);
-      if (!breaker && !superArmor && attacker && !attacker.dead && attacker.motionKey !== "parry" && attacker.motionKey !== "parryKill") {
-        attacker.lockedMotion = "flinch";
-        attacker.lockedUntil = performance.now() + guardCounterFlinchDuration(attacker);
-        setUnitMotion(attacker, "flinch");
-        logMsg(`${UNIT_LABEL_BY_KIND[attacker.kind]}#${attacker.id}はガードされて怯んだ。`);
-      }
-      if (u.shieldHp <= 0) {
+      if (breaker) {
+        u.shieldHp = 0;
         u.shieldBroken = true;
-        logMsg(`${label}の小盾が破壊された!以後ガードできない。`);
+        logMsg(`${sourceLabel} → ${label}の小盾はガードブレイカーを受け、一撃で破壊された!(以後ガードできない)`);
         u.lockedMotion = "shieldbreak";
         u.lockedUntil = performance.now() + motionDuration(CHIEF_MOTIONS.shieldbreak);
         setUnitMotion(u, "shieldbreak");
         playUnitVoice(u, "shieldbreak");
+        return;
+      }
+      setUnitMotion(u, "guard");
+      u.lockedMotion = "guard";
+      u.lockedUntil = performance.now() + 350; // ガードポーズを少し保持してから通常状態に戻す
+      u.guardCooldownUntil = performance.now() + 350 + 1000; // ガード終了後1秒はクールタイム
+      playUnitVoice(u, "guard");
+      logMsg(`${sourceLabel} → ${label}が小盾でガード!ダメージを無効化した。`);
+      if (!superArmor && attacker && !attacker.dead && attacker.motionKey !== "parry" && attacker.motionKey !== "parryKill") {
+        attacker.lockedMotion = "flinch";
+        attacker.lockedUntil = performance.now() + guardCounterFlinchDuration(attacker);
+        setUnitMotion(attacker, "flinch");
+        logMsg(`${UNIT_LABEL_BY_KIND[attacker.kind]}#${attacker.id}はガードされて怯んだ。`);
       }
       return;
     }
@@ -3756,8 +3757,11 @@ function isSuperArmoredAttacker(attacker) {
   return false;
 }
 function isGuardBreakerAttacker(attacker) {
-  // 将来、専用モーションを持つ攻撃者が出た場合はここで判定する(現状は該当なし)
   if (!attacker) return false;
+  // 獰猛なゴブリンは近接2段目(叩きつけ)と中距離攻撃のみガードブレイカー(1段目には付与しない)
+  if (attacker.kind === "brute") {
+    return attacker.motionKey === "midrange" || (attacker.motionKey === "attack" && attacker.frameIndex === 8);
+  }
   return !!(CONFIG_BY_KIND[attacker.kind] && CONFIG_BY_KIND[attacker.kind].isGuardBreaker);
 }
 function isShieldPiercingAttacker(attacker) {
@@ -3772,6 +3776,7 @@ function isGuardNullifierAttacker(attacker) {
   if (attacker.kind === "elite") return attacker.motionKey === "attack" && attacker.frameIndex === 3;
   if (attacker.kind === "brute") return attacker.motionKey === "midrange";
   if (attacker.kind === "halberd") return attacker.motionKey === "midrange";
+  if (attacker.kind === "kurowl") return attacker.motionKey === "melee";
   return false;
 }
 // 最強ガードブレイカー:盾の耐久回数(guardBreakerHitsToBreak等)に関係なく、どんなに硬い盾でも

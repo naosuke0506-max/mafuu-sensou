@@ -1567,7 +1567,7 @@ const REVENANT_MOTIONS = {
   // 武器切り替え:クロスボウ→剣。剣→クロスボウの時は同じフレームを逆再生する
   switchToSword: { frames: ["switch_1", "switch_2", "switch_3", "switch_4"], loop: false, msPerFrame: 90 },
   switchToCrossbow: { frames: ["switch_4", "switch_3", "switch_2", "switch_1"], loop: false, msPerFrame: 90 },
-  flinch: { frames: ["flinch_1", "flinch_2"], frameDurations: [120, 280], loop: false },
+  flinch: { frames: ["flinch_1", "flinch_2"], frameDurations: [270, 630], loop: false },
   // ダウン(突進衝突での転倒/死亡演出兼用)
   down: { frames: ["down_1", "down_2", "down_3"], frameDurations: [200, 250, 5000], loop: false },
   // 突進:剣モード歩行を流用(他キャラより遅い突進)
@@ -1579,31 +1579,31 @@ const REVENANT_MOTIONS = {
     frameDurations: [130, 150, 150, 160, 140, 140, 160, 150, 150, 220],
     hitFrames: [3, 6, 9]
   },
-  // 中距離攻撃(クロスボウ):しゃがみ→構え→発射(hitFrameはindex3)→反動を長めに取る
+  // 中距離攻撃(クロスボウ):しゃがみ→構え→発射(hitFrameはindex3)→反動を長めに取る(ゆっくりだが単発威力が高い)
   xbowAttack: {
     frames: ["xbow_attack_1", "xbow_attack_2", "xbow_attack_3", "xbow_attack_4", "xbow_attack_5", "xbow_attack_6"],
     loop: false,
-    frameDurations: [220, 260, 200, 160, 400, 600],
+    frameDurations: [260, 300, 230, 180, 500, 750],
     hitFrames: [3]
   }
 };
 
 const REVENANT_CONFIG = {
-  walkSpeed: 28,             // 軍団最低クラスの移動速度
+  walkSpeed: 28,             // 軍団最低クラスの移動速度(遅め)
   dashSpeedMultiplier: 1.6,  // 他キャラより遅い突進
   dashDurationMs: 2200,
   dashHitDamage: 10,
   meleeRange: 58,
-  meleeHitDamage1: 5,  // 横斬り(コスト250円版)
+  meleeHitDamage1: 5,  // 横斬り(コスト250円版)・攻撃力は普通
   meleeHitDamage2: 5,  // 突き(コスト250円版)
   meleeHitDamage3: 5,  // 袈裟斬り(コスト250円版)
   weight: 65,
-  maxHp: 32,           // コスト250円版
+  maxHp: 65,           // HP高め・亡者ファミリーの中で最も頑丈
   attackLabel: "斬撃",
   voiceCategory: "revenant",
   midRangeMin: 120,
   midRangeMax: 280,
-  midrangeDamage: 5,   // クロスボウの矢(コスト250円版)
+  midrangeDamage: 22,  // クロスボウはゆっくりだが単発威力が高め
   guardFootstepRange: 0 // (未使用・予約)
 };
 
@@ -1863,7 +1863,7 @@ const HALBERD_MOTIONS = {
     frameDurations: [110, 110, 100, 100, 90, 130, 120, 110, 100, 90, 280],
     hitFrames: [4, 9]
   },
-  flinch: { frames: ["flinch_1", "flinch_2", "flinch_3"], loop: false, frameDurations: [100, 150, 300] },
+  flinch: { frames: ["flinch_1", "flinch_2", "flinch_3"], loop: false, frameDurations: [218, 327, 655] },
   down: {
     frames: ["down_1", "down_2", "down_3", "down_4", "down_5"],
     loop: false,
@@ -1873,25 +1873,25 @@ const HALBERD_MOTIONS = {
   midrange: {
     frames: ["midrange_1", "midrange_2", "midrange_3", "midrange_4", "midrange_5", "midrange_6", "midrange_7", "midrange_8", "midrange_9", "midrange_10", "midrange_11", "midrange_12", "midrange_13", "midrange_14", "midrange_15"],
     loop: false,
-    frameDurations: [90, 90, 90, 100, 130, 130, 140, 150, 160, 170, 130, 120, 110, 200, 450],
+    frameDurations: [90, 90, 90, 100, 130, 130, 140, 150, 160, 170, 130, 120, 110, 200, 900],
     hitFrames: [9],
     moveProgressByFrame: [0.15, 0.35, 0.55, 0.75, 0.9, 0.95, 1, 1, 1, 1, 1, 1, 1, 1, 1]
   }
 };
 
 const HALBERD_CONFIG = {
-  walkSpeed: 32,          // 亡者(28)よりやや速いが、槍兵などよりは遅め
-  meleeRange: 68,         // 斧槍のリーチ(槍兵より長め)
+  walkSpeed: 55,          // 移動速度も速め
+  meleeRange: 85,         // 斧槍の長いリーチ(リーチの短い敵に圧倒的有利)
   meleeHitDamage1: 8,     // 1段目:突き刺し
   meleeHitDamage2: 18,    // 2段目:振り下ろし
   weight: 85,
-  maxHp: 70,
+  maxHp: 105,             // 普通よりは高めのHP
   attackLabel: "斬撃",
   voiceCategory: "revenant", // 専用音声ができるまで亡者の音声セットを流用
   midRangeMin: 90,
   midRangeMax: 220,
   midrangeLeapAdvance: 130,   // 薙ぎ払いのために踏み込む距離
-  midrangeDamage: 25,         // 薙ぎ払いの範囲ダメージ(範囲内の敵全員に同じダメージ)
+  midrangeDamage: 38,         // 薙ぎ払いの範囲ダメージ(隙が大きい分、高火力)
   midrangeSplashRadius: 90    // 薙ぎ払いで同時に巻き込む範囲(px、上限人数なし)
 };
 
@@ -2237,6 +2237,11 @@ function guardCounterFlinchDuration(attacker) {
   const base = motionDuration(MOTIONS_BY_KIND[attacker.kind].flinch);
   return attacker.kind === "thrall" ? base * 2 : base;
 }
+// ガード無効化を受けた防御側の怯み時間。斧槍亡者の中距離(薙ぎ払い)は通常の2倍怯ませる。
+function guardNullifiedFlinchDuration(defenderKind, attacker) {
+  const base = motionDuration(MOTIONS_BY_KIND[defenderKind].flinch);
+  return (attacker && attacker.kind === "halberd") ? base * 2 : base;
+}
 
 // =====================================================================
 // DOM参照
@@ -2394,12 +2399,12 @@ const ROSTER = [
   { kind: "archer", name: "ゴブリン弓兵", cost: ECONOMY_CONFIG.archerCost, statsLine: "HP8 / 矢6 / 体重40 / 射程250(その場で射撃)", icon: ICON_ARCHER },
   { kind: "catapult", name: "ゴブリンカタパルト", cost: ECONOMY_CONFIG.catapultCost, statsLine: "カタパルトHP80 / 岩35(範囲) / 体重300 / 射程250〜400・破壊後は搭乗ゴブリンが継戦", icon: ICON_CATAPULT },
   { kind: "queen", name: "ゴブリンの女王", cost: ECONOMY_CONFIG.queenCost, statsLine: "HP400 / 杖35・薙ぎ払い25・魔砲弾45(いずれも範囲・ガードブレイカー) / 体重145 / 常時スーパーアーマー・デバフ咆哮・召喚持ち", icon: ICON_QUEEN },
-  { kind: "revenant", name: "亡者", cost: ECONOMY_CONFIG.revenantCost, statsLine: "HP32 / 剣5-5-5・矢5 / 体重65 / 移動最遅・近接遠距離を自動で持ち替え", icon: ICON_REVENANT },
+  { kind: "revenant", name: "亡者", cost: ECONOMY_CONFIG.revenantCost, statsLine: "HP65 / 剣5-5-5(近接)・クロスボウ22(中距離・ゆっくりだが単発高威力) / 体重65 / HP高めで移動は最遅。近接遠距離を状況に応じて自動で持ち替える臨機応変型", icon: ICON_REVENANT },
   { kind: "spear", name: "槍兵", cost: ECONOMY_CONFIG.spearCost, statsLine: "HP15 / 刺突8 / 体重65 / 兵士より長いリーチ", icon: ICON_SPEAR },
   { kind: "noirkurowl", name: "ノワール・クロウル", cost: ECONOMY_CONFIG.noirkurowlCost, statsLine: "HP600 / 引っ掻き30×2(第二形態45) / 体重320 / 全長5m超のボス級・HP50%以下で一度だけ第二形態へ変身し全域咆哮(ガードブレイカー)", icon: ICON_NOIRKUROWL },
   { kind: "assassin", name: "暗殺亡者", cost: ECONOMY_CONFIG.assassinCost, statsLine: "HP16 / 刺突10 / 体重55 / 高機動アタッカー・パリィ可能な攻撃は必ず受け流し致命の一撃(即死)、それ以外はガード。攻撃ヒットで出血蓄積+8%", icon: ICON_ASSASSIN },
   { kind: "elite", name: "精鋭の亡者兵士", cost: ECONOMY_CONFIG.eliteCost, statsLine: "HP60 / 盾殴り8・剣斬り12 / 体重75 / 亡者の上位互換・重装ガード持ち。鉄の盾はガードブレイカーを2回受けるまで壊れない", icon: ICON_ELITE },
-  { kind: "halberd", name: "斧槍亡者", cost: ECONOMY_CONFIG.halberdCost, statsLine: "HP70 / 突き8・振り下ろし18、中距離は踏み込み薙ぎ払い25(範囲内の敵を人数無制限で同時ヒット) / 体重85 / リーチが長い近接と、距離を詰める範囲攻撃を自動で使い分け。パリィ不可・ガードなし", icon: ICON_HALBERD },
+  { kind: "halberd", name: "斧槍亡者", cost: ECONOMY_CONFIG.halberdCost, statsLine: "HP105 / 突き8・振り下ろし18、中距離は踏み込み薙ぎ払い38(範囲内の敵を人数無制限で同時ヒット・隙は大きいがガード無効+2倍怯み) / 体重85 / リーチが長く移動速度も速い範囲攻撃アタッカー。近接・中距離ともにスーパーアーマー。数的不利に強いがガードと遠距離攻撃、強い単体の敵に弱い", icon: ICON_HALBERD },
   { kind: "crowman", name: "鴉人", cost: ECONOMY_CONFIG.crowmanCost, statsLine: "HP25 / 通常時は引っ掻き6・低速で非力 / 体重25 / 敵味方問わず出血発生や咆哮が発動すると、フィールド上の鴉人が一斉に心臓を捕食して凶暴化。凶暴化後は高速移動+5連続交差斬り(各7ダメージ・出血蓄積+4%)の高火力コンボ・常時スーパーアーマー・被ダメージ70%カット", icon: ICON_CROWMAN },
   { kind: "thrall", name: "奴隷亡者", cost: ECONOMY_CONFIG.thrallCost, statsLine: "HP52 / 跳躍斧撃10・16(中距離〜近距離対応)、吹き矢5(低ダメージ・命中で毒15%蓄積、100%で毒状態) / 体重60 / 亡者の下位種・素早くトリッキー。ガードされると2倍の時間怯む。パリィされやすく遠距離にも弱い", icon: ICON_THRALL },
   { kind: "cagespider", name: "籠蜘蛛", cost: ECONOMY_CONFIG.cagespiderCost, statsLine: "HP150 / 掴み乱打6×8連・間合い短め(近接)、糞団子3(中距離・控えめな直接火力、命中ごとに毒25%蓄積・100%で毒状態=180秒間1秒毎に最大HPの約0.1%のダメージ) / 体重110 / 軍団最低クラスの移動速度で前線の壁に。怯むと大きな隙。パリィ不可・ガードなし", icon: ICON_CAGESPIDER },
@@ -3162,7 +3167,7 @@ function damageUnit(u, dmg, sourceLabel, attacker) {
     if (!u.isDown && isGuardNullifierAttacker(attacker)) {
       logMsg(`${sourceLabel} → ${label}のガードは意味を成さず、無理矢理怯まされた!(ダメージなし)`);
       u.lockedMotion = "flinch";
-      u.lockedUntil = performance.now() + motionDuration(ELITE_MOTIONS.flinch);
+      u.lockedUntil = performance.now() + guardNullifiedFlinchDuration("elite", attacker);
       setUnitMotion(u, "flinch");
       playUnitVoice(u, "pain");
       return;
@@ -3239,7 +3244,7 @@ function damageUnit(u, dmg, sourceLabel, attacker) {
     if (!u.isDown && isGuardNullifierAttacker(attacker)) {
       logMsg(`${sourceLabel} → ${label}のガードは意味を成さず、無理矢理怯まされた!(ダメージなし)`);
       u.lockedMotion = "flinch";
-      u.lockedUntil = performance.now() + motionDuration(ASSASSIN_MOTIONS.flinch);
+      u.lockedUntil = performance.now() + guardNullifiedFlinchDuration("assassin", attacker);
       setUnitMotion(u, "flinch");
       playUnitVoice(u, "pain");
       return;
@@ -3388,7 +3393,7 @@ function damageUnit(u, dmg, sourceLabel, attacker) {
     if (isGuardNullifierAttacker(attacker)) {
       logMsg(`${sourceLabel} → ${label}のガードは意味を成さず、無理矢理怯まされた!(ダメージなし)`);
       u.lockedMotion = "flinch";
-      u.lockedUntil = performance.now() + motionDuration(CHIEF_MOTIONS.flinch);
+      u.lockedUntil = performance.now() + guardNullifiedFlinchDuration("chief", attacker);
       setUnitMotion(u, "flinch");
       playUnitVoice(u, "pain");
       return;
@@ -3738,6 +3743,9 @@ function isSuperArmoredAttacker(attacker) {
   }
   if (attacker.kind === "noirkurowl") {
     return attacker.motionKey === "attack" || attacker.motionKey === "attack2" || attacker.secondForm;
+  }
+  if (attacker.kind === "halberd") {
+    return attacker.motionKey === "attack" || attacker.motionKey === "midrange";
   }
   return false;
 }

@@ -1959,20 +1959,21 @@ const THRALL_MOTIONS = {
 };
 
 const THRALL_CONFIG = {
-  walkSpeed: 58,           // 小柄・素早い下位種のため軍団屈指の速さ(亡者・斧槍亡者より大幅に速い)
+  walkSpeed: 58,           // 小柄・素早い下位種のため軍団屈指の速さ(亡者・斧槍亡者より大幅に速い)。トリッキーな立ち回りが持ち味
   meleeRange: 150,         // 跳躍斧撃の間合い(中距離〜近距離まで対応)
-  meleeHitDamage1: 9,      // 1段目:跳躍しての回転斬り
-  meleeHitDamage2: 14,     // 2段目:着地叩きつけ
+  meleeHitDamage1: 10,     // 1段目:跳躍しての回転斬り(攻撃力は平均より少し高め)
+  meleeHitDamage2: 16,     // 2段目:着地叩きつけ
   weight: 60,
-  maxHp: 45,
+  maxHp: 52,               // HPは平均的な水準
   attackLabel: "斧撃",
   voiceCategory: "revenant", // 専用音声ができるまで亡者の音声セットを流用
   midrangeLeapAdvance: 100,  // 跳躍斧撃で踏み込む距離
   midRangeMin: 150,          // 吹き矢の間合い(跳躍斧撃の範囲より外側)
   midRangeMax: 300,
-  midrangeDamage: 6,          // 吹き矢(特殊効果なし)
+  midrangeDamage: 5,          // 吹き矢は低ダメージ(毒蓄積が主目的)
   midrangeProjectileFlightMs: 300,
-  midrangeProjectileArcHeight: 12
+  midrangeProjectileArcHeight: 12,
+  midrangePoisonStackPerHit: 15 // 吹き矢1発あたりの毒蓄積(%)。100%で毒状態(籠蜘蛛と共通の毒仕様)
 };
 
 // =====================================================================
@@ -2042,11 +2043,12 @@ const CAGESPIDER_MOTIONS = {
     loop: false,
     frameDurations: [250, 5000]
   },
-  // 中距離:糞団子を複数回投げつける(index1,3,5,7の4回、それぞれ着弾時に毒を25%蓄積)
+  // 中距離:糞団子を複数回投げつける(index1,3,5,7の4回、それぞれ着弾時に毒を25%蓄積)。
+  // 投げ終わり(最終コマ)を長めに取り、隙を大きくしている。
   midrange: {
     frames: ["midrange_1", "midrange_2", "midrange_3", "midrange_4", "midrange_5", "midrange_6", "midrange_7", "midrange_8", "midrange_9"],
     loop: false,
-    frameDurations: [150, 150, 150, 150, 150, 150, 150, 150, 250],
+    frameDurations: [150, 150, 150, 150, 150, 150, 150, 150, 800],
     hitFrames: [1, 3, 5, 7]
   }
 };
@@ -2061,7 +2063,7 @@ const CAGESPIDER_CONFIG = {
   voiceCategory: "cagespider",
   midRangeMin: 100,
   midRangeMax: 260,
-  midrangeDamage: 7,           // 糞団子1発あたりのダメージ
+  midrangeDamage: 3,           // 糞団子1発あたりの直接ダメージ(控えめ・主目的は毒蓄積)
   midrangeProjectileFlightMs: 380,
   midrangeProjectileArcHeight: 40,
   poisonStackPerHit: 25        // 糞団子1発あたりの毒蓄積(%)。100%で発動(最大HPの15%ダメージ)
@@ -2230,6 +2232,11 @@ function motionDuration(m) {
   if (m.frameDurations) return m.frameDurations.reduce((a, b) => a + b, 0);
   return m.frames.length * m.msPerFrame;
 }
+// ガードされた攻撃者側の怯み時間。奴隷亡者はガードに弱く、通常の2倍の時間怯む。
+function guardCounterFlinchDuration(attacker) {
+  const base = motionDuration(MOTIONS_BY_KIND[attacker.kind].flinch);
+  return attacker.kind === "thrall" ? base * 2 : base;
+}
 
 // =====================================================================
 // DOM参照
@@ -2394,8 +2401,8 @@ const ROSTER = [
   { kind: "elite", name: "精鋭の亡者兵士", cost: ECONOMY_CONFIG.eliteCost, statsLine: "HP60 / 盾殴り8・剣斬り12 / 体重75 / 亡者の上位互換・重装ガード持ち。鉄の盾はガードブレイカーを2回受けるまで壊れない", icon: ICON_ELITE },
   { kind: "halberd", name: "斧槍亡者", cost: ECONOMY_CONFIG.halberdCost, statsLine: "HP70 / 突き8・振り下ろし18、中距離は踏み込み薙ぎ払い25(範囲内の敵を人数無制限で同時ヒット) / 体重85 / リーチが長い近接と、距離を詰める範囲攻撃を自動で使い分け。パリィ不可・ガードなし", icon: ICON_HALBERD },
   { kind: "crowman", name: "鴉人", cost: ECONOMY_CONFIG.crowmanCost, statsLine: "HP25 / 通常時は引っ掻き6・低速で非力 / 体重25 / 敵味方問わず出血発生や咆哮が発動すると、フィールド上の鴉人が一斉に心臓を捕食して凶暴化。凶暴化後は高速移動+5連続交差斬り(各7ダメージ・出血蓄積+4%)の高火力コンボ・常時スーパーアーマー・被ダメージ70%カット", icon: ICON_CROWMAN },
-  { kind: "thrall", name: "奴隷亡者", cost: ECONOMY_CONFIG.thrallCost, statsLine: "HP45 / 跳躍斧撃9・14(中距離〜近距離対応)、吹き矢6(特殊効果なし) / 体重60 / 亡者の下位種・小柄で機動力が高い。近接専用モーションは持たず、跳躍斧撃と吹き矢を距離に応じて自動で使い分け。跳躍斧撃はパリィ可能・ガードなし・出血付与なし", icon: ICON_THRALL },
-  { kind: "cagespider", name: "籠蜘蛛", cost: ECONOMY_CONFIG.cagespiderCost, statsLine: "HP150 / 掴み乱打6×8連・間合い短め(近接)、糞団子7(中距離・命中ごとに毒25%蓄積、100%で最大HPの15%ダメージ) / 体重110 / 軍団最低クラスの移動速度で前線の壁に。怯むと大きな隙。パリィ不可・ガードなし", icon: ICON_CAGESPIDER },
+  { kind: "thrall", name: "奴隷亡者", cost: ECONOMY_CONFIG.thrallCost, statsLine: "HP52 / 跳躍斧撃10・16(中距離〜近距離対応)、吹き矢5(低ダメージ・命中で毒15%蓄積、100%で毒状態) / 体重60 / 亡者の下位種・素早くトリッキー。ガードされると2倍の時間怯む。パリィされやすく遠距離にも弱い", icon: ICON_THRALL },
+  { kind: "cagespider", name: "籠蜘蛛", cost: ECONOMY_CONFIG.cagespiderCost, statsLine: "HP150 / 掴み乱打6×8連・間合い短め(近接)、糞団子3(中距離・控えめな直接火力、命中ごとに毒25%蓄積・100%で毒状態=180秒間1秒毎に最大HPの約0.1%のダメージ) / 体重110 / 軍団最低クラスの移動速度で前線の壁に。怯むと大きな隙。パリィ不可・ガードなし", icon: ICON_CAGESPIDER },
   { kind: "pauper", name: "貧困亡者", cost: ECONOMY_CONFIG.pauperCost, statsLine: "HP54 / 突き刺し18(単発・出血蓄積5%) / 体重45 / 亡者の下位種、移動速度は標準的。パリィ不可・ガードなし", icon: ICON_PAUPER }
 ];
 let formationSlots = new Array(MAX_SLOTS).fill(null); // 各要素: null | "soldier" | "kurowl" | "goblin" | "archer" | "catapult"
@@ -3193,7 +3200,7 @@ function damageUnit(u, dmg, sourceLabel, attacker) {
       logMsg(`${sourceLabel} → ${label}が鉄の盾でガード!ダメージを無効化した。`);
       if (!breaker && !isSuperArmoredAttacker(attacker) && attacker && !attacker.dead && attacker.motionKey !== "parry" && attacker.motionKey !== "parryKill") {
         attacker.lockedMotion = "flinch";
-        attacker.lockedUntil = performance.now() + motionDuration(MOTIONS_BY_KIND[attacker.kind].flinch);
+        attacker.lockedUntil = performance.now() + guardCounterFlinchDuration(attacker);
         setUnitMotion(attacker, "flinch");
         logMsg(`${UNIT_LABEL_BY_KIND[attacker.kind]}#${attacker.id}はガードされて怯んだ。`);
       }
@@ -3278,7 +3285,7 @@ function damageUnit(u, dmg, sourceLabel, attacker) {
         logMsg(`${sourceLabel} → ${label}が小盾でガード!ダメージを無効化した。`);
         if (!isSuperArmoredAttacker(attacker) && attacker && !attacker.dead && attacker.motionKey !== "parry" && attacker.motionKey !== "parryKill") {
           attacker.lockedMotion = "flinch";
-          attacker.lockedUntil = performance.now() + motionDuration(MOTIONS_BY_KIND[attacker.kind].flinch);
+          attacker.lockedUntil = performance.now() + guardCounterFlinchDuration(attacker);
           setUnitMotion(attacker, "flinch");
           logMsg(`${UNIT_LABEL_BY_KIND[attacker.kind]}#${attacker.id}はガードされて怯んだ。`);
         }
@@ -3422,7 +3429,7 @@ function damageUnit(u, dmg, sourceLabel, attacker) {
       logMsg(`${sourceLabel} → ${label}が小盾でガード!盾に<b>${shieldDmg}</b>ダメージ(盾残り${u.shieldHp}/${u.shieldMaxHp})`);
       if (!breaker && !superArmor && attacker && !attacker.dead && attacker.motionKey !== "parry" && attacker.motionKey !== "parryKill") {
         attacker.lockedMotion = "flinch";
-        attacker.lockedUntil = performance.now() + motionDuration(MOTIONS_BY_KIND[attacker.kind].flinch);
+        attacker.lockedUntil = performance.now() + guardCounterFlinchDuration(attacker);
         setUnitMotion(attacker, "flinch");
         logMsg(`${UNIT_LABEL_BY_KIND[attacker.kind]}#${attacker.id}はガードされて怯んだ。`);
       }
@@ -4426,46 +4433,68 @@ function tickCagespiderDungBalls(now) {
   cagespiderDungBalls = cagespiderDungBalls.filter(p => !p.resolved);
 }
 
-// 毒蓄積:蓄積値が100%に達すると毒が発生し、最大HPの15%のダメージ+専用エフェクトを与える
+// 毒蓄積:蓄積値が100%に達すると毒状態(継続ダメージ)が発生する。
+// 効果時間は基本180秒、1秒ごとに対象の最大HPの約0.1%のダメージが入り続ける(合計で最大HPの約18%相当)。
+const POISON_DOT_DURATION_MS = 180000;
+const POISON_DOT_PERCENT_PER_SEC = 0.001; // 最大HPに対する割合(0.1%)
 function playPoisonSound() {
   try {
     const audio = new Audio(SOUNDS.cagespider_poison);
     audio.play().catch(() => {});
   } catch (e) { /* 再生できない環境でも処理を止めない */ }
 }
-function showPoisonVisual(target) {
+function showPoisonVisual(target, durationMs) {
   if (!target || !target.el || !target.el.unit) return;
-  attachEffectOverlay(target, CAGESPIDER_POISON_FRAMES, 2200, 150, { loop: true }, CAGESPIDER_FRAMES);
-  playPoisonSound();
+  attachEffectOverlay(target, CAGESPIDER_POISON_FRAMES, durationMs, 150, { loop: true }, CAGESPIDER_FRAMES);
 }
-function triggerPoisonProc(target) {
+function triggerPoisonDot(target) {
   if (!target || target.dead || target.isCastle) return;
+  const now = performance.now();
+  target.poisonDotUntil = now + POISON_DOT_DURATION_MS;
+  target.poisonDotMaxHpSnapshot = target.maxHp || target.hp || 1;
+  target.poisonDotLastTick = now;
+  showPoisonVisual(target, POISON_DOT_DURATION_MS);
+  playPoisonSound();
   const label = `${UNIT_LABEL_BY_KIND[target.kind]}#${target.id}`;
-  const dmg = Math.round((target.maxHp || 1) * 0.15);
-  target.hp = Math.max(0, target.hp - dmg);
-  showPoisonVisual(target);
-  logMsg(`${label}に蓄積した毒が発動し、最大HPの15%(<b>${dmg}</b>)のダメージ!(残り${target.hp.toFixed(0)})`);
-  if (target.hp <= 0 && !target.dead) {
-    target.dead = true;
-    target.isDown = false;
-    target.deadAt = performance.now();
-    target.lockedMotion = null;
-    const vMotions = MOTIONS_BY_KIND[target.kind];
-    const deathKey = vMotions.down ? "down" : "knockback";
-    setUnitMotion(target, deathKey);
-    target.removeAt = target.deadAt + motionDuration(vMotions[deathKey]);
-    playUnitVoice(target, "death");
-    logMsg(`${label}が毒により倒れた。`);
-  }
-  triggerCrowmanAwakening(performance.now());
+  logMsg(`${label}が毒状態になった!(180秒間、1秒ごとに最大HPの約0.1%のダメージ)`);
 }
 function applyPoisonStack(target, amount) {
   if (!target || target.dead || target.isCastle || !amount) return;
   target.poisonAccum = (target.poisonAccum || 0) + amount;
-  showPoisonVisual(target);
   if (target.poisonAccum >= 100) {
     target.poisonAccum = 0;
-    triggerPoisonProc(target);
+    triggerPoisonDot(target);
+  }
+}
+function tickPoisonDots(now) {
+  for (const u of allUnits()) {
+    if (!u.poisonDotUntil || u.dead) continue;
+    if (now >= u.poisonDotUntil) {
+      u.poisonDotUntil = null;
+      continue;
+    }
+    if (now - (u.poisonDotLastTick || 0) >= 1000) {
+      u.poisonDotLastTick = now;
+      const dmg = Math.round((u.poisonDotMaxHpSnapshot || u.maxHp || 1) * POISON_DOT_PERCENT_PER_SEC);
+      if (dmg <= 0) continue;
+      u.hp = Math.max(0, u.hp - dmg);
+      const label = `${UNIT_LABEL_BY_KIND[u.kind]}#${u.id}`;
+      logMsg(`毒の継続ダメージ → ${label}に<b>${dmg}</b>ダメージ(残り${u.hp.toFixed(0)})`);
+      if (u.hp <= 0 && !u.dead) {
+        u.dead = true;
+        u.isDown = false;
+        u.deadAt = now;
+        u.lockedMotion = null;
+        const vMotions = MOTIONS_BY_KIND[u.kind];
+        const deathKey = vMotions.down ? "down" : "knockback";
+        setUnitMotion(u, deathKey);
+        u.removeAt = u.deadAt + motionDuration(vMotions[deathKey]);
+        playUnitVoice(u, "death");
+        logMsg(`${label}が毒により倒れた。`);
+        u.poisonDotUntil = null;
+        triggerCrowmanAwakening(now);
+      }
+    }
   }
 }
 
@@ -4512,6 +4541,7 @@ function tickThrallDarts(now) {
       if (p.targetRef && !p.targetRef.dead) {
         const dmg = Math.round(THRALL_CONFIG.midrangeDamage * p.mult);
         applyDamageTo(p.targetRef, dmg, p.label, p.attacker);
+        applyPoisonStack(p.targetRef, THRALL_CONFIG.midrangePoisonStackPerHit);
       }
       p.el.remove();
     }
@@ -5347,6 +5377,7 @@ function tick(now) {
       tickThrallDarts(now);
       tickCagespiderDungBalls(now);
       tickCagespiderImpactEffects(now);
+      tickPoisonDots(now);
 
       // 敵ユニットを倒した際、出撃コストの一部(KILL_REWARD_RATIO)を即座に獲得する
       for (const u of allUnits()) {

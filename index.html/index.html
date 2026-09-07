@@ -931,6 +931,13 @@ const SOUNDS = {
   "crowman_roar": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/audio/crowman_roar.opus",
   "crowman_attack2": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/audio/crowman_attack2.opus",
   "crowman_death": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/audio/crowman_death.opus",
+  "cagespider_warcry": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/audio/cagespider_warcry.opus",
+  "cagespider_attack": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/audio/cagespider_attack.opus",
+  "cagespider_midrange": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/audio/cagespider_midrange.opus",
+  "cagespider_pain": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/audio/cagespider_pain.opus",
+  "cagespider_death": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/audio/cagespider_death.opus",
+  "cagespider_dungball": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/audio/cagespider_dungball.opus",
+  "cagespider_poison": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/audio/cagespider_poison.opus",
   "catapult_destroy_1": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/audio/catapult_destroy_1.mp3",
   "catapult_destroy_2": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/audio/catapult_destroy_2.mp3",
   "catapult_destroy_3": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/audio/catapult_destroy_3.mp3",
@@ -2049,7 +2056,7 @@ const CAGESPIDER_CONFIG = {
   weight: 110,
   maxHp: 90,
   attackLabel: "掴み乱打",
-  voiceCategory: "revenant", // 専用音声ができるまで亡者の音声セットを流用
+  voiceCategory: "cagespider",
   midRangeMin: 100,
   midRangeMax: 260,
   midrangeDamage: 7,           // 糞団子1発あたりのダメージ
@@ -2455,6 +2462,14 @@ const VOICE_SETS = {
     attack2: SOUNDS.crowman_attack2,     // 凶暴化形態の近接5連斬りヒット時
     death: SOUNDS.crowman_death          // 死亡時(通常・凶暴化共通)
   },
+  cagespider: {
+    warCry: SOUNDS.cagespider_warcry,           // 出撃時の雄叫び
+    iconPreview: SOUNDS.cagespider_warcry,      // 編成画面でアイコンをタップした時(warcryを流用)
+    attack: SOUNDS.cagespider_attack,           // 近接乱打コンボ開始時(檻が激しく揺れ、腕が風を切る音)
+    midrangeAttack: SOUNDS.cagespider_midrange, // 糞団子を投げる瞬間の掛け声
+    pain: SOUNDS.cagespider_pain,               // 被弾・怯み時
+    death: SOUNDS.cagespider_death              // 死亡時
+  },
   goblin: {
     warCry: SOUNDS.goblin_warcry,  // 編成選択プレビュー / 「突撃！」発動時
     attack: SOUNDS.goblin_attack,  // 攻撃ヒット時(棍棒)
@@ -2835,6 +2850,7 @@ function setUnitMotion(u, key) {
   if (u.kind === "chief" && (key === "midrange" || key === "attack")) u.midrangeStartX = u.xPx;
   if (u.kind === "halberd" && key === "midrange") u.midrangeStartX = u.xPx;
   if (u.kind === "thrall" && key === "attack") u.midrangeStartX = u.xPx;
+  if (u.kind === "cagespider" && key === "attack") playUnitVoice(u, "attack");
   if (u.kind === "kurowl" && key === "melee") playUnitVoice(u, "attack");
   if (u.kind === "kurowl" && key === "walk") {
     // 歩行に切り替わるたびに鳴らすと煩いので、間隔を空けて再生する
@@ -4271,6 +4287,13 @@ function spawnCagespiderDungBall(u, target, label) {
   });
 }
 
+function playDungBallSound() {
+  try {
+    const audio = new Audio(SOUNDS.cagespider_dungball);
+    audio.play().catch(() => {});
+  } catch (e) { /* 再生できない環境でも処理を止めない */ }
+}
+
 function spawnDungBallImpact(xImpact) {
   const frames = ["dungball_impact_1", "dungball_impact_2", "dungball_impact_3", "dungball_impact_4"];
   const frameDurations = [90, 100, 120, 150];
@@ -4281,6 +4304,7 @@ function spawnDungBallImpact(xImpact) {
   el.appendChild(img);
   els.field.appendChild(el);
   el.style.left = `${fieldScreenX(xImpact)}px`;
+  playDungBallSound();
 
   cagespiderImpactEffects.push({
     id: ++effectIdSeq,
@@ -4331,9 +4355,16 @@ function tickCagespiderDungBalls(now) {
 }
 
 // 毒蓄積:蓄積値が100%に達すると毒が発生し、最大HPの15%のダメージ+専用エフェクトを与える
+function playPoisonSound() {
+  try {
+    const audio = new Audio(SOUNDS.cagespider_poison);
+    audio.play().catch(() => {});
+  } catch (e) { /* 再生できない環境でも処理を止めない */ }
+}
 function showPoisonVisual(target) {
   if (!target || !target.el || !target.el.unit) return;
   attachEffectOverlay(target, CAGESPIDER_POISON_FRAMES, 2200, 150, { loop: true }, CAGESPIDER_FRAMES);
+  playPoisonSound();
 }
 function triggerPoisonProc(target) {
   if (!target || target.dead || target.isCastle) return;
@@ -5020,9 +5051,6 @@ function tickUnit(u, now) {
         playUnitVoice(u, "midrangeAttack");
       } else if (u.kind === "cagespider" && u.motionKey === "midrange") {
         playUnitVoice(u, "midrangeAttack");
-      } else if (u.kind === "cagespider" && u.motionKey === "attack") {
-        // 8連続ヒットの声は最初の1回だけ再生する
-        if (u.frameIndex === 1) playUnitVoice(u, "attack");
       } else if (u.kind === "crowman" && u.motionKey === "attack2") {
         // 5連続ヒットの声は最初の1回だけ再生する(1.5秒の連続音として作成済みのため)
         if (u.frameIndex === 3) playUnitVoice(u, "attack2");

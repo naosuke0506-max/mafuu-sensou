@@ -2036,7 +2036,7 @@ const CAGESPIDER_MOTIONS = {
     frameDurations: [120, 90, 90, 90, 90, 90, 90, 90, 90, 120, 200],
     hitFrames: [1, 2, 3, 4, 5, 6, 7, 8]
   },
-  flinch: { frames: ["flinch_1", "flinch_2", "flinch_3"], frameDurations: [100, 150, 300], loop: false },
+  flinch: { frames: ["flinch_1", "flinch_2", "flinch_3"], frameDurations: [255, 382, 763], loop: false },
   down: {
     frames: ["down_1", "down_2"],
     loop: false,
@@ -2052,11 +2052,11 @@ const CAGESPIDER_MOTIONS = {
 };
 
 const CAGESPIDER_CONFIG = {
-  walkSpeed: 26,             // 大型・重量級のため軍団屈指の遅さ
-  meleeRange: 70,
-  meleeHitDamage: 5,         // 8ヒットの乱打コンボ、1発あたりのダメージ(合計40)
+  walkSpeed: 18,              // 軍団最低クラスの遅さ(壁役として居座る)
+  meleeRange: 50,             // リーチは短め
+  meleeHitDamage: 6,          // 8ヒットの乱打コンボ、1発あたりのダメージ(合計48)
   weight: 110,
-  maxHp: 90,
+  maxHp: 150,                 // 前線の壁となる高耐久
   attackLabel: "掴み乱打",
   voiceCategory: "cagespider",
   midRangeMin: 100,
@@ -2103,12 +2103,12 @@ const ICON_PAUPER = "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@ma
 const PAUPER_MOTIONS = {
   idle: { frames: ["walk_1"], loop: true, msPerFrame: 600 },
   walk: { frames: ["walk_1", "walk_2", "walk_3", "walk_4", "walk_5"], loop: true, msPerFrame: 160 },
-  // 近接:フォークでの単発突き刺し(index8でヒット・コンボはせず1ヒットのみ)
+  // 近接:フォークでの単発突き刺し(index3の突き刺し完了・スパーク発生時にヒット。コンボはせず1ヒットのみ)
   attack: {
     frames: ["attack_1", "attack_2", "attack_3", "attack_4", "attack_5", "attack_6", "attack_7", "attack_8", "attack_9", "attack_10", "attack_11"],
     loop: false,
     frameDurations: [156, 141, 141, 125, 125, 109, 109, 109, 109, 141, 235],
-    hitFrames: [8]
+    hitFrames: [3]
   },
   flinch: { frames: ["flinch_1", "flinch_2", "flinch_3"], frameDurations: [100, 150, 300], loop: false },
   down: {
@@ -2395,7 +2395,7 @@ const ROSTER = [
   { kind: "halberd", name: "斧槍亡者", cost: ECONOMY_CONFIG.halberdCost, statsLine: "HP70 / 突き8・振り下ろし18、中距離は踏み込み薙ぎ払い25(範囲内の敵を人数無制限で同時ヒット) / 体重85 / リーチが長い近接と、距離を詰める範囲攻撃を自動で使い分け。パリィ不可・ガードなし", icon: ICON_HALBERD },
   { kind: "crowman", name: "鴉人", cost: ECONOMY_CONFIG.crowmanCost, statsLine: "HP25 / 通常時は引っ掻き6・低速で非力 / 体重25 / 敵味方問わず出血発生や咆哮が発動すると、フィールド上の鴉人が一斉に心臓を捕食して凶暴化。凶暴化後は高速移動+5連続交差斬り(各7ダメージ・出血蓄積+4%)の高火力コンボ・常時スーパーアーマー・被ダメージ70%カット", icon: ICON_CROWMAN },
   { kind: "thrall", name: "奴隷亡者", cost: ECONOMY_CONFIG.thrallCost, statsLine: "HP45 / 跳躍斧撃9・14(中距離〜近距離対応)、吹き矢6(特殊効果なし) / 体重60 / 亡者の下位種・小柄で機動力が高い。近接専用モーションは持たず、跳躍斧撃と吹き矢を距離に応じて自動で使い分け。跳躍斧撃はパリィ可能・ガードなし・出血付与なし", icon: ICON_THRALL },
-  { kind: "cagespider", name: "籠蜘蛛", cost: ECONOMY_CONFIG.cagespiderCost, statsLine: "HP90 / 掴み乱打5×8連(近接)、糞団子7(中距離・命中ごとに毒25%蓄積、100%で最大HPの15%ダメージ) / 体重110 / 大型・低速の重量級。近接遠距離を距離に応じて自動で使い分け。パリィ不可・ガードなし", icon: ICON_CAGESPIDER },
+  { kind: "cagespider", name: "籠蜘蛛", cost: ECONOMY_CONFIG.cagespiderCost, statsLine: "HP150 / 掴み乱打6×8連・間合い短め(近接)、糞団子7(中距離・命中ごとに毒25%蓄積、100%で最大HPの15%ダメージ) / 体重110 / 軍団最低クラスの移動速度で前線の壁に。怯むと大きな隙。パリィ不可・ガードなし", icon: ICON_CAGESPIDER },
   { kind: "pauper", name: "貧困亡者", cost: ECONOMY_CONFIG.pauperCost, statsLine: "HP54 / 突き刺し18(単発・出血蓄積5%) / 体重45 / 亡者の下位種、移動速度は標準的。パリィ不可・ガードなし", icon: ICON_PAUPER }
 ];
 let formationSlots = new Array(MAX_SLOTS).fill(null); // 各要素: null | "soldier" | "kurowl" | "goblin" | "archer" | "catapult"

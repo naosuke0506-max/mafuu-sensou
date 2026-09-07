@@ -364,26 +364,26 @@
     <button class="act" id="btnSpawnCatapultLeft">ゴブリンカタパルトを出撃(敵軍/左, 2400円)</button>
     <button class="act" id="btnSpawnBruteRight">獰猛なゴブリンを出撃(自軍/右, 1800円)</button>
     <button class="act" id="btnSpawnBruteLeft">獰猛なゴブリンを出撃(敵軍/左, 1800円)</button>
-    <button class="act" id="btnSpawnChiefRight">ゴブリン長を出撃(自軍/右, 3500円)</button>
-    <button class="act" id="btnSpawnChiefLeft">ゴブリン長を出撃(敵軍/左, 3500円)</button>
-    <button class="act" id="btnSpawnQueenRight">ゴブリンの女王を出撃(自軍/右, 12000円)</button>
-    <button class="act" id="btnSpawnQueenLeft">ゴブリンの女王を出撃(敵軍/左, 12000円)</button>
+    <button class="act" id="btnSpawnChiefRight">ゴブリン長を出撃(自軍/右, 3000円)</button>
+    <button class="act" id="btnSpawnChiefLeft">ゴブリン長を出撃(敵軍/左, 3000円)</button>
+    <button class="act" id="btnSpawnQueenRight">ゴブリンの女王を出撃(自軍/右, 6000円)</button>
+    <button class="act" id="btnSpawnQueenLeft">ゴブリンの女王を出撃(敵軍/左, 6000円)</button>
     <button class="act" id="btnSpawnRevenantRight">亡者を出撃(自軍/右, 250円)</button>
     <button class="act" id="btnSpawnRevenantLeft">亡者を出撃(敵軍/左, 250円)</button>
     <button class="act" id="btnSpawnSpearRight">槍兵を出撃(自軍/右, 175円)</button>
     <button class="act" id="btnSpawnSpearLeft">槍兵を出撃(敵軍/左, 175円)</button>
-    <button class="act" id="btnSpawnNoirkurowlRight">ノワール・クロウルを出撃(自軍/右, 17500円)</button>
-    <button class="act" id="btnSpawnNoirkurowlLeft">ノワール・クロウルを出撃(敵軍/左, 17500円)</button>
+    <button class="act" id="btnSpawnNoirkurowlRight">ノワール・クロウルを出撃(自軍/右, 7500円)</button>
+    <button class="act" id="btnSpawnNoirkurowlLeft">ノワール・クロウルを出撃(敵軍/左, 7500円)</button>
     <button class="act" id="btnSpawnAssassinRight">暗殺亡者を出撃(自軍/右, 450円)</button>
     <button class="act" id="btnSpawnAssassinLeft">暗殺亡者を出撃(敵軍/左, 450円)</button>
     <button class="act" id="btnSpawnEliteRight">精鋭の亡者兵士を出撃(自軍/右, 600円)</button>
     <button class="act" id="btnSpawnEliteLeft">精鋭の亡者兵士を出撃(敵軍/左, 600円)</button>
-    <button class="act" id="btnSpawnHalberdRight">斧槍亡者を出撃(自軍/右, 1800円)</button>
-    <button class="act" id="btnSpawnHalberdLeft">斧槍亡者を出撃(敵軍/左, 1800円)</button>
-    <button class="act" id="btnSpawnCrowmanRight">鴉人を出撃(自軍/右, 900円)</button>
-    <button class="act" id="btnSpawnCrowmanLeft">鴉人を出撃(敵軍/左, 900円)</button>
-    <button class="act" id="btnSpawnThrallRight">奴隷亡者を出撃(自軍/右, 600円)</button>
-    <button class="act" id="btnSpawnThrallLeft">奴隷亡者を出撃(敵軍/左, 600円)</button>
+    <button class="act" id="btnSpawnHalberdRight">斧槍亡者を出撃(自軍/右, 1200円)</button>
+    <button class="act" id="btnSpawnHalberdLeft">斧槍亡者を出撃(敵軍/左, 1200円)</button>
+    <button class="act" id="btnSpawnCrowmanRight">鴉人を出撃(自軍/右, 550円)</button>
+    <button class="act" id="btnSpawnCrowmanLeft">鴉人を出撃(敵軍/左, 550円)</button>
+    <button class="act" id="btnSpawnThrallRight">奴隷亡者を出撃(自軍/右, 500円)</button>
+    <button class="act" id="btnSpawnThrallLeft">奴隷亡者を出撃(敵軍/左, 500円)</button>
     <button class="act" id="btnSpawnCagespiderRight">籠蜘蛛を出撃(自軍/右, 1000円)</button>
     <button class="act" id="btnSpawnCagespiderLeft">籠蜘蛛を出撃(敵軍/左, 1000円)</button>
     <button class="act" id="btnSpawnPauperRight">貧困亡者を出撃(自軍/右, 300円)</button>
@@ -575,15 +575,15 @@ const NOIRKUROWL_MOTIONS = {
 
 const NOIRKUROWL_CONFIG = {
   bodyLength: 150,        // 全長5m以上の目安
-  walkSpeed: 40,          // 重量級のため兵士より遅め
+  walkSpeed: 52,          // 移動速度は普通
   dashSpeedMultiplier: 2.5,
   dashDurationMs: 3000,
   meleeRange: 110,        // 大きな体格に見合った長いリーチ
-  meleeHitDamage: 30,     // 通常コンボ1ヒットあたり(コスト17,500円版)
-  attack2HitDamage: 45,   // 第二形態専用コンボ1ヒットあたり(コスト17,500円版)
+  meleeHitDamage: 35,     // 通常コンボ1ヒットあたり・攻撃力高め
+  attack2HitDamage: 55,   // 第二形態専用コンボ1ヒットあたり
   dashHitDamage: 25,
   weight: 320,            // 全キャラ中最重量
-  maxHp: 600,             // コスト17,500円版(ボスクラスの耐久力)
+  maxHp: 190,             // HPは普通
   attackLabel: "引っ掻き",
   voiceCategory: "noirkurowl", // 専用音声セット
   roarNearRadius: 150,     // 咆哮:これ以下の距離の敵はクロウルに変身させる
@@ -1476,25 +1476,25 @@ const QUEEN_MOTIONS = {
 };
 
 const QUEEN_CONFIG = {
-  walkSpeed: 35,
+  walkSpeed: 28,            // 移動速度は遅め
   dashSpeedMultiplier: 2,
   dashDurationMs: 2500,
   dashHitDamage: 20,
   meleeRange: 65,
-  meleeHitDamage: 35,       // 1段目(範囲攻撃)(コスト12,000円版)
-  meleeHitDamage2: 25,      // 2段目(薙ぎ払い・範囲攻撃/ガードブレイカー)(コスト12,000円版)
+  meleeHitDamage: 18,       // 1段目(範囲攻撃)・攻撃力は普通
+  meleeHitDamage2: 14,      // 2段目(薙ぎ払い・範囲攻撃/ガードブレイカー)
   meleeSplashRadius1: 70,   // 1段目の範囲攻撃の半径
   meleeSplashRadius2: 80,   // 2段目の範囲攻撃の半径
   weight: 145,
-  maxHp: 400,               // コスト12,000円版
+  maxHp: 170,               // HPは普通
   attackLabel: "杖の叩きつけ",
   voiceCategory: "queen",
   midRangeMin: 100,
   midRangeMax: 220,
-  midrangeDamage: 45,       // コスト12,000円版・ガードブレイカー
+  midrangeDamage: 20,       // ガードブレイカー
   midrangeCooldownMs: 15000,         // 中距離攻撃(魔砲弾)の再使用クールタイム
   midrangeSplashRadius: 90,
-  midrangeSplashMinDamage: 18,  // コスト12,000円版
+  midrangeSplashMinDamage: 10,
   midrangeProjectileFlightMs: 550,
   midrangeProjectileArcHeight: 70,   // 放物線の高さ(見た目)
   midrangeLaunchHeightPx: 55,        // 杖の先端の高さ(見た目)
@@ -2359,16 +2359,16 @@ const ECONOMY_CONFIG = {
   archerCost: 120,
   catapultCost: 2400,
   bruteCost: 1800,
-  chiefCost: 3500,
-  queenCost: 12000,
+  chiefCost: 3000,
+  queenCost: 6000,
   revenantCost: 250,
   spearCost: 175,
   assassinCost: 450,
   eliteCost: 600,
-  noirkurowlCost: 17500,
-  halberdCost: 1800,
-  crowmanCost: 900,
-  thrallCost: 600,
+  noirkurowlCost: 7500,
+  halberdCost: 1200,
+  crowmanCost: 550,
+  thrallCost: 500,
   cagespiderCost: 1000,
   pauperCost: 300
 };
@@ -2399,10 +2399,10 @@ const ROSTER = [
   { kind: "chief", name: "ゴブリン長", cost: ECONOMY_CONFIG.chiefCost, statsLine: "HP160 / 斬撃24 / 体重80 / 普通よりHP高め・攻撃力高い。ガード持ち(クールタイム1秒)、ガードブレイカーを受けると盾が一撃で破壊され以後ガード不可", icon: ICON_CHIEF },
   { kind: "archer", name: "ゴブリン弓兵", cost: ECONOMY_CONFIG.archerCost, statsLine: "HP16 / 矢6(低め) / 体重40 / 移動速め・射程250(その場で射撃)", icon: ICON_ARCHER },
   { kind: "catapult", name: "ゴブリンカタパルト", cost: ECONOMY_CONFIG.catapultCost, statsLine: "カタパルトHP130 / 岩45(範囲・ガードブレイカー) / 体重300 / HP高め・移動遅め・射程250〜400・破壊後は搭乗ゴブリンが継戦", icon: ICON_CATAPULT },
-  { kind: "queen", name: "ゴブリンの女王", cost: ECONOMY_CONFIG.queenCost, statsLine: "HP400 / 杖35・薙ぎ払い25・魔砲弾45(いずれも範囲・ガードブレイカー) / 体重145 / 常時スーパーアーマー・デバフ咆哮・召喚持ち", icon: ICON_QUEEN },
+  { kind: "queen", name: "ゴブリンの女王", cost: ECONOMY_CONFIG.queenCost, statsLine: "HP170(普通) / 杖18・薙ぎ払い14・魔砲弾20(いずれも範囲・ガードブレイカー、攻撃力は普通) / 体重145 / 移動遅め。攻撃中のみスーパーアーマー、時間経過で召喚により強化・デバフ咆哮持ち。隙を突かれるとハメられて弱い", icon: ICON_QUEEN },
   { kind: "revenant", name: "亡者", cost: ECONOMY_CONFIG.revenantCost, statsLine: "HP65 / 剣5-5-5(近接)・クロスボウ18(中距離・ゆっくりだが単発高威力) / 体重65 / HP高めで移動は最遅。近接遠距離を状況に応じて自動で持ち替える臨機応変型", icon: ICON_REVENANT },
   { kind: "spear", name: "槍兵", cost: ECONOMY_CONFIG.spearCost, statsLine: "HP15 / 刺突8 / 体重65 / 兵士より長いリーチ", icon: ICON_SPEAR },
-  { kind: "noirkurowl", name: "ノワール・クロウル", cost: ECONOMY_CONFIG.noirkurowlCost, statsLine: "HP600 / 引っ掻き30×2(第二形態45) / 体重320 / 全長5m超のボス級・HP50%以下で一度だけ第二形態へ変身し全域咆哮(ガードブレイカー)", icon: ICON_NOIRKUROWL },
+  { kind: "noirkurowl", name: "ノワール・クロウル", cost: ECONOMY_CONFIG.noirkurowlCost, statsLine: "HP190(普通) / 引っ掻き35×2(第二形態55、攻撃力高め) / 体重320 / 移動速度は普通。全長5m超のボス級・HP50%以下で一度だけ第二形態へ変身し全域咆哮(ガードブレイカー)", icon: ICON_NOIRKUROWL },
   { kind: "assassin", name: "暗殺亡者", cost: ECONOMY_CONFIG.assassinCost, statsLine: "HP16 / 刺突10 / 体重55 / 高機動アタッカー・パリィ可能な攻撃は受け流し致命の一撃(即死、クールタイム20秒)、それ以外はガード(クールタイム2秒)。攻撃ヒットで出血蓄積+15%。ガードブレイカーを受けると盾が破壊されパリィもガードも不可に。強い単体には滅法強いが複数には弱い", icon: ICON_ASSASSIN },
   { kind: "elite", name: "精鋭の亡者兵士", cost: ECONOMY_CONFIG.eliteCost, statsLine: "HP88 / 盾殴り8(ガード無効)・剣斬り12 / 体重75 / 亡者の上位互換・重装ガード持ち(クールタイム1秒)。ガードブレイカーを受けると盾が一撃で破壊されガード不可に。複数体揃うと鉄壁だが、リーチは短めでガードブレイカー・ガード無効に弱い", icon: ICON_ELITE },
   { kind: "halberd", name: "斧槍亡者", cost: ECONOMY_CONFIG.halberdCost, statsLine: "HP105 / 突き8・振り下ろし18、中距離は踏み込み薙ぎ払い38(範囲内の敵を人数無制限で同時ヒット・隙は大きいがガード無効+2倍怯み) / 体重85 / リーチが長く移動速度も速い範囲攻撃アタッカー。近接・中距離ともにスーパーアーマー。数的不利に強いがガードと遠距離攻撃、強い単体の敵に弱い", icon: ICON_HALBERD },

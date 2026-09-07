@@ -1603,7 +1603,7 @@ const REVENANT_CONFIG = {
   voiceCategory: "revenant",
   midRangeMin: 120,
   midRangeMax: 280,
-  midrangeDamage: 22,  // クロスボウはゆっくりだが単発威力が高め
+  midrangeDamage: 18,  // クロスボウはゆっくりだが単発威力が高め
   guardFootstepRange: 0 // (未使用・予約)
 };
 
@@ -1713,14 +1713,16 @@ const ASSASSIN_MOTIONS = {
 const ASSASSIN_CONFIG = {
   walkSpeed: 68,          // 軍団屈指の高機動力
   meleeRange: 50,
-  meleeHitDamage: 10,     // 単発の突き刺し(連撃ではない)
+  meleeHitDamage: 10,     // 単発の突き刺し(連撃ではない)・攻撃力は普通
   weight: 55,
-  maxHp: 16,
+  maxHp: 16,              // HP低め
   attackLabel: "刺突",
   voiceCategory: "assassin", // 専用音声セット(ElevenLabsで生成)
-  parryChance: 1.0,       // パリィ可能な攻撃を受けた際は必ずパリィする(100%)
-  bleedPerHit: 8,         // 近接攻撃1ヒットあたりの出血蓄積値(%)
-  guardHoldMs: 350
+  parryChance: 1.0,       // パリィ可能な攻撃を受けた際は必ずパリィする(100%、クールタイム中を除く)
+  parryCooldownMs: 20000, // パリィ成功後、再度パリィできるまでのクールタイム
+  bleedPerHit: 15,        // 近接攻撃1ヒットあたりの出血蓄積値(%)・多め
+  guardHoldMs: 350,
+  guardCooldownMs: 2000   // ガード終了後、再度ガードできるまでのクールタイム
 };
 
 // =====================================================================
@@ -1782,7 +1784,7 @@ const ELITE_MOTIONS = {
     loop: false,
     frameDurations: [120, 140, 160, 180, 450]
   },
-  flinch: { frames: ["flinch_1","flinch_2","flinch_3"], loop: false, frameDurations: [100, 150, 300] },
+  flinch: { frames: ["flinch_1","flinch_2","flinch_3"], loop: false, frameDurations: [236, 355, 709] },
   down: {
     frames: ["down_1","down_2","down_3","down_4","down_5"],
     loop: false,
@@ -1791,16 +1793,16 @@ const ELITE_MOTIONS = {
 };
 
 const ELITE_CONFIG = {
-  walkSpeed: 60,          // 兵士(55)よりやや速い
-  meleeRange: 62,
-  meleeHitDamage1: 8,     // 1段目:盾殴り
+  walkSpeed: 55,          // 移動速度は普通(兵士と同水準)
+  meleeRange: 50,         // リーチは普通より短め
+  meleeHitDamage1: 8,     // 1段目:盾殴り(ガード無効)
   meleeHitDamage2: 12,    // 2段目:剣斬り
   weight: 75,
-  maxHp: 60,
+  maxHp: 88,              // HP高め
   attackLabel: "斬撃",
   voiceCategory: "elite", // 専用音声セット(ElevenLabsで生成)
-  guardBreakerHitsToBreak: 2, // 硬い鉄の盾:ガードブレイカーを2回受けるまで壊れない
-  guardHoldMs: 350
+  guardHoldMs: 350,
+  guardCooldownMs: 1000   // ガード終了後、再度ガードできるまでのクールタイム
 };
 
 // =====================================================================
@@ -2399,11 +2401,11 @@ const ROSTER = [
   { kind: "archer", name: "ゴブリン弓兵", cost: ECONOMY_CONFIG.archerCost, statsLine: "HP8 / 矢6 / 体重40 / 射程250(その場で射撃)", icon: ICON_ARCHER },
   { kind: "catapult", name: "ゴブリンカタパルト", cost: ECONOMY_CONFIG.catapultCost, statsLine: "カタパルトHP80 / 岩35(範囲) / 体重300 / 射程250〜400・破壊後は搭乗ゴブリンが継戦", icon: ICON_CATAPULT },
   { kind: "queen", name: "ゴブリンの女王", cost: ECONOMY_CONFIG.queenCost, statsLine: "HP400 / 杖35・薙ぎ払い25・魔砲弾45(いずれも範囲・ガードブレイカー) / 体重145 / 常時スーパーアーマー・デバフ咆哮・召喚持ち", icon: ICON_QUEEN },
-  { kind: "revenant", name: "亡者", cost: ECONOMY_CONFIG.revenantCost, statsLine: "HP65 / 剣5-5-5(近接)・クロスボウ22(中距離・ゆっくりだが単発高威力) / 体重65 / HP高めで移動は最遅。近接遠距離を状況に応じて自動で持ち替える臨機応変型", icon: ICON_REVENANT },
+  { kind: "revenant", name: "亡者", cost: ECONOMY_CONFIG.revenantCost, statsLine: "HP65 / 剣5-5-5(近接)・クロスボウ18(中距離・ゆっくりだが単発高威力) / 体重65 / HP高めで移動は最遅。近接遠距離を状況に応じて自動で持ち替える臨機応変型", icon: ICON_REVENANT },
   { kind: "spear", name: "槍兵", cost: ECONOMY_CONFIG.spearCost, statsLine: "HP15 / 刺突8 / 体重65 / 兵士より長いリーチ", icon: ICON_SPEAR },
   { kind: "noirkurowl", name: "ノワール・クロウル", cost: ECONOMY_CONFIG.noirkurowlCost, statsLine: "HP600 / 引っ掻き30×2(第二形態45) / 体重320 / 全長5m超のボス級・HP50%以下で一度だけ第二形態へ変身し全域咆哮(ガードブレイカー)", icon: ICON_NOIRKUROWL },
-  { kind: "assassin", name: "暗殺亡者", cost: ECONOMY_CONFIG.assassinCost, statsLine: "HP16 / 刺突10 / 体重55 / 高機動アタッカー・パリィ可能な攻撃は必ず受け流し致命の一撃(即死)、それ以外はガード。攻撃ヒットで出血蓄積+8%", icon: ICON_ASSASSIN },
-  { kind: "elite", name: "精鋭の亡者兵士", cost: ECONOMY_CONFIG.eliteCost, statsLine: "HP60 / 盾殴り8・剣斬り12 / 体重75 / 亡者の上位互換・重装ガード持ち。鉄の盾はガードブレイカーを2回受けるまで壊れない", icon: ICON_ELITE },
+  { kind: "assassin", name: "暗殺亡者", cost: ECONOMY_CONFIG.assassinCost, statsLine: "HP16 / 刺突10 / 体重55 / 高機動アタッカー・パリィ可能な攻撃は受け流し致命の一撃(即死、クールタイム20秒)、それ以外はガード(クールタイム2秒)。攻撃ヒットで出血蓄積+15%。ガードブレイカーを受けると盾が破壊されパリィもガードも不可に。強い単体には滅法強いが複数には弱い", icon: ICON_ASSASSIN },
+  { kind: "elite", name: "精鋭の亡者兵士", cost: ECONOMY_CONFIG.eliteCost, statsLine: "HP88 / 盾殴り8(ガード無効)・剣斬り12 / 体重75 / 亡者の上位互換・重装ガード持ち(クールタイム1秒)。ガードブレイカーを受けると盾が一撃で破壊されガード不可に。複数体揃うと鉄壁だが、リーチは短めでガードブレイカー・ガード無効に弱い", icon: ICON_ELITE },
   { kind: "halberd", name: "斧槍亡者", cost: ECONOMY_CONFIG.halberdCost, statsLine: "HP105 / 突き8・振り下ろし18、中距離は踏み込み薙ぎ払い38(範囲内の敵を人数無制限で同時ヒット・隙は大きいがガード無効+2倍怯み) / 体重85 / リーチが長く移動速度も速い範囲攻撃アタッカー。近接・中距離ともにスーパーアーマー。数的不利に強いがガードと遠距離攻撃、強い単体の敵に弱い", icon: ICON_HALBERD },
   { kind: "crowman", name: "鴉人", cost: ECONOMY_CONFIG.crowmanCost, statsLine: "HP25 / 通常時は引っ掻き6・低速で非力 / 体重25 / 敵味方問わず出血発生や咆哮が発動すると、フィールド上の鴉人が一斉に心臓を捕食して凶暴化。凶暴化後は高速移動+5連続交差斬り(各7ダメージ・出血蓄積+4%)の高火力コンボ・常時スーパーアーマー・被ダメージ70%カット", icon: ICON_CROWMAN },
   { kind: "thrall", name: "奴隷亡者", cost: ECONOMY_CONFIG.thrallCost, statsLine: "HP52 / 跳躍斧撃10・16(中距離〜近距離対応)、吹き矢5(低ダメージ・命中で毒15%蓄積、100%で毒状態) / 体重60 / 亡者の下位種・素早くトリッキー。ガードされると2倍の時間怯む。パリィされやすく遠距離にも弱い", icon: ICON_THRALL },
@@ -3160,7 +3162,8 @@ function damageUnit(u, dmg, sourceLabel, attacker) {
     return;
   }
 
-  // 精鋭の亡者兵士:硬い鉄の盾でガード。ガードブレイカーを受けても1回では壊れず、2回受けてようやく破壊される
+  // 精鋭の亡者兵士:硬い鉄の盾でガード。ガードブレイカーを受けると一撃で盾が破壊され、二度とガードできなくなる。
+  // ガード直後は1秒のクールタイムがあり、その間に再度攻撃を受けるとガードできず通常ダメージを受ける。
   if (u.kind === "elite") {
     // ガード無効効果(相手の近接1段目・盾殴りなど):ガード中でも構わず強制的に怯ませる。
     // 盾は壊さず、HPダメージも与えない。
@@ -3172,7 +3175,8 @@ function damageUnit(u, dmg, sourceLabel, attacker) {
       playUnitVoice(u, "pain");
       return;
     }
-    const guardableState = !u.isDown && (u.motionKey === "idle" || u.motionKey === "walk" || u.motionKey === "attack");
+    const guardOnCooldown = u.guardCooldownUntil && performance.now() < u.guardCooldownUntil;
+    const guardableState = !u.isDown && !guardOnCooldown && (u.motionKey === "idle" || u.motionKey === "walk" || u.motionKey === "attack");
     if (guardableState && !u.shieldBroken) {
       const ultimate = isUltimateGuardBreakerAttacker(attacker);
       if (ultimate) {
@@ -3186,20 +3190,17 @@ function damageUnit(u, dmg, sourceLabel, attacker) {
       }
       const breaker = isGuardBreakerAttacker(attacker);
       if (breaker) {
-        u.guardBreakerHitsTaken = (u.guardBreakerHitsTaken || 0) + 1;
-        if (u.guardBreakerHitsTaken >= ELITE_CONFIG.guardBreakerHitsToBreak) {
-          u.shieldBroken = true;
-          logMsg(`${sourceLabel} → ${label}の鉄の盾がガードブレイカーを${u.guardBreakerHitsTaken}回受けて、ついに破壊された!`);
-          u.lockedMotion = "shieldbreak";
-          u.lockedUntil = performance.now() + motionDuration(ELITE_MOTIONS.shieldbreak);
-          setUnitMotion(u, "shieldbreak");
-          playUnitVoice(u, "shieldbreak");
-          return;
-        }
-        logMsg(`${sourceLabel} → ${label}の鉄の盾がガードブレイカーを受けたが耐えた!(${u.guardBreakerHitsTaken}/${ELITE_CONFIG.guardBreakerHitsToBreak})`);
+        u.shieldBroken = true;
+        logMsg(`${sourceLabel} → ${label}の鉄の盾はガードブレイカーを受け、一撃で破壊された!`);
+        u.lockedMotion = "shieldbreak";
+        u.lockedUntil = performance.now() + motionDuration(ELITE_MOTIONS.shieldbreak);
+        setUnitMotion(u, "shieldbreak");
+        playUnitVoice(u, "shieldbreak");
+        return;
       }
       u.lockedMotion = "guard";
       u.lockedUntil = performance.now() + ELITE_CONFIG.guardHoldMs;
+      u.guardCooldownUntil = performance.now() + ELITE_CONFIG.guardHoldMs + ELITE_CONFIG.guardCooldownMs;
       setUnitMotion(u, "guard");
       playUnitVoice(u, "guard");
       logMsg(`${sourceLabel} → ${label}が鉄の盾でガード!ダメージを無効化した。`);
@@ -3254,7 +3255,7 @@ function damageUnit(u, dmg, sourceLabel, attacker) {
       const breaker = isGuardBreakerAttacker(attacker) || isUltimateGuardBreakerAttacker(attacker);
       if (breaker && !u.shieldBroken) {
         u.shieldBroken = true;
-        logMsg(`${sourceLabel} → ${label}の小盾はガードブレイカーを受け、一撃で破壊された!`);
+        logMsg(`${sourceLabel} → ${label}の小盾はガードブレイカーを受け、一撃で破壊された!(以後パリィもガードもできない)`);
         u.lockedMotion = "shieldbreak";
         u.lockedUntil = performance.now() + motionDuration(ASSASSIN_MOTIONS.shieldbreak);
         setUnitMotion(u, "shieldbreak");
@@ -3262,9 +3263,11 @@ function damageUnit(u, dmg, sourceLabel, attacker) {
         return;
       }
       const parryable = isAttackParryable(attacker) && !breaker;
-      if (parryable) {
+      const parryOnCooldown = u.parryCooldownUntil && performance.now() < u.parryCooldownUntil;
+      if (parryable && !u.shieldBroken && !parryOnCooldown) {
         if (Math.random() < ASSASSIN_CONFIG.parryChance) {
           u.parryVictim = attacker || null;
+          u.parryCooldownUntil = performance.now() + ASSASSIN_CONFIG.parryCooldownMs;
           logMsg(`${sourceLabel} → ${label}が「パリィ」に成功!致命の一撃に繋げる。(この間完全無敵)`);
           u.lockedMotion = "parry";
           u.lockedUntil = Number.MAX_SAFE_INTEGER; // アニメーション終了(下部のフレーム終了処理)で次のモーションへ移行するため、タイマーでは解除しない
@@ -3281,10 +3284,13 @@ function damageUnit(u, dmg, sourceLabel, attacker) {
           }
           return;
         }
-        // パリィ失敗: 下の通常ダメージ処理へ進む
-      } else if (!u.shieldBroken) {
+        // パリィ失敗: 下のガード判定へ進む
+      }
+      const guardOnCooldown = u.guardCooldownUntil && performance.now() < u.guardCooldownUntil;
+      if (!u.shieldBroken && !guardOnCooldown) {
         u.lockedMotion = "guard";
         u.lockedUntil = performance.now() + ASSASSIN_CONFIG.guardHoldMs;
+        u.guardCooldownUntil = performance.now() + ASSASSIN_CONFIG.guardHoldMs + ASSASSIN_CONFIG.guardCooldownMs;
         setUnitMotion(u, "guard");
         playUnitVoice(u, "guard");
         logMsg(`${sourceLabel} → ${label}が小盾でガード!ダメージを無効化した。`);

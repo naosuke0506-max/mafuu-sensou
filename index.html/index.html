@@ -386,6 +386,8 @@
     <button class="act" id="btnSpawnThrallLeft">奴隷亡者を出撃(敵軍/左, 600円)</button>
     <button class="act" id="btnSpawnCagespiderRight">籠蜘蛛を出撃(自軍/右, 1000円)</button>
     <button class="act" id="btnSpawnCagespiderLeft">籠蜘蛛を出撃(敵軍/左, 1000円)</button>
+    <button class="act" id="btnSpawnPauperRight">貧困亡者を出撃(自軍/右, 300円)</button>
+    <button class="act" id="btnSpawnPauperLeft">貧困亡者を出撃(敵軍/左, 300円)</button>
     <button class="act wallet" id="btnWalletUp">財布レベルアップ(<span id="walletUpCostText">?</span>円)</button>
     <button class="act reset" id="btnReset">編成に戻る</button>
   </div>
@@ -2066,6 +2068,68 @@ const CAGESPIDER_CONFIG = {
 };
 
 // =====================================================================
+// 貧困亡者の定義:亡者の下位種。ボロ布を纏いフォーク(三又槍)を持つ痩せ細った亡者。
+// 近接は単発の突き刺しのみ(コンボはせず1ヒットのみダメージ判定)、出血を5%蓄積させる。
+// パリィ不可・ガードなし。移動速度は亡者系の中では標準的。
+// 専用音声は未着手のため、暫定で亡者(revenant)の音声セットを流用する。
+// =====================================================================
+const PAUPER_FRAMES = {
+  "walk_1": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/pauper_repo_upload/walk_1.png",
+  "walk_2": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/pauper_repo_upload/walk_2.png",
+  "walk_3": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/pauper_repo_upload/walk_3.png",
+  "walk_4": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/pauper_repo_upload/walk_4.png",
+  "walk_5": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/pauper_repo_upload/walk_5.png",
+  "attack_1": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/pauper_repo_upload/attack_1.png",
+  "attack_2": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/pauper_repo_upload/attack_2.png",
+  "attack_3": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/pauper_repo_upload/attack_3.png",
+  "attack_4": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/pauper_repo_upload/attack_4.png",
+  "attack_5": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/pauper_repo_upload/attack_5.png",
+  "attack_6": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/pauper_repo_upload/attack_6.png",
+  "attack_7": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/pauper_repo_upload/attack_7.png",
+  "attack_8": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/pauper_repo_upload/attack_8.png",
+  "attack_9": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/pauper_repo_upload/attack_9.png",
+  "attack_10": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/pauper_repo_upload/attack_10.png",
+  "attack_11": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/pauper_repo_upload/attack_11.png",
+  "flinch_1": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/pauper_repo_upload/flinch_1.png",
+  "flinch_2": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/pauper_repo_upload/flinch_2.png",
+  "flinch_3": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/pauper_repo_upload/flinch_3.png",
+  "down_1": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/pauper_repo_upload/down_1.png",
+  "down_2": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/pauper_repo_upload/down_2.png",
+  "down_3": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/pauper_repo_upload/down_3.png"
+};
+// 専用アイコン未作成のため、暫定的に歩行1枚目を編成アイコンとして流用
+const ICON_PAUPER = "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/pauper_repo_upload/walk_1.png";
+
+const PAUPER_MOTIONS = {
+  idle: { frames: ["walk_1"], loop: true, msPerFrame: 600 },
+  walk: { frames: ["walk_1", "walk_2", "walk_3", "walk_4", "walk_5"], loop: true, msPerFrame: 160 },
+  // 近接:フォークでの単発突き刺し(index8でヒット・コンボはせず1ヒットのみ)
+  attack: {
+    frames: ["attack_1", "attack_2", "attack_3", "attack_4", "attack_5", "attack_6", "attack_7", "attack_8", "attack_9", "attack_10", "attack_11"],
+    loop: false,
+    frameDurations: [100, 90, 90, 80, 80, 70, 70, 70, 70, 90, 150],
+    hitFrames: [8]
+  },
+  flinch: { frames: ["flinch_1", "flinch_2", "flinch_3"], frameDurations: [100, 150, 300], loop: false },
+  down: {
+    frames: ["down_1", "down_2", "down_3"],
+    loop: false,
+    frameDurations: [200, 250, 5000]
+  }
+};
+
+const PAUPER_CONFIG = {
+  walkSpeed: 45,           // 亡者系の中では標準的な速さ
+  meleeRange: 65,
+  meleeHitDamage: 18,      // 単発の突き刺し
+  weight: 45,
+  maxHp: 30,
+  attackLabel: "突き刺し",
+  voiceCategory: "revenant", // 専用音声ができるまで亡者の音声セットを流用
+  bleedPerHit: 5            // 近接攻撃1ヒットあたりの出血蓄積値(%)
+};
+
+// =====================================================================
 // 鴉人の定義:通常形態は低速・低火力・低HPの弱いユニット。
 // フィールド上で出血発生または咆哮系スキル(獰猛なゴブリン・ゴブリンの女王・ノワール・クロウル)が
 // 発動すると、自軍敵軍を問わず未変身の鴉人が一斉に心臓を捕食し、凶暴化形態へ移行する。
@@ -2217,6 +2281,8 @@ const els = {
   btnSpawnThrallRight: document.getElementById("btnSpawnThrallRight"),
   btnSpawnCagespiderLeft: document.getElementById("btnSpawnCagespiderLeft"),
   btnSpawnCagespiderRight: document.getElementById("btnSpawnCagespiderRight"),
+  btnSpawnPauperLeft: document.getElementById("btnSpawnPauperLeft"),
+  btnSpawnPauperRight: document.getElementById("btnSpawnPauperRight"),
   btnReset: document.getElementById("btnReset"),
   enemyCastleHpFill: document.getElementById("enemyCastleHpFill"),
   enemyCastleHpText: document.getElementById("enemyCastleHpText"),
@@ -2252,6 +2318,7 @@ let elites = [];
 let halberdRevenants = [];
 let thralls = [];
 let cagespiders = [];
+let paupers = [];
 let crowmen = [];
 let projectiles = [];    // カタパルトの岩(飛翔中)
 let impactEffects = [];  // 着弾エフェクト(スパーク・砂煙)
@@ -2268,7 +2335,7 @@ let effectIdSeq = 0;
 let enemyCastle = null;
 let allyCastle = null;
 let money = 0;
-let loadout = { soldier: true, kurowl: true, goblin: true, archer: true, catapult: true, brute: true, chief: true, queen: true, revenant: true, spear: true, noirkurowl: true, assassin: true, elite: true, halberd: true, crowman: true, thrall: true, cagespider: true }; // 出撃可能なユニット種別(スロットから導出)
+let loadout = { soldier: true, kurowl: true, goblin: true, archer: true, catapult: true, brute: true, chief: true, queen: true, revenant: true, spear: true, noirkurowl: true, assassin: true, elite: true, halberd: true, crowman: true, thrall: true, cagespider: true, pauper: true }; // 出撃可能なユニット種別(スロットから導出)
 
 const SOLDIER_QUEUE_GAP = 0; // 味方同士は重なって密集できる(間合いに入れるユニット数を制限しないため)
 const CASTLE_CONFIG = { maxHp: 150 }; // 魔の平原の城HP仕様
@@ -2289,7 +2356,8 @@ const ECONOMY_CONFIG = {
   halberdCost: 1800,
   crowmanCost: 900,
   thrallCost: 600,
-  cagespiderCost: 1000
+  cagespiderCost: 1000,
+  pauperCost: 300
 };
 
 // =====================================================================
@@ -2327,17 +2395,18 @@ const ROSTER = [
   { kind: "halberd", name: "斧槍亡者", cost: ECONOMY_CONFIG.halberdCost, statsLine: "HP70 / 突き8・振り下ろし18、中距離は踏み込み薙ぎ払い25(範囲内の敵を人数無制限で同時ヒット) / 体重85 / リーチが長い近接と、距離を詰める範囲攻撃を自動で使い分け。パリィ不可・ガードなし", icon: ICON_HALBERD },
   { kind: "crowman", name: "鴉人", cost: ECONOMY_CONFIG.crowmanCost, statsLine: "HP25 / 通常時は引っ掻き6・低速で非力 / 体重25 / 敵味方問わず出血発生や咆哮が発動すると、フィールド上の鴉人が一斉に心臓を捕食して凶暴化。凶暴化後は高速移動+5連続交差斬り(各7ダメージ・出血蓄積+4%)の高火力コンボ・常時スーパーアーマー・被ダメージ70%カット", icon: ICON_CROWMAN },
   { kind: "thrall", name: "奴隷亡者", cost: ECONOMY_CONFIG.thrallCost, statsLine: "HP45 / 跳躍斧撃9・14(中距離〜近距離対応)、吹き矢6(特殊効果なし) / 体重60 / 亡者の下位種・小柄で機動力が高い。近接専用モーションは持たず、跳躍斧撃と吹き矢を距離に応じて自動で使い分け。跳躍斧撃はパリィ可能・ガードなし・出血付与なし", icon: ICON_THRALL },
-  { kind: "cagespider", name: "籠蜘蛛", cost: ECONOMY_CONFIG.cagespiderCost, statsLine: "HP90 / 掴み乱打5×8連(近接)、糞団子7(中距離・命中ごとに毒25%蓄積、100%で最大HPの15%ダメージ) / 体重110 / 大型・低速の重量級。近接遠距離を距離に応じて自動で使い分け。パリィ不可・ガードなし", icon: ICON_CAGESPIDER }
+  { kind: "cagespider", name: "籠蜘蛛", cost: ECONOMY_CONFIG.cagespiderCost, statsLine: "HP90 / 掴み乱打5×8連(近接)、糞団子7(中距離・命中ごとに毒25%蓄積、100%で最大HPの15%ダメージ) / 体重110 / 大型・低速の重量級。近接遠距離を距離に応じて自動で使い分け。パリィ不可・ガードなし", icon: ICON_CAGESPIDER },
+  { kind: "pauper", name: "貧困亡者", cost: ECONOMY_CONFIG.pauperCost, statsLine: "HP30 / 突き刺し18(単発・出血蓄積5%) / 体重45 / 亡者の下位種、移動速度は標準的。パリィ不可・ガードなし", icon: ICON_PAUPER }
 ];
 let formationSlots = new Array(MAX_SLOTS).fill(null); // 各要素: null | "soldier" | "kurowl" | "goblin" | "archer" | "catapult"
 let selectedRosterKind = null;
 let lastMoneyTick = 0;
 let battleActive = false;
 
-const MOTIONS_BY_KIND = { soldier: SOLDIER_MOTIONS, kurowl: KUROWL_MOTIONS, goblin: GOBLIN_MOTIONS, archer: ARCHER_MOTIONS, catapult: CATAPULT_MOTIONS, brute: BRUTE_MOTIONS, chief: CHIEF_MOTIONS, queen: QUEEN_MOTIONS, revenant: REVENANT_MOTIONS, spear: SPEAR_MOTIONS, noirkurowl: NOIRKUROWL_MOTIONS, assassin: ASSASSIN_MOTIONS, elite: ELITE_MOTIONS, halberd: HALBERD_MOTIONS, crowman: CROWMAN_MOTIONS, thrall: THRALL_MOTIONS, cagespider: CAGESPIDER_MOTIONS };
-const CONFIG_BY_KIND = { soldier: SOLDIER_CONFIG, kurowl: KUROWL_CONFIG, goblin: GOBLIN_CONFIG, archer: ARCHER_CONFIG, catapult: CATAPULT_CONFIG, brute: BRUTE_CONFIG, chief: CHIEF_CONFIG, queen: QUEEN_CONFIG, revenant: REVENANT_CONFIG, spear: SPEAR_CONFIG, noirkurowl: NOIRKUROWL_CONFIG, assassin: ASSASSIN_CONFIG, elite: ELITE_CONFIG, halberd: HALBERD_CONFIG, crowman: CROWMAN_CONFIG, thrall: THRALL_CONFIG, cagespider: CAGESPIDER_CONFIG };
-const FRAMES_BY_KIND = { soldier: SOLDIER_FRAMES, kurowl: KUROWL_FRAMES, goblin: GOBLIN_FRAMES, archer: ARCHER_FRAMES, catapult: CATAPULT_FRAMES, brute: BRUTE_FRAMES, chief: CHIEF_FRAMES, queen: QUEEN_FRAMES, revenant: REVENANT_FRAMES, spear: SPEAR_FRAMES, noirkurowl: NOIRKUROWL_FRAMES, assassin: ASSASSIN_FRAMES, elite: ELITE_FRAMES, halberd: HALBERD_FRAMES, crowman: CROWMAN_FRAMES, thrall: THRALL_FRAMES, cagespider: CAGESPIDER_FRAMES };
-const UNIT_LABEL_BY_KIND = { soldier: "兵士", kurowl: "クロウル", goblin: "ゴブリン", archer: "ゴブリン弓兵", catapult: "ゴブリンカタパルト", brute: "獰猛なゴブリン", chief: "ゴブリン長", queen: "ゴブリンの女王", revenant: "亡者", spear: "槍兵", noirkurowl: "ノワール・クロウル", assassin: "暗殺亡者", elite: "精鋭の亡者兵士", halberd: "斧槍亡者", crowman: "鴉人", thrall: "奴隷亡者", cagespider: "籠蜘蛛" };
+const MOTIONS_BY_KIND = { soldier: SOLDIER_MOTIONS, kurowl: KUROWL_MOTIONS, goblin: GOBLIN_MOTIONS, archer: ARCHER_MOTIONS, catapult: CATAPULT_MOTIONS, brute: BRUTE_MOTIONS, chief: CHIEF_MOTIONS, queen: QUEEN_MOTIONS, revenant: REVENANT_MOTIONS, spear: SPEAR_MOTIONS, noirkurowl: NOIRKUROWL_MOTIONS, assassin: ASSASSIN_MOTIONS, elite: ELITE_MOTIONS, halberd: HALBERD_MOTIONS, crowman: CROWMAN_MOTIONS, thrall: THRALL_MOTIONS, cagespider: CAGESPIDER_MOTIONS, pauper: PAUPER_MOTIONS };
+const CONFIG_BY_KIND = { soldier: SOLDIER_CONFIG, kurowl: KUROWL_CONFIG, goblin: GOBLIN_CONFIG, archer: ARCHER_CONFIG, catapult: CATAPULT_CONFIG, brute: BRUTE_CONFIG, chief: CHIEF_CONFIG, queen: QUEEN_CONFIG, revenant: REVENANT_CONFIG, spear: SPEAR_CONFIG, noirkurowl: NOIRKUROWL_CONFIG, assassin: ASSASSIN_CONFIG, elite: ELITE_CONFIG, halberd: HALBERD_CONFIG, crowman: CROWMAN_CONFIG, thrall: THRALL_CONFIG, cagespider: CAGESPIDER_CONFIG, pauper: PAUPER_CONFIG };
+const FRAMES_BY_KIND = { soldier: SOLDIER_FRAMES, kurowl: KUROWL_FRAMES, goblin: GOBLIN_FRAMES, archer: ARCHER_FRAMES, catapult: CATAPULT_FRAMES, brute: BRUTE_FRAMES, chief: CHIEF_FRAMES, queen: QUEEN_FRAMES, revenant: REVENANT_FRAMES, spear: SPEAR_FRAMES, noirkurowl: NOIRKUROWL_FRAMES, assassin: ASSASSIN_FRAMES, elite: ELITE_FRAMES, halberd: HALBERD_FRAMES, crowman: CROWMAN_FRAMES, thrall: THRALL_FRAMES, cagespider: CAGESPIDER_FRAMES, pauper: PAUPER_FRAMES };
+const UNIT_LABEL_BY_KIND = { soldier: "兵士", kurowl: "クロウル", goblin: "ゴブリン", archer: "ゴブリン弓兵", catapult: "ゴブリンカタパルト", brute: "獰猛なゴブリン", chief: "ゴブリン長", queen: "ゴブリンの女王", revenant: "亡者", spear: "槍兵", noirkurowl: "ノワール・クロウル", assassin: "暗殺亡者", elite: "精鋭の亡者兵士", halberd: "斧槍亡者", crowman: "鴉人", thrall: "奴隷亡者", cagespider: "籠蜘蛛", pauper: "貧困亡者" };
 
 // =====================================================================
 // 突撃システム(新):ダウン/起き上がりモーションの補完
@@ -2569,6 +2638,9 @@ function motionLabel(kind, key) {
   if (kind === "cagespider") {
     return { idle: "待機", walk: "歩行", attack: "掴み乱打", flinch: "怯み", down: "ダウン", midrange: "糞団子" }[key] || key;
   }
+  if (kind === "pauper") {
+    return { idle: "待機", walk: "歩行", attack: "突き刺し", flinch: "怯み", down: "ダウン" }[key] || key;
+  }
   return { idle: "待機", walk: "歩行", flinch: "怯み", knockback: "吹き飛ばし", melee: "近接攻撃", midrange: "中距離攻撃", charge: "突進" }[key] || key;
 }
 
@@ -2691,7 +2763,7 @@ function createUnit(kind, side, startXOverride) {
     guardBreakerHitsTaken: 0, // 精鋭の亡者兵士:硬い鉄の盾がこれまでに受けたガードブレイカーの回数
     el
   };
-  const targetArr = kind === "kurowl" ? kurowls : kind === "goblin" ? goblins : kind === "archer" ? archers : kind === "catapult" ? catapults : kind === "brute" ? brutes : kind === "chief" ? chiefs : kind === "queen" ? queens : kind === "revenant" ? revenants : kind === "spear" ? spears : kind === "noirkurowl" ? noirkurowls : kind === "assassin" ? assassins : kind === "elite" ? elites : kind === "halberd" ? halberdRevenants : kind === "crowman" ? crowmen : kind === "thrall" ? thralls : kind === "cagespider" ? cagespiders : soldiers;
+  const targetArr = kind === "kurowl" ? kurowls : kind === "goblin" ? goblins : kind === "archer" ? archers : kind === "catapult" ? catapults : kind === "brute" ? brutes : kind === "chief" ? chiefs : kind === "queen" ? queens : kind === "revenant" ? revenants : kind === "spear" ? spears : kind === "noirkurowl" ? noirkurowls : kind === "assassin" ? assassins : kind === "elite" ? elites : kind === "halberd" ? halberdRevenants : kind === "crowman" ? crowmen : kind === "thrall" ? thralls : kind === "cagespider" ? cagespiders : kind === "pauper" ? paupers : soldiers;
   targetArr.push(u);
   el.unit.style.display = "block";
   setUnitMotion(u, "walk");
@@ -2720,7 +2792,7 @@ function updateCastleUI(castle, fillEl, textEl) {
 // 共通ヘルパー
 // =====================================================================
 function allUnits() {
-  return soldiers.concat(kurowls, goblins, archers, catapults, brutes, chiefs, queens, revenants, spears, noirkurowls, assassins, elites, halberdRevenants, crowmen, thralls, cagespiders);
+  return soldiers.concat(kurowls, goblins, archers, catapults, brutes, chiefs, queens, revenants, spears, noirkurowls, assassins, elites, halberdRevenants, crowmen, thralls, cagespiders, paupers);
 }
 
 function dist(a, b) {
@@ -4718,7 +4790,7 @@ function applyProneSizing(u) {
 }
 
 function tickDeadUnitAnimation(u, now) {
-  const motion = u.kind === "catapult" ? MOTIONS_BY_KIND[u.kind].destroy : (u.kind === "queen" || u.kind === "revenant" || u.kind === "assassin" || u.kind === "elite" || u.kind === "halberd" || u.kind === "crowman" || u.kind === "thrall" || u.kind === "cagespider") ? MOTIONS_BY_KIND[u.kind].down : MOTIONS_BY_KIND[u.kind].knockback;
+  const motion = u.kind === "catapult" ? MOTIONS_BY_KIND[u.kind].destroy : (u.kind === "queen" || u.kind === "revenant" || u.kind === "assassin" || u.kind === "elite" || u.kind === "halberd" || u.kind === "crowman" || u.kind === "thrall" || u.kind === "cagespider" || u.kind === "pauper") ? MOTIONS_BY_KIND[u.kind].down : MOTIONS_BY_KIND[u.kind].knockback;
   const frameDt = Math.max(0, now - u.lastFrameTime);
   const curDuration = (motion.frameDurations ? motion.frameDurations[u.frameIndex] : null) || motion.msPerFrame;
 
@@ -5028,6 +5100,9 @@ function tickUnit(u, now) {
           applyDamageTo(hitTarget, dmg, label, u);
           if (u.kind === "assassin" && hitTarget && !hitTarget.dead) {
             applyBleedStack(hitTarget, ASSASSIN_CONFIG.bleedPerHit);
+          }
+          if (u.kind === "pauper" && hitTarget && !hitTarget.dead) {
+            applyBleedStack(hitTarget, PAUPER_CONFIG.bleedPerHit);
           }
         }
       }
@@ -5366,6 +5441,7 @@ function spawnUnit(kind, side) {
   if (kind === "crowman") playUnitVoice(u, "warCry");
   if (kind === "thrall") playUnitVoice(u, "warCry");
   if (kind === "cagespider") playUnitVoice(u, "warCry");
+  if (kind === "pauper") playUnitVoice(u, "warCry");
 }
 
 function clearAllUnits() {
@@ -5387,6 +5463,7 @@ function clearAllUnits() {
   crowmen = [];
   thralls = [];
   cagespiders = [];
+  paupers = [];
   for (const p of projectiles) p.el.remove();
   projectiles = [];
   for (const e of impactEffects) e.el.remove();
@@ -5505,6 +5582,8 @@ function applyLoadoutToButtons() {
   els.btnSpawnThrallRight.style.display = loadout.thrall ? "" : "none";
   els.btnSpawnCagespiderLeft.style.display = loadout.cagespider ? "" : "none";
   els.btnSpawnCagespiderRight.style.display = loadout.cagespider ? "" : "none";
+  els.btnSpawnPauperLeft.style.display = loadout.pauper ? "" : "none";
+  els.btnSpawnPauperRight.style.display = loadout.pauper ? "" : "none";
 }
 
 function startBattle() {
@@ -5525,7 +5604,8 @@ function startBattle() {
   loadout.crowman = formationSlots.includes("crowman");
   loadout.thrall = formationSlots.includes("thrall");
   loadout.cagespider = formationSlots.includes("cagespider");
-  if (!loadout.soldier && !loadout.kurowl && !loadout.goblin && !loadout.archer && !loadout.catapult && !loadout.brute && !loadout.chief && !loadout.queen && !loadout.revenant && !loadout.spear && !loadout.noirkurowl && !loadout.assassin && !loadout.elite && !loadout.halberd && !loadout.crowman && !loadout.thrall && !loadout.cagespider) {
+  loadout.pauper = formationSlots.includes("pauper");
+  if (!loadout.soldier && !loadout.kurowl && !loadout.goblin && !loadout.archer && !loadout.catapult && !loadout.brute && !loadout.chief && !loadout.queen && !loadout.revenant && !loadout.spear && !loadout.noirkurowl && !loadout.assassin && !loadout.elite && !loadout.halberd && !loadout.crowman && !loadout.thrall && !loadout.cagespider && !loadout.pauper) {
     els.formationWarning.style.display = "block";
     return;
   }
@@ -5612,6 +5692,8 @@ els.btnSpawnThrallLeft.addEventListener("click", () => spawnUnit("thrall", "left
 els.btnSpawnThrallRight.addEventListener("click", () => spawnUnit("thrall", "right"));
 els.btnSpawnCagespiderLeft.addEventListener("click", () => spawnUnit("cagespider", "left"));
 els.btnSpawnCagespiderRight.addEventListener("click", () => spawnUnit("cagespider", "right"));
+els.btnSpawnPauperLeft.addEventListener("click", () => spawnUnit("pauper", "left"));
+els.btnSpawnPauperRight.addEventListener("click", () => spawnUnit("pauper", "right"));
 els.btnReset.addEventListener("click", reset);
 els.btnStartBattle.addEventListener("click", startBattle);
 

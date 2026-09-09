@@ -211,6 +211,12 @@
     max-height: 95px;
   }
 
+  /* 教導師は太った体格のため、女王と同程度に大きく表示する */
+  .confessor-unit img {
+    max-height: 78px;
+    max-width: 110px;
+  }
+
   /* 女王の召喚魔法陣:通常のimpact-unitの3倍サイズ、位置を低めに表示 */
   .queen-summonfx-unit {
     position: absolute; bottom: 10px; width: 360px; height: 270px;
@@ -388,6 +394,8 @@
     <button class="act" id="btnSpawnCagespiderLeft">籠蜘蛛を出撃(敵軍/左, 1000円)</button>
     <button class="act" id="btnSpawnPauperRight">貧困亡者を出撃(自軍/右, 300円)</button>
     <button class="act" id="btnSpawnPauperLeft">貧困亡者を出撃(敵軍/左, 300円)</button>
+    <button class="act" id="btnSpawnConfessorRight">教導師を出撃(自軍/右, 2500円)</button>
+    <button class="act" id="btnSpawnConfessorLeft">教導師を出撃(敵軍/左, 2500円)</button>
     <button class="act wallet" id="btnWalletUp">財布レベルアップ(<span id="walletUpCostText">?</span>円)</button>
     <button class="act reset" id="btnReset">編成に戻る</button>
   </div>
@@ -2133,6 +2141,124 @@ const PAUPER_CONFIG = {
 };
 
 // =====================================================================
+// 教導師の定義:太った鍵持ちの黒魔道士風キャラ。メイスと呪文書の二刀流。
+// 近接は本叩き(単体)→メイス振り回し(範囲)の2段コンボ。
+// 中距離は蟲魔法(単体着弾+出血蓄積 → 着弾地点に3秒間蟲エフェクトが残り、0.5秒毎に範囲の微ダメージ+出血蓄積)。
+// 特殊攻撃(抱きついて焼く)は、フィールド上で出血が発生した瞬間に「発動準備」状態になり、
+// クールタイム20秒で次の近接攻撃の代わりに発動する。単体着弾+炎上蓄積100%(確定発火)を与えたのち、
+// 同様に3秒間その場に留まり0.5秒毎に範囲の微ダメージ+出血蓄積+炎上蓄積を追加する。
+// ガード・パリィともになし(魔法系アタッカー)。専用音声は未着手のため、暫定で亡者(revenant)の音声セットを流用する。
+// =====================================================================
+const CONFESSOR_FRAMES = {
+  "walk_1": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/confessor_repo_upload/walk_1.png",
+  "walk_2": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/confessor_repo_upload/walk_2.png",
+  "walk_3": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/confessor_repo_upload/walk_3.png",
+  "attack_1": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/confessor_repo_upload/attack_1.png",
+  "attack_2": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/confessor_repo_upload/attack_2.png",
+  "attack_3": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/confessor_repo_upload/attack_3.png",
+  "attack_4": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/confessor_repo_upload/attack_4.png",
+  "attack_5": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/confessor_repo_upload/attack_5.png",
+  "attack_6": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/confessor_repo_upload/attack_6.png",
+  "attack_7": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/confessor_repo_upload/attack_7.png",
+  "special_1": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/confessor_repo_upload/special_1.png",
+  "special_2": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/confessor_repo_upload/special_2.png",
+  "special_3": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/confessor_repo_upload/special_3.png",
+  "special_4": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/confessor_repo_upload/special_4.png",
+  "special_5": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/confessor_repo_upload/special_5.png",
+  "special_6": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/confessor_repo_upload/special_6.png",
+  "special_7": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/confessor_repo_upload/special_7.png",
+  "special_8": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/confessor_repo_upload/special_8.png",
+  "special_9": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/confessor_repo_upload/special_9.png",
+  "flinch_1": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/confessor_repo_upload/flinch_1.png",
+  "flinch_2": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/confessor_repo_upload/flinch_2.png",
+  "flinch_3": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/confessor_repo_upload/flinch_3.png",
+  "down_1": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/confessor_repo_upload/down_1.png",
+  "down_2": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/confessor_repo_upload/down_2.png",
+  "midrange_1": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/confessor_repo_upload/midrange_1.png",
+  "midrange_2": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/confessor_repo_upload/midrange_2.png",
+  "midrange_3": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/confessor_repo_upload/midrange_3.png",
+  "midrange_4": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/confessor_repo_upload/midrange_4.png",
+  "midrange_5": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/confessor_repo_upload/midrange_5.png",
+  "midrange_6": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/confessor_repo_upload/midrange_6.png",
+  "midrange_7": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/confessor_repo_upload/midrange_7.png",
+  "bug_effect_1": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/confessor_repo_upload/bug_effect_1.png",
+  "bug_effect_2": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/confessor_repo_upload/bug_effect_2.png",
+  "bug_effect_3": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/confessor_repo_upload/bug_effect_3.png",
+  "bug_effect_4": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/confessor_repo_upload/bug_effect_4.png",
+  "burn_effect_1": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/confessor_repo_upload/burn_effect_1.png",
+  "burn_effect_2": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/confessor_repo_upload/burn_effect_2.png",
+  "burn_effect_3": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/confessor_repo_upload/burn_effect_3.png",
+  "burn_effect_4": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/confessor_repo_upload/burn_effect_4.png"
+};
+const ICON_CONFESSOR = "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/icons/confessor_icon.png";
+const CONFESSOR_BUG_FRAMES = ["bug_effect_1", "bug_effect_2", "bug_effect_3", "bug_effect_4"];
+const CONFESSOR_BURN_FRAMES = ["burn_effect_1", "burn_effect_2", "burn_effect_3", "burn_effect_4"];
+
+const CONFESSOR_MOTIONS = {
+  idle: { frames: ["walk_1"], loop: true, msPerFrame: 600 },
+  walk: { frames: ["walk_1", "walk_2", "walk_3"], loop: true, msPerFrame: 220 },
+  // 近接:本叩き(index2でヒット・単体)→メイス振り回し(index6でヒット・範囲)の2段コンボ
+  attack: {
+    frames: ["attack_1", "attack_2", "attack_3", "attack_4", "attack_5", "attack_6", "attack_7"],
+    loop: false,
+    frameDurations: [140, 150, 140, 130, 140, 150, 260],
+    hitFrames: [2, 6]
+  },
+  flinch: { frames: ["flinch_1", "flinch_2", "flinch_3"], loop: false, frameDurations: [100, 150, 300] },
+  down: {
+    frames: ["down_1", "down_2"],
+    loop: false,
+    frameDurations: [250, 5000]
+  },
+  // 中距離:蟲魔法の詠唱→放出(index6でヒット・着弾地点に蟲エフェクトが残る)
+  midrange: {
+    frames: ["midrange_1", "midrange_2", "midrange_3", "midrange_4", "midrange_5", "midrange_6", "midrange_7"],
+    loop: false,
+    frameDurations: [150, 150, 150, 160, 170, 180, 260],
+    hitFrames: [6]
+  },
+  // 特殊:抱きついて焼く(index6でヒット・確定炎上)。周囲で出血が発生した瞬間に発動準備状態になり、
+  // クールタイム20秒で次の近接攻撃の代わりに発動する
+  special: {
+    frames: ["special_1", "special_2", "special_3", "special_4", "special_5", "special_6", "special_7", "special_8", "special_9"],
+    loop: false,
+    frameDurations: [150, 150, 140, 150, 150, 160, 140, 300, 400],
+    hitFrames: [6]
+  }
+};
+
+const CONFESSOR_CONFIG = {
+  walkSpeed: 42,             // 標準(兵士より遅め)
+  meleeRange: 65,
+  meleeHitDamage1: 14,       // 1段目:本叩き(単体)
+  meleeHitDamage2: 20,       // 2段目:メイス振り回し(範囲)
+  meleeSplashRadius: 60,
+  weight: 90,
+  maxHp: 140,
+  attackLabel: "本叩き",
+  voiceCategory: "revenant", // 専用音声ができるまで亡者の音声セットを流用
+  midRangeMin: 100,
+  midRangeMax: 260,
+  midrangeProjectileFlightMs: 350,
+  midrangeProjectileArcHeight: 40,
+  midrangeDamage: 12,
+  midrangeBleedPerHit: 8,
+  bugZoneDurationMs: 3000,   // 蟲エフェクトの残留時間
+  bugZoneTickMs: 500,        // ティック間隔
+  bugZoneRadius: 70,
+  bugZoneTickDamage: 3,
+  bugZoneTickBleed: 3,
+  specialCooldownMs: 20000,
+  specialProjectileFlightMs: 300,
+  specialProjectileArcHeight: 30,
+  specialDamage: 22,
+  specialBurnStack: 100,     // 確定炎上(蓄積を100%まで一気に埋める)
+  specialZoneTickDamage: 4,
+  specialZoneTickBleed: 5,
+  specialZoneTickBurn: 10
+};
+
+// =====================================================================
 // 鴉人の定義:通常形態は低速・低火力・低HPの弱いユニット。
 // フィールド上で出血発生または咆哮系スキル(獰猛なゴブリン・ゴブリンの女王・ノワール・クロウル)が
 // 発動すると、自軍敵軍を問わず未変身の鴉人が一斉に心臓を捕食し、凶暴化形態へ移行する。
@@ -2296,6 +2422,8 @@ const els = {
   btnSpawnCagespiderRight: document.getElementById("btnSpawnCagespiderRight"),
   btnSpawnPauperLeft: document.getElementById("btnSpawnPauperLeft"),
   btnSpawnPauperRight: document.getElementById("btnSpawnPauperRight"),
+  btnSpawnConfessorLeft: document.getElementById("btnSpawnConfessorLeft"),
+  btnSpawnConfessorRight: document.getElementById("btnSpawnConfessorRight"),
   btnReset: document.getElementById("btnReset"),
   enemyCastleHpFill: document.getElementById("enemyCastleHpFill"),
   enemyCastleHpText: document.getElementById("enemyCastleHpText"),
@@ -2333,6 +2461,9 @@ let thralls = [];
 let cagespiders = [];
 let paupers = [];
 let crowmen = [];
+let confessors = [];
+let confessorBolts = [];      // 教導師:蟲魔法・特殊攻撃の投射物(飛翔中)
+let confessorBugZones = [];   // 教導師:着弾後に残る蟲エフェクトの範囲ダメージゾーン
 let projectiles = [];    // カタパルトの岩(飛翔中)
 let impactEffects = [];  // 着弾エフェクト(スパーク・砂煙)
 let queenBolts = [];        // 女王の魔砲弾(飛翔中)
@@ -2348,7 +2479,7 @@ let effectIdSeq = 0;
 let enemyCastle = null;
 let allyCastle = null;
 let money = 0;
-let loadout = { soldier: true, kurowl: true, goblin: true, archer: true, catapult: true, brute: true, chief: true, queen: true, revenant: true, spear: true, noirkurowl: true, assassin: true, elite: true, halberd: true, crowman: true, thrall: true, cagespider: true, pauper: true }; // 出撃可能なユニット種別(スロットから導出)
+let loadout = { soldier: true, kurowl: true, goblin: true, archer: true, catapult: true, brute: true, chief: true, queen: true, revenant: true, spear: true, noirkurowl: true, assassin: true, elite: true, halberd: true, crowman: true, thrall: true, cagespider: true, pauper: true, confessor: true }; // 出撃可能なユニット種別(スロットから導出)
 
 const SOLDIER_QUEUE_GAP = 0; // 味方同士は重なって密集できる(間合いに入れるユニット数を制限しないため)
 const CASTLE_CONFIG = { maxHp: 150 }; // 魔の平原の城HP仕様
@@ -2370,7 +2501,8 @@ const ECONOMY_CONFIG = {
   crowmanCost: 550,
   thrallCost: 500,
   cagespiderCost: 1000,
-  pauperCost: 300
+  pauperCost: 300,
+  confessorCost: 2500
 };
 
 // =====================================================================
@@ -2409,17 +2541,18 @@ const ROSTER = [
   { kind: "crowman", name: "鴉人", cost: ECONOMY_CONFIG.crowmanCost, statsLine: "HP28(普通より低め) / 通常時は引っ掻き4(攻撃力は普通)・リーチ長め・移動速度は全キャラ中最低 / 体重25 / 敵味方問わず出血発生や咆哮が発動すると、フィールド上の鴉人が一斉に心臓を捕食して凶暴化。凶暴化後は高速移動+5連続交差斬り(各6ダメージ・出血蓄積+12%)の高火力コンボ・常時スーパーアーマー・被ダメージ70%カット", icon: ICON_CROWMAN },
   { kind: "thrall", name: "奴隷亡者", cost: ECONOMY_CONFIG.thrallCost, statsLine: "HP43 / 跳躍斧撃8・13(中距離〜近距離対応)、吹き矢4(低ダメージ・命中で毒15%蓄積、100%で毒状態) / 体重60 / 亡者の下位種・素早くトリッキー。ガードされると2倍の時間怯む。パリィされやすく遠距離にも弱い", icon: ICON_THRALL },
   { kind: "cagespider", name: "籠蜘蛛", cost: ECONOMY_CONFIG.cagespiderCost, statsLine: "HP150 / 掴み乱打6×8連・間合い短め(近接)、糞団子3(中距離・控えめな直接火力、命中ごとに毒25%蓄積・100%で毒状態=180秒間1秒毎に最大HPの約0.1%のダメージ) / 体重110 / 軍団最低クラスの移動速度で前線の壁に。怯むと大きな隙。パリィ不可・ガードなし", icon: ICON_CAGESPIDER },
-  { kind: "pauper", name: "貧困亡者", cost: ECONOMY_CONFIG.pauperCost, statsLine: "HP54 / 突き刺し18(単発・出血蓄積5%) / 体重45 / 亡者の下位種、移動速度は標準的。パリィ不可・ガードなし", icon: ICON_PAUPER }
+  { kind: "pauper", name: "貧困亡者", cost: ECONOMY_CONFIG.pauperCost, statsLine: "HP54 / 突き刺し18(単発・出血蓄積5%) / 体重45 / 亡者の下位種、移動速度は標準的。パリィ不可・ガードなし", icon: ICON_PAUPER },
+  { kind: "confessor", name: "教導師", cost: ECONOMY_CONFIG.confessorCost, statsLine: "HP140 / 本叩き14(単体)・メイス20(範囲)、中距離は蟲魔法12(単体+出血8%、着弾地点に3秒間残留し0.5秒毎に範囲微ダメ+出血)、特殊は抱きつき22(出血発生時に発動準備・クールタイム20秒・確定炎上) / 体重90 / 太った黒魔道士風の魔法系アタッカー。移動速度は標準。ガード・パリィともになし", icon: ICON_CONFESSOR }
 ];
 let formationSlots = new Array(MAX_SLOTS).fill(null); // 各要素: null | "soldier" | "kurowl" | "goblin" | "archer" | "catapult"
 let selectedRosterKind = null;
 let lastMoneyTick = 0;
 let battleActive = false;
 
-const MOTIONS_BY_KIND = { soldier: SOLDIER_MOTIONS, kurowl: KUROWL_MOTIONS, goblin: GOBLIN_MOTIONS, archer: ARCHER_MOTIONS, catapult: CATAPULT_MOTIONS, brute: BRUTE_MOTIONS, chief: CHIEF_MOTIONS, queen: QUEEN_MOTIONS, revenant: REVENANT_MOTIONS, spear: SPEAR_MOTIONS, noirkurowl: NOIRKUROWL_MOTIONS, assassin: ASSASSIN_MOTIONS, elite: ELITE_MOTIONS, halberd: HALBERD_MOTIONS, crowman: CROWMAN_MOTIONS, thrall: THRALL_MOTIONS, cagespider: CAGESPIDER_MOTIONS, pauper: PAUPER_MOTIONS };
-const CONFIG_BY_KIND = { soldier: SOLDIER_CONFIG, kurowl: KUROWL_CONFIG, goblin: GOBLIN_CONFIG, archer: ARCHER_CONFIG, catapult: CATAPULT_CONFIG, brute: BRUTE_CONFIG, chief: CHIEF_CONFIG, queen: QUEEN_CONFIG, revenant: REVENANT_CONFIG, spear: SPEAR_CONFIG, noirkurowl: NOIRKUROWL_CONFIG, assassin: ASSASSIN_CONFIG, elite: ELITE_CONFIG, halberd: HALBERD_CONFIG, crowman: CROWMAN_CONFIG, thrall: THRALL_CONFIG, cagespider: CAGESPIDER_CONFIG, pauper: PAUPER_CONFIG };
-const FRAMES_BY_KIND = { soldier: SOLDIER_FRAMES, kurowl: KUROWL_FRAMES, goblin: GOBLIN_FRAMES, archer: ARCHER_FRAMES, catapult: CATAPULT_FRAMES, brute: BRUTE_FRAMES, chief: CHIEF_FRAMES, queen: QUEEN_FRAMES, revenant: REVENANT_FRAMES, spear: SPEAR_FRAMES, noirkurowl: NOIRKUROWL_FRAMES, assassin: ASSASSIN_FRAMES, elite: ELITE_FRAMES, halberd: HALBERD_FRAMES, crowman: CROWMAN_FRAMES, thrall: THRALL_FRAMES, cagespider: CAGESPIDER_FRAMES, pauper: PAUPER_FRAMES };
-const UNIT_LABEL_BY_KIND = { soldier: "兵士", kurowl: "クロウル", goblin: "ゴブリン", archer: "ゴブリン弓兵", catapult: "ゴブリンカタパルト", brute: "獰猛なゴブリン", chief: "ゴブリン長", queen: "ゴブリンの女王", revenant: "亡者", spear: "槍兵", noirkurowl: "ノワール・クロウル", assassin: "暗殺亡者", elite: "精鋭の亡者兵士", halberd: "斧槍亡者", crowman: "鴉人", thrall: "奴隷亡者", cagespider: "籠蜘蛛", pauper: "貧困亡者" };
+const MOTIONS_BY_KIND = { soldier: SOLDIER_MOTIONS, kurowl: KUROWL_MOTIONS, goblin: GOBLIN_MOTIONS, archer: ARCHER_MOTIONS, catapult: CATAPULT_MOTIONS, brute: BRUTE_MOTIONS, chief: CHIEF_MOTIONS, queen: QUEEN_MOTIONS, revenant: REVENANT_MOTIONS, spear: SPEAR_MOTIONS, noirkurowl: NOIRKUROWL_MOTIONS, assassin: ASSASSIN_MOTIONS, elite: ELITE_MOTIONS, halberd: HALBERD_MOTIONS, crowman: CROWMAN_MOTIONS, thrall: THRALL_MOTIONS, cagespider: CAGESPIDER_MOTIONS, pauper: PAUPER_MOTIONS, confessor: CONFESSOR_MOTIONS };
+const CONFIG_BY_KIND = { soldier: SOLDIER_CONFIG, kurowl: KUROWL_CONFIG, goblin: GOBLIN_CONFIG, archer: ARCHER_CONFIG, catapult: CATAPULT_CONFIG, brute: BRUTE_CONFIG, chief: CHIEF_CONFIG, queen: QUEEN_CONFIG, revenant: REVENANT_CONFIG, spear: SPEAR_CONFIG, noirkurowl: NOIRKUROWL_CONFIG, assassin: ASSASSIN_CONFIG, elite: ELITE_CONFIG, halberd: HALBERD_CONFIG, crowman: CROWMAN_CONFIG, thrall: THRALL_CONFIG, cagespider: CAGESPIDER_CONFIG, pauper: PAUPER_CONFIG, confessor: CONFESSOR_CONFIG };
+const FRAMES_BY_KIND = { soldier: SOLDIER_FRAMES, kurowl: KUROWL_FRAMES, goblin: GOBLIN_FRAMES, archer: ARCHER_FRAMES, catapult: CATAPULT_FRAMES, brute: BRUTE_FRAMES, chief: CHIEF_FRAMES, queen: QUEEN_FRAMES, revenant: REVENANT_FRAMES, spear: SPEAR_FRAMES, noirkurowl: NOIRKUROWL_FRAMES, assassin: ASSASSIN_FRAMES, elite: ELITE_FRAMES, halberd: HALBERD_FRAMES, crowman: CROWMAN_FRAMES, thrall: THRALL_FRAMES, cagespider: CAGESPIDER_FRAMES, pauper: PAUPER_FRAMES, confessor: CONFESSOR_FRAMES };
+const UNIT_LABEL_BY_KIND = { soldier: "兵士", kurowl: "クロウル", goblin: "ゴブリン", archer: "ゴブリン弓兵", catapult: "ゴブリンカタパルト", brute: "獰猛なゴブリン", chief: "ゴブリン長", queen: "ゴブリンの女王", revenant: "亡者", spear: "槍兵", noirkurowl: "ノワール・クロウル", assassin: "暗殺亡者", elite: "精鋭の亡者兵士", halberd: "斧槍亡者", crowman: "鴉人", thrall: "奴隷亡者", cagespider: "籠蜘蛛", pauper: "貧困亡者", confessor: "教導師" };
 
 // =====================================================================
 // 突撃システム(新):ダウン/起き上がりモーションの補完
@@ -2655,6 +2788,9 @@ function motionLabel(kind, key) {
   if (kind === "pauper") {
     return { idle: "待機", walk: "歩行", attack: "突き刺し", flinch: "怯み", down: "ダウン" }[key] || key;
   }
+  if (kind === "confessor") {
+    return { idle: "待機", walk: "歩行", attack: "近接コンボ(本叩き→メイス)", flinch: "怯み", down: "ダウン", midrange: "蟲魔法", special: "特殊攻撃(抱きついて焼く)" }[key] || key;
+  }
   return { idle: "待機", walk: "歩行", flinch: "怯み", knockback: "吹き飛ばし", melee: "近接攻撃", midrange: "中距離攻撃", charge: "突進" }[key] || key;
 }
 
@@ -2669,6 +2805,7 @@ function isEngagedMotion(kind, key) {
   if (kind === "crowman") return key === "attack" || key === "attack2" || key === "transform";
   if (kind === "thrall") return key === "attack" || key === "midrange";
   if (kind === "cagespider") return key === "attack" || key === "midrange";
+  if (kind === "confessor") return key === "attack" || key === "midrange" || key === "special";
   return key === "attack"; // soldier / goblin など近接攻撃タイプ共通
 }
 
@@ -2676,7 +2813,7 @@ function isEngagedMotion(kind, key) {
 // ユニット(兵士・クロウル共通)のDOM生成
 // =====================================================================
 function createUnitDom(kind) {
-  const unitClass = kind === "kurowl" ? "kurowl-unit" : kind === "catapult" ? "catapult-unit" : kind === "noirkurowl" ? "noirkurowl-unit" : kind === "queen" ? "soldier-unit queen-unit" : kind === "halberd" ? "soldier-unit halberd-unit" : kind === "crowman" ? "soldier-unit crowman-unit" : kind === "thrall" ? "soldier-unit thrall-unit" : kind === "cagespider" ? "soldier-unit cagespider-unit" : "soldier-unit";
+  const unitClass = kind === "kurowl" ? "kurowl-unit" : kind === "catapult" ? "catapult-unit" : kind === "noirkurowl" ? "noirkurowl-unit" : kind === "queen" ? "soldier-unit queen-unit" : kind === "halberd" ? "soldier-unit halberd-unit" : kind === "crowman" ? "soldier-unit crowman-unit" : kind === "thrall" ? "soldier-unit thrall-unit" : kind === "cagespider" ? "soldier-unit cagespider-unit" : kind === "confessor" ? "soldier-unit confessor-unit" : "soldier-unit";
   const hpWrapClass = kind === "kurowl" ? "kurowl-hp" : kind === "catapult" ? "catapult-hp" : kind === "noirkurowl" ? "noirkurowl-hp" : "soldier-hp";
   const hpFillClass = kind === "kurowl" ? "kurowl-hp-fill" : kind === "catapult" ? "catapult-hp-fill" : kind === "noirkurowl" ? "noirkurowl-hp-fill" : "soldier-hp-fill";
 
@@ -2709,7 +2846,7 @@ function createUnitDom(kind) {
 // 対応するkindのものに更新する
 function applyUnitDomKindClasses(u) {
   const kind = u.kind;
-  const unitClass = kind === "kurowl" ? "kurowl-unit" : kind === "catapult" ? "catapult-unit" : kind === "noirkurowl" ? "noirkurowl-unit" : kind === "queen" ? "soldier-unit queen-unit" : kind === "halberd" ? "soldier-unit halberd-unit" : kind === "crowman" ? "soldier-unit crowman-unit" : kind === "thrall" ? "soldier-unit thrall-unit" : kind === "cagespider" ? "soldier-unit cagespider-unit" : "soldier-unit";
+  const unitClass = kind === "kurowl" ? "kurowl-unit" : kind === "catapult" ? "catapult-unit" : kind === "noirkurowl" ? "noirkurowl-unit" : kind === "queen" ? "soldier-unit queen-unit" : kind === "halberd" ? "soldier-unit halberd-unit" : kind === "crowman" ? "soldier-unit crowman-unit" : kind === "thrall" ? "soldier-unit thrall-unit" : kind === "cagespider" ? "soldier-unit cagespider-unit" : kind === "confessor" ? "soldier-unit confessor-unit" : "soldier-unit";
   const hpWrapClass = kind === "kurowl" ? "kurowl-hp" : kind === "catapult" ? "catapult-hp" : kind === "noirkurowl" ? "noirkurowl-hp" : "soldier-hp";
   const hpFillClass = kind === "kurowl" ? "kurowl-hp-fill" : kind === "catapult" ? "catapult-hp-fill" : kind === "noirkurowl" ? "noirkurowl-hp-fill" : "soldier-hp-fill";
   u.el.unit.className = unitClass;
@@ -2771,13 +2908,18 @@ function createUnit(kind, side, startXOverride) {
     debuffMultiplier: 1,
     bleedAccum: 0,          // 出血蓄積値(%)。100に達すると出血が発生する
     poisonAccum: 0,         // 毒蓄積値(%)。100に達すると毒が発生する(籠蜘蛛の糞団子など)
+    burnAccum: 0,           // 炎上蓄積値(%)。100に達すると発火する(教導師の特殊攻撃など)
+    burnDotUntil: 0,        // 発火継続時間の終了時刻
+    burnSpreadLastTick: 0,  // 延焼(周囲の同陣営への炎上蓄積付与)の前回判定時刻
+    confessorPrimed: false, // 教導師:出血発生を検知して特殊攻撃の発動準備が整っている状態
+    confessorSpecialCooldownUntil: 0, // 教導師:特殊攻撃の次回発動可能時刻
     parryVictim: null,      // 暗殺亡者:パリィ成功時に致命の一撃で仕留める対象
     parryKillStartX: null,  // 暗殺亡者:致命の一撃で跳躍を開始した位置
     parryKillEndX: null,    // 暗殺亡者:致命の一撃で着地する(対象の背後の)位置
     guardBreakerHitsTaken: 0, // 精鋭の亡者兵士:硬い鉄の盾がこれまでに受けたガードブレイカーの回数
     el
   };
-  const targetArr = kind === "kurowl" ? kurowls : kind === "goblin" ? goblins : kind === "archer" ? archers : kind === "catapult" ? catapults : kind === "brute" ? brutes : kind === "chief" ? chiefs : kind === "queen" ? queens : kind === "revenant" ? revenants : kind === "spear" ? spears : kind === "noirkurowl" ? noirkurowls : kind === "assassin" ? assassins : kind === "elite" ? elites : kind === "halberd" ? halberdRevenants : kind === "crowman" ? crowmen : kind === "thrall" ? thralls : kind === "cagespider" ? cagespiders : kind === "pauper" ? paupers : soldiers;
+  const targetArr = kind === "kurowl" ? kurowls : kind === "goblin" ? goblins : kind === "archer" ? archers : kind === "catapult" ? catapults : kind === "brute" ? brutes : kind === "chief" ? chiefs : kind === "queen" ? queens : kind === "revenant" ? revenants : kind === "spear" ? spears : kind === "noirkurowl" ? noirkurowls : kind === "assassin" ? assassins : kind === "elite" ? elites : kind === "halberd" ? halberdRevenants : kind === "crowman" ? crowmen : kind === "thrall" ? thralls : kind === "cagespider" ? cagespiders : kind === "pauper" ? paupers : kind === "confessor" ? confessors : soldiers;
   targetArr.push(u);
   el.unit.style.display = "block";
   setUnitMotion(u, "walk");
@@ -2806,7 +2948,7 @@ function updateCastleUI(castle, fillEl, textEl) {
 // 共通ヘルパー
 // =====================================================================
 function allUnits() {
-  return soldiers.concat(kurowls, goblins, archers, catapults, brutes, chiefs, queens, revenants, spears, noirkurowls, assassins, elites, halberdRevenants, crowmen, thralls, cagespiders, paupers);
+  return soldiers.concat(kurowls, goblins, archers, catapults, brutes, chiefs, queens, revenants, spears, noirkurowls, assassins, elites, halberdRevenants, crowmen, thralls, cagespiders, paupers, confessors);
 }
 
 function dist(a, b) {
@@ -2937,6 +3079,11 @@ function setUnitMotion(u, key) {
   if (u.kind === "halberd" && key === "midrange") u.midrangeStartX = u.xPx;
   if (u.kind === "thrall" && key === "attack") u.midrangeStartX = u.xPx;
   if (u.kind === "cagespider" && key === "attack") playUnitVoice(u, "attack");
+  if (u.kind === "confessor" && key === "special") {
+    // 特殊攻撃(抱きついて焼く)が発動する瞬間に発動準備フラグを消費し、クールタイムを開始する
+    u.confessorPrimed = false;
+    u.confessorSpecialCooldownUntil = now + CONFESSOR_CONFIG.specialCooldownMs;
+  }
   if (u.kind === "kurowl" && key === "melee") playUnitVoice(u, "attack");
   if (u.kind === "kurowl" && key === "walk") {
     // 歩行に切り替わるたびに鳴らすと煩いので、間隔を空けて再生する
@@ -3050,6 +3197,17 @@ function evaluateUnitState(u, now) {
     const inMelee = d <= cfg.meleeRange;
     if (inMelee) {
       setUnitMotion(u, "attack");
+    } else if (d >= cfg.midRangeMin && d <= cfg.midRangeMax) {
+      setUnitMotion(u, "midrange");
+    } else {
+      setUnitMotion(u, "walk");
+    }
+  } else if (u.kind === "confessor") {
+    const cfg = CONFIG_BY_KIND[u.kind];
+    const inMelee = d <= cfg.meleeRange;
+    if (inMelee) {
+      // 出血発生を検知して発動準備が整っている場合、次の近接攻撃の代わりに特殊攻撃(抱きついて焼く)を出す
+      setUnitMotion(u, u.confessorPrimed ? "special" : "attack");
     } else if (d >= cfg.midRangeMin && d <= cfg.midRangeMax) {
       setUnitMotion(u, "midrange");
     } else {
@@ -3866,6 +4024,7 @@ function triggerBleedProc(target) {
     logMsg(`${label}が出血により倒れた。`);
   }
   triggerCrowmanAwakening(performance.now());
+  triggerConfessorPrime(performance.now());
 }
 // 暗殺亡者:パリィ成功・致命の一撃モーション開始時、対象の背後(向きと逆側)へ回り込む移動を準備する。
 // 対象を実際に仕留めるのは、この後hitFrame(突き刺しのコマ)に到達した時点(executeAssassinParryKill)
@@ -4523,6 +4682,238 @@ function tickPoisonDots(now) {
 }
 
 // =====================================================================
+// 炎上状態異常(教導師の特殊攻撃などで確定付与):出血・毒と並行する新パラメータ。
+// 蓄積値が100%に達すると発火し、10秒間1秒毎に最大HPの1%のダメージを受け続ける(毒より短期集中型)。
+// 発火中のキャラが移動する際、0.5秒間隔で自分の歩幅分(半径50px程度)の範囲にいる
+// 「自分と同じ陣営」のキャラのみに炎上蓄積+5%を延焼させる(敵陣営への誤爆はしない)。
+// =====================================================================
+const BURN_DOT_DURATION_MS = 10000;
+const BURN_DOT_PERCENT_PER_SEC = 0.01; // 最大HPに対する割合(1%)
+const BURN_SPREAD_INTERVAL_MS = 500;
+const BURN_SPREAD_RADIUS = 50;
+const BURN_SPREAD_PERCENT = 5;
+function showBurnVisual(target, durationMs) {
+  if (!target || !target.el || !target.el.unit) return;
+  attachEffectOverlay(target, CONFESSOR_BURN_FRAMES, durationMs, 150, { loop: true }, CONFESSOR_FRAMES);
+}
+function triggerBurnProc(target) {
+  if (!target || target.dead || target.isCastle) return;
+  const now = performance.now();
+  target.burnDotUntil = now + BURN_DOT_DURATION_MS;
+  target.burnDotMaxHpSnapshot = target.maxHp || target.hp || 1;
+  target.burnDotLastTick = now;
+  target.burnSpreadLastTick = now;
+  showBurnVisual(target, BURN_DOT_DURATION_MS);
+  const label = `${UNIT_LABEL_BY_KIND[target.kind]}#${target.id}`;
+  logMsg(`${label}が炎上状態になった!(10秒間、1秒ごとに最大HPの約1%のダメージ)`);
+}
+function applyBurnStack(target, amount) {
+  if (!target || target.dead || target.isCastle || !amount) return;
+  target.burnAccum = (target.burnAccum || 0) + amount;
+  if (target.burnAccum >= 100) {
+    target.burnAccum = 0;
+    triggerBurnProc(target);
+  }
+}
+function tickBurnDots(now) {
+  for (const u of allUnits()) {
+    if (!u.burnDotUntil || u.dead) continue;
+    if (now >= u.burnDotUntil) {
+      u.burnDotUntil = null;
+      continue;
+    }
+    if (now - (u.burnDotLastTick || 0) >= 1000) {
+      u.burnDotLastTick = now;
+      const dmg = Math.round((u.burnDotMaxHpSnapshot || u.maxHp || 1) * BURN_DOT_PERCENT_PER_SEC);
+      if (dmg > 0) {
+        u.hp = Math.max(0, u.hp - dmg);
+        const label = `${UNIT_LABEL_BY_KIND[u.kind]}#${u.id}`;
+        logMsg(`炎上の継続ダメージ → ${label}に<b>${dmg}</b>ダメージ(残り${u.hp.toFixed(0)})`);
+        if (u.hp <= 0 && !u.dead) {
+          u.dead = true;
+          u.isDown = false;
+          u.deadAt = now;
+          u.lockedMotion = null;
+          const vMotions = MOTIONS_BY_KIND[u.kind];
+          const deathKey = vMotions.down ? "down" : "knockback";
+          setUnitMotion(u, deathKey);
+          u.removeAt = u.deadAt + motionDuration(vMotions[deathKey]);
+          playUnitVoice(u, "death");
+          logMsg(`${label}が炎上により倒れた。`);
+          u.burnDotUntil = null;
+          triggerCrowmanAwakening(now);
+          continue;
+        }
+      }
+    }
+    // 延焼:発火中のキャラの周囲(歩幅目安の半径)にいる「同じ陣営」のキャラのみに炎上蓄積を付与する
+    if (now - (u.burnSpreadLastTick || 0) >= BURN_SPREAD_INTERVAL_MS) {
+      u.burnSpreadLastTick = now;
+      for (const other of allUnits()) {
+        if (other === u || other.dead || other.isCastle || other.team !== u.team) continue;
+        if (Math.abs(other.xPx - u.xPx) > BURN_SPREAD_RADIUS) continue;
+        applyBurnStack(other, BURN_SPREAD_PERCENT);
+      }
+    }
+  }
+}
+
+// =====================================================================
+// 教導師:出血発生を検知して特殊攻撃(抱きついて焼く)の発動準備状態にする。
+// クールタイム中の教導師は準備状態にならない(triggerBleedProcから呼び出される)
+// =====================================================================
+function triggerConfessorPrime(now) {
+  for (const u of confessors) {
+    if (u.dead) continue;
+    if (u.confessorPrimed) continue;
+    if (now < (u.confessorSpecialCooldownUntil || 0)) continue;
+    u.confessorPrimed = true;
+  }
+}
+
+// =====================================================================
+// 教導師:メイス振り回し(近接2段目・自身を中心とした範囲攻撃)
+// =====================================================================
+function resolveConfessorMaceSplash(u, dmg, label) {
+  const cfg = CONFESSOR_CONFIG;
+  for (const unit of allUnits()) {
+    if (unit === u || unit.dead || unit.team === u.team) continue;
+    if (Math.abs(unit.xPx - u.xPx) > cfg.meleeSplashRadius) continue;
+    const guardian = findGuardianChief(unit, u.team);
+    if (guardian) {
+      applyDamageTo(guardian, dmg, label + "(範囲攻撃を肩代わり)", u);
+    } else {
+      applyDamageTo(unit, dmg, label, u);
+    }
+  }
+  for (const castle of [enemyCastle, allyCastle]) {
+    if (!castle || castle.dead || castle.team === u.team) continue;
+    if (Math.abs(castle.xPx - u.xPx) > cfg.meleeSplashRadius) continue;
+    damageCastle(castle, dmg, label);
+  }
+}
+
+// =====================================================================
+// 教導師:蟲魔法(中距離)・特殊攻撃(抱きついて焼く)の投射物。
+// 着弾時に単体ヒット(ダメージ+出血、特殊はさらに確定炎上)を与えたのち、
+// 着弾地点に3秒間残る蟲エフェクトのダメージゾーンを生成する
+// =====================================================================
+function spawnConfessorInsectBolt(u, target, label, isSpecial) {
+  const cfg = CONFESSOR_CONFIG;
+  const buffMultiplier = (u.buffUntil && performance.now() < u.buffUntil) ? (u.buffMultiplier || 1) : 1;
+  const debuffMultiplier = (u.debuffUntil && performance.now() < u.debuffUntil) ? (u.debuffMultiplier || 1) : 1;
+  const el = document.createElement("div");
+  el.className = "projectile-unit";
+  const img = document.createElement("img");
+  img.src = CONFESSOR_FRAMES.bug_effect_1;
+  el.appendChild(img);
+  els.field.appendChild(el);
+
+  confessorBolts.push({
+    id: ++projectileIdSeq,
+    team: u.team,
+    attacker: u,
+    xStart: u.xPx,
+    xTarget: target.xPx,
+    startTime: performance.now(),
+    duration: isSpecial ? cfg.specialProjectileFlightMs : cfg.midrangeProjectileFlightMs,
+    arcHeight: isSpecial ? cfg.specialProjectileArcHeight : cfg.midrangeProjectileArcHeight,
+    label,
+    mult: buffMultiplier * debuffMultiplier,
+    targetRef: target,
+    isSpecial: !!isSpecial,
+    resolved: false,
+    el
+  });
+}
+
+function spawnConfessorBugZone(xImpact, team, attacker, isSpecial) {
+  const cfg = CONFESSOR_CONFIG;
+  const el = document.createElement("div");
+  el.className = "impact-unit";
+  const img = document.createElement("img");
+  img.src = CONFESSOR_FRAMES.bug_effect_1;
+  el.appendChild(img);
+  els.field.appendChild(el);
+  el.style.left = `${fieldScreenX(xImpact)}px`;
+
+  const now = performance.now();
+  confessorBugZones.push({
+    xImpact,
+    team,
+    attacker,
+    isSpecial: !!isSpecial,
+    radius: cfg.bugZoneRadius,
+    tickMs: cfg.bugZoneTickMs,
+    nextTickTime: now + cfg.bugZoneTickMs,
+    endsAt: now + cfg.bugZoneDurationMs,
+    tickDamage: isSpecial ? cfg.specialZoneTickDamage : cfg.bugZoneTickDamage,
+    tickBleed: isSpecial ? cfg.specialZoneTickBleed : cfg.bugZoneTickBleed,
+    tickBurn: isSpecial ? cfg.specialZoneTickBurn : 0,
+    frames: CONFESSOR_BUG_FRAMES,
+    frameIndex: 0,
+    lastFrameTime: now,
+    done: false,
+    el,
+    img
+  });
+}
+
+function tickConfessorBolts(now) {
+  for (const p of confessorBolts) {
+    const t = Math.min(1, (now - p.startTime) / p.duration);
+    const curX = p.xStart + (p.xTarget - p.xStart) * t;
+    const arc = 4 * p.arcHeight * t * (1 - t);
+    p.el.style.left = `${fieldScreenX(curX)}px`;
+    p.el.style.transform = `translateX(-50%) translateY(${-arc}px)`;
+    if (t >= 1 && !p.resolved) {
+      p.resolved = true;
+      const cfg = CONFESSOR_CONFIG;
+      if (p.targetRef && !p.targetRef.dead) {
+        if (p.isSpecial) {
+          const dmg = Math.round(cfg.specialDamage * p.mult);
+          applyDamageTo(p.targetRef, dmg, p.label, p.attacker);
+          applyBurnStack(p.targetRef, cfg.specialBurnStack); // 確定炎上
+        } else {
+          const dmg = Math.round(cfg.midrangeDamage * p.mult);
+          applyDamageTo(p.targetRef, dmg, p.label, p.attacker);
+          applyBleedStack(p.targetRef, cfg.midrangeBleedPerHit);
+        }
+      }
+      spawnConfessorBugZone(p.xTarget, p.team, p.attacker, p.isSpecial);
+      p.el.remove();
+    }
+  }
+  confessorBolts = confessorBolts.filter(p => !p.resolved);
+}
+
+function tickConfessorBugZones(now) {
+  for (const z of confessorBugZones) {
+    if (now - z.lastFrameTime >= 150) {
+      z.lastFrameTime = now;
+      z.frameIndex = (z.frameIndex + 1) % z.frames.length;
+      z.img.src = CONFESSOR_FRAMES[z.frames[z.frameIndex]];
+    }
+    if (now >= z.nextTickTime && now < z.endsAt) {
+      z.nextTickTime += z.tickMs;
+      const label = `教導師の蟲エフェクト`;
+      for (const unit of allUnits()) {
+        if (unit.dead || unit.team === z.team) continue;
+        if (Math.abs(unit.xPx - z.xImpact) > z.radius) continue;
+        applyDamageTo(unit, z.tickDamage, label, z.attacker);
+        applyBleedStack(unit, z.tickBleed);
+        if (z.tickBurn) applyBurnStack(unit, z.tickBurn);
+      }
+    }
+    if (now >= z.endsAt) {
+      z.done = true;
+      z.el.remove();
+    }
+  }
+  confessorBugZones = confessorBugZones.filter(z => !z.done);
+}
+
+// =====================================================================
 // 奴隷亡者の吹き矢(中距離攻撃の投擲物・特殊効果なしの単体ダメージのみ)
 // =====================================================================
 function spawnThrallDart(u, target, label) {
@@ -4844,7 +5235,7 @@ function applyProneSizing(u) {
 }
 
 function tickDeadUnitAnimation(u, now) {
-  const motion = u.kind === "catapult" ? MOTIONS_BY_KIND[u.kind].destroy : (u.kind === "queen" || u.kind === "revenant" || u.kind === "assassin" || u.kind === "elite" || u.kind === "halberd" || u.kind === "crowman" || u.kind === "thrall" || u.kind === "cagespider" || u.kind === "pauper") ? MOTIONS_BY_KIND[u.kind].down : MOTIONS_BY_KIND[u.kind].knockback;
+  const motion = u.kind === "catapult" ? MOTIONS_BY_KIND[u.kind].destroy : (u.kind === "queen" || u.kind === "revenant" || u.kind === "assassin" || u.kind === "elite" || u.kind === "halberd" || u.kind === "crowman" || u.kind === "thrall" || u.kind === "cagespider" || u.kind === "pauper" || u.kind === "confessor") ? MOTIONS_BY_KIND[u.kind].down : MOTIONS_BY_KIND[u.kind].knockback;
   const frameDt = Math.max(0, now - u.lastFrameTime);
   const curDuration = (motion.frameDurations ? motion.frameDurations[u.frameIndex] : null) || motion.msPerFrame;
 
@@ -4943,7 +5334,7 @@ function tickUnit(u, now) {
   // 兵士/ゴブリンなど近接タイプは攻撃中でも継続的に再評価してよい(自身は移動しないため)が、
   // クロウルの中距離/近接攻撃は自ら移動・演出するモーションなので、
   // walk中のみ再評価し、攻撃モーションは最後まで中断せず再生し切る
-  if ((u.kind !== "kurowl" || u.motionKey === "walk") && !(u.kind === "brute" && u.motionKey === "midrange") && !(u.kind === "chief" && (u.motionKey === "midrange" || u.motionKey === "attack")) && !(u.kind === "revenant" && (u.motionKey === "attack" || u.motionKey === "xbowAttack" || u.motionKey === "switchToSword" || u.motionKey === "switchToCrossbow")) && !(u.kind === "noirkurowl" && (u.motionKey === "attack" || u.motionKey === "attack2" || u.motionKey === "transform")) && !(u.kind === "halberd" && (u.motionKey === "attack" || u.motionKey === "midrange")) && !(u.kind === "crowman" && (u.motionKey === "attack" || u.motionKey === "attack2" || u.motionKey === "transform")) && !(u.kind === "thrall" && (u.motionKey === "attack" || u.motionKey === "midrange")) && !(u.kind === "cagespider" && (u.motionKey === "attack" || u.motionKey === "midrange"))) {
+  if ((u.kind !== "kurowl" || u.motionKey === "walk") && !(u.kind === "brute" && u.motionKey === "midrange") && !(u.kind === "chief" && (u.motionKey === "midrange" || u.motionKey === "attack")) && !(u.kind === "revenant" && (u.motionKey === "attack" || u.motionKey === "xbowAttack" || u.motionKey === "switchToSword" || u.motionKey === "switchToCrossbow")) && !(u.kind === "noirkurowl" && (u.motionKey === "attack" || u.motionKey === "attack2" || u.motionKey === "transform")) && !(u.kind === "halberd" && (u.motionKey === "attack" || u.motionKey === "midrange")) && !(u.kind === "crowman" && (u.motionKey === "attack" || u.motionKey === "attack2" || u.motionKey === "transform")) && !(u.kind === "thrall" && (u.motionKey === "attack" || u.motionKey === "midrange")) && !(u.kind === "cagespider" && (u.motionKey === "attack" || u.motionKey === "midrange")) && !(u.kind === "confessor" && (u.motionKey === "attack" || u.motionKey === "midrange" || u.motionKey === "special"))) {
     evaluateUnitState(u, now);
   }
 
@@ -5083,6 +5474,16 @@ function tickUnit(u, now) {
       } else if (u.kind === "cagespider" && u.motionKey === "midrange") {
         dmg = CAGESPIDER_CONFIG.midrangeDamage;
         label = `籠蜘蛛#${u.id}の糞団子`;
+      } else if (u.kind === "confessor" && u.motionKey === "attack") {
+        // hitFrames: [2, 6] → index2が本叩き(単体)、index6がメイス振り回し(範囲)
+        dmg = u.frameIndex === 2 ? CONFESSOR_CONFIG.meleeHitDamage1 : CONFESSOR_CONFIG.meleeHitDamage2;
+        label = `教導師#${u.id}の${u.frameIndex === 2 ? "本叩き" : "メイス振り回し"}`;
+      } else if (u.kind === "confessor" && u.motionKey === "midrange") {
+        dmg = CONFESSOR_CONFIG.midrangeDamage;
+        label = `教導師#${u.id}の蟲魔法`;
+      } else if (u.kind === "confessor" && u.motionKey === "special") {
+        dmg = CONFESSOR_CONFIG.specialDamage;
+        label = `教導師#${u.id}の特殊攻撃(抱きついて焼く)`;
       } else if (u.kind === "crowman" && u.motionKey === "attack2") {
         // hitFrames: [3,4,5,6,7] → 凶暴化形態の5連続交差斬り(各ヒットで出血蓄積+4%)
         dmg = CROWMAN_CONFIG.meleeHitDamage2;
@@ -5135,6 +5536,18 @@ function tickUnit(u, now) {
         } else if (u.kind === "cagespider" && u.motionKey === "attack") {
           // コンボ中に対象が離れていた場合、間合い外なら空振りにする
           if (dist(u, hitTarget) <= CAGESPIDER_CONFIG.meleeRange + 15) applyDamageTo(hitTarget, dmg, label, u);
+        } else if (u.kind === "confessor" && u.motionKey === "attack" && u.frameIndex === 2) {
+          // 1段目:本叩き(単体ヒット)。コンボ中に対象が離れていた場合、間合い外なら空振りにする
+          if (dist(u, hitTarget) <= CONFESSOR_CONFIG.meleeRange + 15) {
+            applyDamageTo(hitTarget, dmg, label, u);
+          }
+        } else if (u.kind === "confessor" && u.motionKey === "attack" && u.frameIndex === 6) {
+          // 2段目:メイス振り回し(自身を中心とした範囲攻撃)
+          resolveConfessorMaceSplash(u, dmg, label);
+        } else if (u.kind === "confessor" && u.motionKey === "midrange") {
+          spawnConfessorInsectBolt(u, hitTarget, label, false);
+        } else if (u.kind === "confessor" && u.motionKey === "special") {
+          spawnConfessorInsectBolt(u, hitTarget, label, true);
         } else if (u.kind === "crowman" && (u.motionKey === "attack" || u.motionKey === "attack2")) {
           // コンボ中に対象が離れていた場合、間合い外なら空振りにする
           const range = u.motionKey === "attack2" ? CROWMAN_CONFIG.meleeRange2 : CROWMAN_CONFIG.meleeRange;
@@ -5179,6 +5592,8 @@ function tickUnit(u, now) {
       } else if (u.kind === "thrall" && u.motionKey === "midrange") {
         playUnitVoice(u, "midrangeAttack");
       } else if (u.kind === "cagespider" && u.motionKey === "midrange") {
+        playUnitVoice(u, "midrangeAttack");
+      } else if (u.kind === "confessor" && (u.motionKey === "midrange" || u.motionKey === "special")) {
         playUnitVoice(u, "midrangeAttack");
       } else if (u.kind === "crowman" && u.motionKey === "attack2") {
         // 5連続ヒットの声は最初の1回だけ再生する(1.5秒の連続音として作成済みのため)
@@ -5402,6 +5817,9 @@ function tick(now) {
       tickCagespiderDungBalls(now);
       tickCagespiderImpactEffects(now);
       tickPoisonDots(now);
+      tickBurnDots(now);
+      tickConfessorBolts(now);
+      tickConfessorBugZones(now);
 
       // 敵ユニットを倒した際、出撃コストの一部(KILL_REWARD_RATIO)を即座に獲得する
       for (const u of allUnits()) {
@@ -5497,6 +5915,7 @@ function spawnUnit(kind, side) {
   if (kind === "thrall") playUnitVoice(u, "warCry");
   if (kind === "cagespider") playUnitVoice(u, "warCry");
   if (kind === "pauper") playUnitVoice(u, "warCry");
+  if (kind === "confessor") playUnitVoice(u, "warCry");
 }
 
 function clearAllUnits() {
@@ -5519,6 +5938,11 @@ function clearAllUnits() {
   thralls = [];
   cagespiders = [];
   paupers = [];
+  confessors = [];
+  for (const p of confessorBolts) p.el.remove();
+  confessorBolts = [];
+  for (const z of confessorBugZones) z.el.remove();
+  confessorBugZones = [];
   for (const p of projectiles) p.el.remove();
   projectiles = [];
   for (const e of impactEffects) e.el.remove();
@@ -5639,6 +6063,8 @@ function applyLoadoutToButtons() {
   els.btnSpawnCagespiderRight.style.display = loadout.cagespider ? "" : "none";
   els.btnSpawnPauperLeft.style.display = loadout.pauper ? "" : "none";
   els.btnSpawnPauperRight.style.display = loadout.pauper ? "" : "none";
+  els.btnSpawnConfessorLeft.style.display = loadout.confessor ? "" : "none";
+  els.btnSpawnConfessorRight.style.display = loadout.confessor ? "" : "none";
 }
 
 function startBattle() {
@@ -5660,7 +6086,8 @@ function startBattle() {
   loadout.thrall = formationSlots.includes("thrall");
   loadout.cagespider = formationSlots.includes("cagespider");
   loadout.pauper = formationSlots.includes("pauper");
-  if (!loadout.soldier && !loadout.kurowl && !loadout.goblin && !loadout.archer && !loadout.catapult && !loadout.brute && !loadout.chief && !loadout.queen && !loadout.revenant && !loadout.spear && !loadout.noirkurowl && !loadout.assassin && !loadout.elite && !loadout.halberd && !loadout.crowman && !loadout.thrall && !loadout.cagespider && !loadout.pauper) {
+  loadout.confessor = formationSlots.includes("confessor");
+  if (!loadout.soldier && !loadout.kurowl && !loadout.goblin && !loadout.archer && !loadout.catapult && !loadout.brute && !loadout.chief && !loadout.queen && !loadout.revenant && !loadout.spear && !loadout.noirkurowl && !loadout.assassin && !loadout.elite && !loadout.halberd && !loadout.crowman && !loadout.thrall && !loadout.cagespider && !loadout.pauper && !loadout.confessor) {
     els.formationWarning.style.display = "block";
     return;
   }
@@ -5749,6 +6176,8 @@ els.btnSpawnCagespiderLeft.addEventListener("click", () => spawnUnit("cagespider
 els.btnSpawnCagespiderRight.addEventListener("click", () => spawnUnit("cagespider", "right"));
 els.btnSpawnPauperLeft.addEventListener("click", () => spawnUnit("pauper", "left"));
 els.btnSpawnPauperRight.addEventListener("click", () => spawnUnit("pauper", "right"));
+els.btnSpawnConfessorLeft.addEventListener("click", () => spawnUnit("confessor", "left"));
+els.btnSpawnConfessorRight.addEventListener("click", () => spawnUnit("confessor", "right"));
 els.btnReset.addEventListener("click", reset);
 els.btnStartBattle.addEventListener("click", startBattle);
 

@@ -2217,7 +2217,7 @@ const CONFESSOR_MOTIONS = {
     frameDurations: [150, 150, 150, 160, 170, 180, 260],
     hitFrames: [6]
   },
-  // 特殊:抱きついて焼く(index6でヒット・確定炎上)。周囲で出血が発生した瞬間に発動準備状態になり、
+  // 特殊:抱きついて焼く(index6でヒット・確定炎上)。クールタイム20秒で、明けていれば
   // クールタイム20秒で次の近接攻撃の代わりに発動する
   special: {
     frames: ["special_1", "special_2", "special_3", "special_4", "special_5", "special_6", "special_7", "special_8", "special_9"],
@@ -2544,7 +2544,7 @@ const ROSTER = [
   { kind: "thrall", name: "奴隷亡者", cost: ECONOMY_CONFIG.thrallCost, statsLine: "HP43 / 跳躍斧撃8・13(中距離〜近距離対応)、吹き矢4(低ダメージ・命中で毒15%蓄積、100%で毒状態) / 体重60 / 亡者の下位種・素早くトリッキー。ガードされると2倍の時間怯む。パリィされやすく遠距離にも弱い", icon: ICON_THRALL },
   { kind: "cagespider", name: "籠蜘蛛", cost: ECONOMY_CONFIG.cagespiderCost, statsLine: "HP150 / 掴み乱打6×8連・間合い短め(近接)、糞団子3(中距離・控えめな直接火力、命中ごとに毒25%蓄積・100%で毒状態=90秒間1秒毎に最大HPの約4/9%のダメージ、合計約40%) / 体重110 / 軍団最低クラスの移動速度で前線の壁に。怯むと大きな隙。パリィ不可・ガードなし", icon: ICON_CAGESPIDER },
   { kind: "pauper", name: "貧困亡者", cost: ECONOMY_CONFIG.pauperCost, statsLine: "HP54 / 突き刺し18(単発・出血蓄積5%) / 体重45 / 亡者の下位種、移動速度は標準的。パリィ不可・ガードなし", icon: ICON_PAUPER },
-  { kind: "confessor", name: "教導師", cost: ECONOMY_CONFIG.confessorCost, statsLine: "HP140 / 本叩き14(単体)・メイス20(範囲)、中距離は蟲魔法12(単体+出血8%、着弾地点に3秒間残留し0.5秒毎に範囲微ダメ+出血)、特殊は抱きつき22(出血発生時に発動準備・クールタイム20秒・確定炎上) / 体重90 / 太った黒魔道士風の魔法系アタッカー。移動速度は標準。ガード・パリィともになし", icon: ICON_CONFESSOR }
+  { kind: "confessor", name: "教導師", cost: ECONOMY_CONFIG.confessorCost, statsLine: "HP140 / 本叩き14(単体・パリィ可能・ガード無効)・メイス20(範囲・出血蓄積+ガードブレイカー)、中距離は蟲魔法12(単体+出血8%、着弾地点に3秒間残留し0.5秒毎に範囲微ダメ+出血、クールタイム10秒)、特殊は抱きつき22(クールタイム20秒明けで近接の代わりに発動・確定炎上、モーション中はスーパーアーマー+被ダメージ半減) / 体重90 / 太った黒魔道士風の魔法系アタッカー。移動速度は標準。ガード・パリィともになし", icon: ICON_CONFESSOR }
 ];
 let formationSlots = new Array(MAX_SLOTS).fill(null); // 各要素: null | "soldier" | "kurowl" | "goblin" | "archer" | "catapult"
 let selectedRosterKind = null;
@@ -2913,7 +2913,6 @@ function createUnit(kind, side, startXOverride) {
     burnAccum: 0,           // 炎上蓄積値(%)。100に達すると発火する(教導師の特殊攻撃など)
     burnDotUntil: 0,        // 発火継続時間の終了時刻
     burnSpreadLastTick: 0,  // 延焼(周囲の同陣営への炎上蓄積付与)の前回判定時刻
-    confessorPrimed: false, // 教導師:出血発生を検知して特殊攻撃の発動準備が整っている状態
     confessorSpecialCooldownUntil: 0, // 教導師:特殊攻撃の次回発動可能時刻
     parryVictim: null,      // 暗殺亡者:パリィ成功時に致命の一撃で仕留める対象
     parryKillStartX: null,  // 暗殺亡者:致命の一撃で跳躍を開始した位置
@@ -3082,8 +3081,7 @@ function setUnitMotion(u, key) {
   if (u.kind === "thrall" && key === "attack") u.midrangeStartX = u.xPx;
   if (u.kind === "cagespider" && key === "attack") playUnitVoice(u, "attack");
   if (u.kind === "confessor" && key === "special") {
-    // 特殊攻撃(抱きついて焼く)が発動する瞬間に発動準備フラグを消費し、クールタイムを開始する
-    u.confessorPrimed = false;
+    // 特殊攻撃(抱きついて焼く)が発動する瞬間にクールタイムを開始する
     u.confessorSpecialCooldownUntil = now + CONFESSOR_CONFIG.specialCooldownMs;
   }
   if (u.kind === "kurowl" && key === "melee") playUnitVoice(u, "attack");
@@ -3208,8 +3206,9 @@ function evaluateUnitState(u, now) {
     const cfg = CONFIG_BY_KIND[u.kind];
     const inMelee = d <= cfg.meleeRange;
     if (inMelee) {
-      // 出血発生を検知して発動準備が整っている場合、次の近接攻撃の代わりに特殊攻撃(抱きついて焼く)を出す
-      setUnitMotion(u, u.confessorPrimed ? "special" : "attack");
+      // クールタイムが明けていれば、次の近接攻撃の代わりに特殊攻撃(抱きついて焼く)を出す
+      const specialReady = now >= (u.confessorSpecialCooldownUntil || 0);
+      setUnitMotion(u, specialReady ? "special" : "attack");
     } else if (d >= cfg.midRangeMin && d <= cfg.midRangeMax && now >= (u.midrangeCooldownUntil || 0)) {
       if (u.motionKey !== "midrange") u.midrangeCooldownUntil = now + cfg.midrangeCooldownMs;
       setUnitMotion(u, "midrange");
@@ -3403,7 +3402,9 @@ function damageUnit(u, dmg, sourceLabel, attacker) {
       return;
     }
     // ガード無効効果:ガード中でも構わず強制的に怯ませる。盾は壊さず、HPダメージも与えない。
-    if (!u.isDown && isGuardNullifierAttacker(attacker)) {
+    // ただし、パリィ可能な攻撃(教導師の本叩きなど)の場合はパリィ判定を優先し、パリィが失敗した場合のみ
+    // ここに落ちてくる(下のguardableStateブロック内で処理する)
+    if (!u.isDown && isGuardNullifierAttacker(attacker) && !isAttackParryable(attacker)) {
       logMsg(`${sourceLabel} → ${label}のガードは意味を成さず、無理矢理怯まされた!(ダメージなし)`);
       u.lockedMotion = "flinch";
       u.lockedUntil = performance.now() + guardNullifiedFlinchDuration("assassin", attacker);
@@ -3446,6 +3447,16 @@ function damageUnit(u, dmg, sourceLabel, attacker) {
           return;
         }
         // パリィ失敗: 下のガード判定へ進む
+      }
+      // パリィ可能かつガード無効属性を併せ持つ攻撃(教導師の本叩きなど)は、パリィが不発だった場合、
+      // 通常のガードでは防げず強制的に怯む(ガード無効の効果がここで働く)
+      if (!u.shieldBroken && isGuardNullifierAttacker(attacker)) {
+        logMsg(`${sourceLabel} → ${label}のガードは意味を成さず、無理矢理怯まされた!(ダメージなし)`);
+        u.lockedMotion = "flinch";
+        u.lockedUntil = performance.now() + guardNullifiedFlinchDuration("assassin", attacker);
+        setUnitMotion(u, "flinch");
+        playUnitVoice(u, "pain");
+        return;
       }
       const guardOnCooldown = u.guardCooldownUntil && performance.now() < u.guardCooldownUntil;
       if (!u.shieldBroken && !guardOnCooldown) {
@@ -4070,7 +4081,6 @@ function triggerBleedProc(target) {
     logMsg(`${label}が出血により倒れた。`);
   }
   triggerCrowmanAwakening(performance.now());
-  triggerConfessorPrime(performance.now());
 }
 // 暗殺亡者:パリィ成功・致命の一撃モーション開始時、対象の背後(向きと逆側)へ回り込む移動を準備する。
 // 対象を実際に仕留めるのは、この後hitFrame(突き刺しのコマ)に到達した時点(executeAssassinParryKill)
@@ -4801,19 +4811,6 @@ function tickBurnDots(now) {
         applyBurnStack(other, BURN_SPREAD_PERCENT);
       }
     }
-  }
-}
-
-// =====================================================================
-// 教導師:出血発生を検知して特殊攻撃(抱きついて焼く)の発動準備状態にする。
-// クールタイム中の教導師は準備状態にならない(triggerBleedProcから呼び出される)
-// =====================================================================
-function triggerConfessorPrime(now) {
-  for (const u of confessors) {
-    if (u.dead) continue;
-    if (u.confessorPrimed) continue;
-    if (now < (u.confessorSpecialCooldownUntil || 0)) continue;
-    u.confessorPrimed = true;
   }
 }
 

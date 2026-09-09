@@ -2232,6 +2232,7 @@ const CONFESSOR_CONFIG = {
   meleeRange: 65,
   meleeHitDamage1: 14,       // 1段目:本叩き(単体)
   meleeHitDamage2: 20,       // 2段目:メイス振り回し(範囲)
+  meleeBleedPerHit2: 8,      // 2段目(メイス)ヒット時の出血蓄積値(%)
   meleeSplashRadius: 60,
   weight: 90,
   maxHp: 140,
@@ -2243,6 +2244,7 @@ const CONFESSOR_CONFIG = {
   midrangeProjectileArcHeight: 40,
   midrangeDamage: 12,
   midrangeBleedPerHit: 8,
+  midrangeCooldownMs: 10000, // 中距離攻撃(蟲魔法)のクールタイム
   bugZoneDurationMs: 3000,   // 蟲エフェクトの残留時間
   bugZoneTickMs: 500,        // ティック間隔
   bugZoneRadius: 70,
@@ -2540,7 +2542,7 @@ const ROSTER = [
   { kind: "halberd", name: "斧槍亡者", cost: ECONOMY_CONFIG.halberdCost, statsLine: "HP70 / 突き5・振り下ろし12、中距離は踏み込み薙ぎ払い25(範囲内の敵を人数無制限で同時ヒット・隙は大きいがガード無効+2倍怯み) / 体重85 / リーチが長く移動速度も速い範囲攻撃アタッカー。近接・中距離ともにスーパーアーマー。数的不利に強いがガードと遠距離攻撃、強い単体の敵に弱い", icon: ICON_HALBERD },
   { kind: "crowman", name: "鴉人", cost: ECONOMY_CONFIG.crowmanCost, statsLine: "HP28(普通より低め) / 通常時は引っ掻き4(攻撃力は普通)・リーチ長め・移動速度は全キャラ中最低 / 体重25 / 敵味方問わず出血発生や咆哮が発動すると、フィールド上の鴉人が一斉に心臓を捕食して凶暴化。凶暴化後は高速移動+5連続交差斬り(各6ダメージ・出血蓄積+12%)の高火力コンボ・常時スーパーアーマー・被ダメージ70%カット", icon: ICON_CROWMAN },
   { kind: "thrall", name: "奴隷亡者", cost: ECONOMY_CONFIG.thrallCost, statsLine: "HP43 / 跳躍斧撃8・13(中距離〜近距離対応)、吹き矢4(低ダメージ・命中で毒15%蓄積、100%で毒状態) / 体重60 / 亡者の下位種・素早くトリッキー。ガードされると2倍の時間怯む。パリィされやすく遠距離にも弱い", icon: ICON_THRALL },
-  { kind: "cagespider", name: "籠蜘蛛", cost: ECONOMY_CONFIG.cagespiderCost, statsLine: "HP150 / 掴み乱打6×8連・間合い短め(近接)、糞団子3(中距離・控えめな直接火力、命中ごとに毒25%蓄積・100%で毒状態=90秒間1秒毎に最大HPの約1/3%のダメージ、合計約30%) / 体重110 / 軍団最低クラスの移動速度で前線の壁に。怯むと大きな隙。パリィ不可・ガードなし", icon: ICON_CAGESPIDER },
+  { kind: "cagespider", name: "籠蜘蛛", cost: ECONOMY_CONFIG.cagespiderCost, statsLine: "HP150 / 掴み乱打6×8連・間合い短め(近接)、糞団子3(中距離・控えめな直接火力、命中ごとに毒25%蓄積・100%で毒状態=90秒間1秒毎に最大HPの約4/9%のダメージ、合計約40%) / 体重110 / 軍団最低クラスの移動速度で前線の壁に。怯むと大きな隙。パリィ不可・ガードなし", icon: ICON_CAGESPIDER },
   { kind: "pauper", name: "貧困亡者", cost: ECONOMY_CONFIG.pauperCost, statsLine: "HP54 / 突き刺し18(単発・出血蓄積5%) / 体重45 / 亡者の下位種、移動速度は標準的。パリィ不可・ガードなし", icon: ICON_PAUPER },
   { kind: "confessor", name: "教導師", cost: ECONOMY_CONFIG.confessorCost, statsLine: "HP140 / 本叩き14(単体)・メイス20(範囲)、中距離は蟲魔法12(単体+出血8%、着弾地点に3秒間残留し0.5秒毎に範囲微ダメ+出血)、特殊は抱きつき22(出血発生時に発動準備・クールタイム20秒・確定炎上) / 体重90 / 太った黒魔道士風の魔法系アタッカー。移動速度は標準。ガード・パリィともになし", icon: ICON_CONFESSOR }
 ];
@@ -3208,7 +3210,8 @@ function evaluateUnitState(u, now) {
     if (inMelee) {
       // 出血発生を検知して発動準備が整っている場合、次の近接攻撃の代わりに特殊攻撃(抱きついて焼く)を出す
       setUnitMotion(u, u.confessorPrimed ? "special" : "attack");
-    } else if (d >= cfg.midRangeMin && d <= cfg.midRangeMax) {
+    } else if (d >= cfg.midRangeMin && d <= cfg.midRangeMax && now >= (u.midrangeCooldownUntil || 0)) {
+      if (u.motionKey !== "midrange") u.midrangeCooldownUntil = now + cfg.midrangeCooldownMs;
       setUnitMotion(u, "midrange");
     } else {
       setUnitMotion(u, "walk");
@@ -3861,6 +3864,37 @@ function damageUnit(u, dmg, sourceLabel, attacker) {
     return;
   }
 
+  // 教導師:近接コンボ・特殊攻撃(抱きついて焼く)のモーション中はスーパーアーマーで怯まない。
+  // 特殊攻撃モーション中は被ダメージを半減する。
+  if (u.kind === "confessor") {
+    const superArmor = u.motionKey === "attack" || u.motionKey === "special";
+    const damageHalved = u.motionKey === "special";
+    const actualDmg = damageHalved ? Math.round(dmg * 0.5) : dmg;
+    u.hp = Math.max(0, u.hp - actualDmg);
+    const suffix = damageHalved ? "(特殊攻撃中でダメージ半減・スーパーアーマーで怯まず)" : (superArmor ? "(攻撃中はスーパーアーマーで怯まず)" : "");
+    logMsg(`${sourceLabel} → ${label}に<b>${actualDmg}</b>ダメージ(残り${u.hp.toFixed(0)})${suffix}`);
+    if (u.hp <= 0) {
+      u.dead = true;
+      u.isDown = false;
+      u.deadAt = performance.now();
+      u.lockedMotion = null;
+      setUnitMotion(u, "down");
+      u.removeAt = u.deadAt + motionDuration(CONFESSOR_MOTIONS.down);
+      playUnitVoice(u, "death");
+      logMsg(`${label}が倒れた。`);
+    } else if (u.isDown) {
+      logMsg(`${label}はダウン中のため怯まず、そのまま倒れ続けている。`);
+    } else if (superArmor) {
+      // スーパーアーマー: 怯まずモーションを継続する
+    } else {
+      u.lockedMotion = "flinch";
+      u.lockedUntil = performance.now() + motionDuration(CONFESSOR_MOTIONS.flinch);
+      setUnitMotion(u, "flinch");
+      playUnitVoice(u, "pain");
+    }
+    return;
+  }
+
   // kurowl
   if (u.motionKey === "charge") {
     logMsg(`${sourceLabel} → ${label}は突進中のため無敵、ダメージを無効化した。`);
@@ -3913,6 +3947,9 @@ function isSuperArmoredAttacker(attacker) {
   if (attacker.kind === "halberd") {
     return attacker.motionKey === "attack" || attacker.motionKey === "midrange";
   }
+  if (attacker.kind === "confessor") {
+    return attacker.motionKey === "attack" || attacker.motionKey === "special";
+  }
   return false;
 }
 function isGuardBreakerAttacker(attacker) {
@@ -3920,6 +3957,10 @@ function isGuardBreakerAttacker(attacker) {
   // 獰猛なゴブリンは近接2段目(叩きつけ)と中距離攻撃のみガードブレイカー(1段目には付与しない)
   if (attacker.kind === "brute") {
     return attacker.motionKey === "midrange" || (attacker.motionKey === "attack" && attacker.frameIndex === 8);
+  }
+  // 教導師は近接2段目(メイス振り回し)のみガードブレイカー(1段目の本叩きには付与しない)
+  if (attacker.kind === "confessor") {
+    return attacker.motionKey === "attack" && attacker.frameIndex === 6;
   }
   return !!(CONFIG_BY_KIND[attacker.kind] && CONFIG_BY_KIND[attacker.kind].isGuardBreaker);
 }
@@ -3936,6 +3977,8 @@ function isGuardNullifierAttacker(attacker) {
   if (attacker.kind === "brute") return attacker.motionKey === "midrange";
   if (attacker.kind === "halberd") return attacker.motionKey === "midrange";
   if (attacker.kind === "kurowl") return attacker.motionKey === "melee";
+  // 教導師は近接1段目(本叩き)のみガード無効(ガード中でも強制的に怯ませる)
+  if (attacker.kind === "confessor") return attacker.motionKey === "attack" && attacker.frameIndex === 2;
   return false;
 }
 // 最強ガードブレイカー:盾の耐久回数(guardBreakerHitsToBreak等)に関係なく、どんなに硬い盾でも
@@ -3966,6 +4009,9 @@ function isAttackParryable(attacker) {
       return attacker.motionKey === "attack";
     case "elite":
       return attacker.motionKey === "attack" && attacker.frameIndex === 5;
+    case "confessor":
+      // 近接1段目(本叩き)のみパリィ可能。2段目(メイス)・中距離・特殊はパリィ不可
+      return attacker.motionKey === "attack" && attacker.frameIndex === 2;
     default:
       return false;
   }
@@ -4616,9 +4662,9 @@ function tickCagespiderDungBalls(now) {
 }
 
 // 毒蓄積:蓄積値が100%に達すると毒状態(継続ダメージ)が発生する。
-// 効果時間は90秒(強化前の半分)、1秒ごとに対象の最大HPの約1/3%のダメージが入り続ける(合計で最大HPの約30%相当)。
+// 効果時間は90秒、1秒ごとに対象の最大HPの約4/9%のダメージが入り続ける(合計で最大HPの約40%相当)。
 const POISON_DOT_DURATION_MS = 90000;
-const POISON_DOT_PERCENT_PER_SEC = 0.3 / 90; // 最大HPに対する割合(90秒で合計30%になるよう逆算)
+const POISON_DOT_PERCENT_PER_SEC = 0.4 / 90; // 最大HPに対する割合(90秒で合計40%になるよう逆算)
 function playPoisonSound() {
   return; // 音声は全面的に無効化(パフォーマンス改善のため)
   try {
@@ -4639,7 +4685,7 @@ function triggerPoisonDot(target) {
   showPoisonVisual(target, POISON_DOT_DURATION_MS);
   playPoisonSound();
   const label = `${UNIT_LABEL_BY_KIND[target.kind]}#${target.id}`;
-  logMsg(`${label}が毒状態になった!(90秒間、1秒ごとに最大HPの約1/3%のダメージ、合計約30%)`);
+  logMsg(`${label}が毒状態になった!(90秒間、1秒ごとに最大HPの約4/9%のダメージ、合計約40%)`);
 }
 function applyPoisonStack(target, amount) {
   if (!target || target.dead || target.isCastle || !amount) return;
@@ -4785,6 +4831,7 @@ function resolveConfessorMaceSplash(u, dmg, label) {
     } else {
       applyDamageTo(unit, dmg, label, u);
     }
+    if (!unit.dead) applyBleedStack(unit, cfg.meleeBleedPerHit2);
   }
   for (const castle of [enemyCastle, allyCastle]) {
     if (!castle || castle.dead || castle.team === u.team) continue;

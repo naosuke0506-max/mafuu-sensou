@@ -2244,7 +2244,7 @@ const CONFESSOR_CONFIG = {
   midrangeProjectileArcHeight: 40,
   midrangeDamage: 12,
   midrangeBleedPerHit: 8,
-  midrangeCooldownMs: 10000, // 中距離攻撃(蟲魔法)のクールタイム
+  midrangeCooldownMs: 18000, // 中距離攻撃(蟲魔法)のクールタイム
   bugZoneDurationMs: 3000,   // 蟲エフェクトの残留時間
   bugZoneTickMs: 500,        // ティック間隔
   bugZoneRadius: 70,
@@ -2544,7 +2544,7 @@ const ROSTER = [
   { kind: "thrall", name: "奴隷亡者", cost: ECONOMY_CONFIG.thrallCost, statsLine: "HP43 / 跳躍斧撃8・13(中距離〜近距離対応)、吹き矢4(低ダメージ・命中で毒15%蓄積、100%で毒状態) / 体重60 / 亡者の下位種・素早くトリッキー。ガードされると2倍の時間怯む。パリィされやすく遠距離にも弱い", icon: ICON_THRALL },
   { kind: "cagespider", name: "籠蜘蛛", cost: ECONOMY_CONFIG.cagespiderCost, statsLine: "HP150 / 掴み乱打6×8連・間合い短め(近接)、糞団子3(中距離・控えめな直接火力、命中ごとに毒25%蓄積・100%で毒状態=90秒間1秒毎に最大HPの約4/9%のダメージ、合計約40%) / 体重110 / 軍団最低クラスの移動速度で前線の壁に。怯むと大きな隙。パリィ不可・ガードなし", icon: ICON_CAGESPIDER },
   { kind: "pauper", name: "貧困亡者", cost: ECONOMY_CONFIG.pauperCost, statsLine: "HP54 / 突き刺し18(単発・出血蓄積5%) / 体重45 / 亡者の下位種、移動速度は標準的。パリィ不可・ガードなし", icon: ICON_PAUPER },
-  { kind: "confessor", name: "教導師", cost: ECONOMY_CONFIG.confessorCost, statsLine: "HP140 / 本叩き14(単体・パリィ可能・ガード無効)・メイス20(範囲・出血蓄積+ガードブレイカー)、中距離は蟲魔法12(単体+出血8%、着弾地点に3秒間残留し0.5秒毎に範囲微ダメ+出血、クールタイム10秒)、特殊は抱きつき22(クールタイム20秒明けで近接の代わりに発動・確定炎上、モーション中はスーパーアーマー+被ダメージ半減) / 体重90 / 太った黒魔道士風の魔法系アタッカー。移動速度は標準。ガード・パリィともになし", icon: ICON_CONFESSOR }
+  { kind: "confessor", name: "教導師", cost: ECONOMY_CONFIG.confessorCost, statsLine: "HP140 / 本叩き14(単体・パリィ可能・ガード無効)・メイス20(範囲・出血蓄積+ガードブレイカー)、中距離は蟲魔法12(単体+出血8%、着弾地点に3秒間残留し0.5秒毎に範囲微ダメ+出血、クールタイム18秒)、特殊は抱きつき22(クールタイム20秒明けで近接の代わりに発動・確定炎上、モーション中はスーパーアーマー+被ダメージ半減) / 体重90 / 太った黒魔道士風の魔法系アタッカー。移動速度は標準。ガード・パリィともになし", icon: ICON_CONFESSOR }
 ];
 let formationSlots = new Array(MAX_SLOTS).fill(null); // 各要素: null | "soldier" | "kurowl" | "goblin" | "archer" | "catapult"
 let selectedRosterKind = null;

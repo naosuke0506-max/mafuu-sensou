@@ -217,6 +217,11 @@
     max-width: 110px;
   }
 
+  /* 結晶戦士は細身の等身大キャラのため、兵士と同程度の標準サイズで表示する */
+  .crystalwarrior-unit img {
+    max-height: 60px;
+  }
+
   /* 女王の召喚魔法陣:通常のimpact-unitの3倍サイズ、位置を低めに表示 */
   .queen-summonfx-unit {
     position: absolute; bottom: 10px; width: 360px; height: 270px;
@@ -396,6 +401,8 @@
     <button class="act" id="btnSpawnPauperLeft">貧困亡者を出撃(敵軍/左, 300円)</button>
     <button class="act" id="btnSpawnConfessorRight">教導師を出撃(自軍/右, 2500円)</button>
     <button class="act" id="btnSpawnConfessorLeft">教導師を出撃(敵軍/左, 2500円)</button>
+    <button class="act" id="btnSpawnCrystalwarriorRight">結晶戦士を出撃(自軍/右, 400円)</button>
+    <button class="act" id="btnSpawnCrystalwarriorLeft">結晶戦士を出撃(敵軍/左, 400円)</button>
     <button class="act wallet" id="btnWalletUp">財布レベルアップ(<span id="walletUpCostText">?</span>円)</button>
     <button class="act reset" id="btnReset">編成に戻る</button>
   </div>
@@ -2261,6 +2268,65 @@ const CONFESSOR_CONFIG = {
 };
 
 // =====================================================================
+// 結晶戦士の定義:漆黒の肉体に結晶の鎧をまとった剣士。
+// 近接は剣ヒット(単体)→0.3〜0.5秒後、剣を振った到達点に結晶エフェクトが発生し単体ヒット(2連ヒット)。
+// 特性:魔法・結晶・氷属性のダメージを完全に無効化し、物理属性のダメージは50%軽減する。
+// HPはやや低めだが、この耐性によって実質的な硬さを持つ。専用音声は未着手のため亡者(revenant)の音声セットを流用する。
+// =====================================================================
+const CRYSTALWARRIOR_FRAMES = {
+  "walk_1": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/crystalwarrior_repo_transparent/walk_1.png",
+  "walk_2": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/crystalwarrior_repo_transparent/walk_2.png",
+  "walk_3": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/crystalwarrior_repo_transparent/walk_3.png",
+  "attack_1": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/crystalwarrior_repo_transparent/attack_1.png",
+  "attack_2": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/crystalwarrior_repo_transparent/attack_2.png",
+  "attack_3": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/crystalwarrior_repo_transparent/attack_3.png",
+  "attack_4": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/crystalwarrior_repo_transparent/attack_4.png",
+  "attack_5": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/crystalwarrior_repo_transparent/attack_5.png",
+  "attack_6": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/crystalwarrior_repo_transparent/attack_6.png",
+  "flinch_1": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/crystalwarrior_repo_transparent/flinch_1.png",
+  "flinch_2": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/crystalwarrior_repo_transparent/flinch_2.png",
+  "flinch_3": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/crystalwarrior_repo_transparent/flinch_3.png",
+  "down_1": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/crystalwarrior_repo_transparent/down_1.png",
+  "down_2": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/crystalwarrior_repo_transparent/down_2.png",
+  "down_3": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/crystalwarrior_repo_transparent/down_3.png",
+  "down_4": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/crystalwarrior_repo_transparent/down_4.png",
+  "crystal_effect_1": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/crystalwarrior_repo_transparent/crystal_effect_1.png",
+  "crystal_effect_2": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/crystalwarrior_repo_transparent/crystal_effect_2.png",
+  "crystal_effect_3": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/crystalwarrior_repo_transparent/crystal_effect_3.png",
+  "crystal_effect_4": "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/images/crystalwarrior_repo_transparent/crystal_effect_4.png"
+};
+const ICON_CRYSTALWARRIOR = "https://cdn.jsdelivr.net/gh/naosuke0506-max/mafuu-sensou@main/icons/crystalwarrior_icon.png";
+const CRYSTALWARRIOR_EFFECT_FRAMES = ["crystal_effect_1", "crystal_effect_2", "crystal_effect_3", "crystal_effect_4"];
+
+const CRYSTALWARRIOR_MOTIONS = {
+  idle: { frames: ["walk_1"], loop: true, msPerFrame: 600 },
+  walk: { frames: ["walk_1", "walk_2", "walk_3"], loop: true, msPerFrame: 180 },
+  // 剣ヒット(index3)。この0.3〜0.5秒後に剣の到達点で結晶エフェクトの2撃目が発生する(tickCrystalWarriorEffectsで処理)
+  attack: {
+    frames: ["attack_1", "attack_2", "attack_3", "attack_4", "attack_5", "attack_6"],
+    loop: false,
+    frameDurations: [140, 150, 140, 160, 150, 220],
+    hitFrames: [3]
+  },
+  flinch: { frames: ["flinch_1", "flinch_2", "flinch_3"], loop: false, frameDurations: [100, 150, 300] },
+  down: { frames: ["down_1", "down_2", "down_3", "down_4"], loop: false, frameDurations: [150, 150, 150, 5000] }
+};
+
+const CRYSTALWARRIOR_CONFIG = {
+  walkSpeed: 50,
+  meleeRange: 60,
+  swordDamage: 10,
+  crystalEffectDamage: 8,
+  crystalEffectDelayMs: 400,   // 剣ヒットから0.3〜0.5秒後(中央値400msで設定)
+  crystalEffectRadius: 40,
+  weight: 45,
+  maxHp: 18,
+  attackLabel: "結晶剣",
+  voiceCategory: "revenant", // 専用音声ができるまで亡者の音声セットを流用
+  physicalDamageReduction: 0.5 // 物理属性のダメージを50%軽減
+};
+
+// =====================================================================
 // 鴉人の定義:通常形態は低速・低火力・低HPの弱いユニット。
 // フィールド上で出血発生または咆哮系スキル(獰猛なゴブリン・ゴブリンの女王・ノワール・クロウル)が
 // 発動すると、自軍敵軍を問わず未変身の鴉人が一斉に心臓を捕食し、凶暴化形態へ移行する。
@@ -2426,6 +2492,8 @@ const els = {
   btnSpawnPauperRight: document.getElementById("btnSpawnPauperRight"),
   btnSpawnConfessorLeft: document.getElementById("btnSpawnConfessorLeft"),
   btnSpawnConfessorRight: document.getElementById("btnSpawnConfessorRight"),
+  btnSpawnCrystalwarriorLeft: document.getElementById("btnSpawnCrystalwarriorLeft"),
+  btnSpawnCrystalwarriorRight: document.getElementById("btnSpawnCrystalwarriorRight"),
   btnReset: document.getElementById("btnReset"),
   enemyCastleHpFill: document.getElementById("enemyCastleHpFill"),
   enemyCastleHpText: document.getElementById("enemyCastleHpText"),
@@ -2466,6 +2534,8 @@ let crowmen = [];
 let confessors = [];
 let confessorBolts = [];      // 教導師:蟲魔法・特殊攻撃の投射物(飛翔中)
 let confessorBugZones = [];   // 教導師:着弾後に残る蟲エフェクトの範囲ダメージゾーン
+let crystalwarriors = [];
+let crystalwarriorEffects = []; // 結晶戦士:剣ヒットの0.3〜0.5秒後に発生する結晶エフェクトの予約リスト
 let projectiles = [];    // カタパルトの岩(飛翔中)
 let impactEffects = [];  // 着弾エフェクト(スパーク・砂煙)
 let queenBolts = [];        // 女王の魔砲弾(飛翔中)
@@ -2481,7 +2551,7 @@ let effectIdSeq = 0;
 let enemyCastle = null;
 let allyCastle = null;
 let money = 0;
-let loadout = { soldier: true, kurowl: true, goblin: true, archer: true, catapult: true, brute: true, chief: true, queen: true, revenant: true, spear: true, noirkurowl: true, assassin: true, elite: true, halberd: true, crowman: true, thrall: true, cagespider: true, pauper: true, confessor: true }; // 出撃可能なユニット種別(スロットから導出)
+let loadout = { soldier: true, kurowl: true, goblin: true, archer: true, catapult: true, brute: true, chief: true, queen: true, revenant: true, spear: true, noirkurowl: true, assassin: true, elite: true, halberd: true, crowman: true, thrall: true, cagespider: true, pauper: true, confessor: true, crystalwarrior: true }; // 出撃可能なユニット種別(スロットから導出)
 
 const SOLDIER_QUEUE_GAP = 0; // 味方同士は重なって密集できる(間合いに入れるユニット数を制限しないため)
 const CASTLE_CONFIG = { maxHp: 150 }; // 魔の平原の城HP仕様
@@ -2504,7 +2574,8 @@ const ECONOMY_CONFIG = {
   thrallCost: 500,
   cagespiderCost: 1000,
   pauperCost: 300,
-  confessorCost: 2500
+  confessorCost: 2500,
+  crystalwarriorCost: 400
 };
 
 // =====================================================================
@@ -2544,17 +2615,18 @@ const ROSTER = [
   { kind: "thrall", name: "奴隷亡者", cost: ECONOMY_CONFIG.thrallCost, statsLine: "HP43 / 跳躍斧撃8・13(中距離〜近距離対応)、吹き矢4(低ダメージ・命中で毒15%蓄積、100%で毒状態) / 体重60 / 亡者の下位種・素早くトリッキー。ガードされると2倍の時間怯む。パリィされやすく遠距離にも弱い", icon: ICON_THRALL },
   { kind: "cagespider", name: "籠蜘蛛", cost: ECONOMY_CONFIG.cagespiderCost, statsLine: "HP150 / 掴み乱打6×8連・間合い短め(近接)、糞団子3(中距離・控えめな直接火力、命中ごとに毒25%蓄積・100%で毒状態=90秒間1秒毎に最大HPの約4/9%のダメージ、合計約40%) / 体重110 / 軍団最低クラスの移動速度で前線の壁に。怯むと大きな隙。パリィ不可・ガードなし", icon: ICON_CAGESPIDER },
   { kind: "pauper", name: "貧困亡者", cost: ECONOMY_CONFIG.pauperCost, statsLine: "HP54 / 突き刺し18(単発・出血蓄積5%) / 体重45 / 亡者の下位種、移動速度は標準的。パリィ不可・ガードなし", icon: ICON_PAUPER },
-  { kind: "confessor", name: "教導師", cost: ECONOMY_CONFIG.confessorCost, statsLine: "HP140 / 本叩き14(単体・パリィ可能・ガード無効)・メイス20(範囲・出血蓄積+ガードブレイカー)、中距離は蟲魔法12(単体+出血8%、着弾地点に3秒間残留し0.5秒毎に範囲微ダメ+出血、クールタイム18秒)、特殊は抱きつき22(クールタイム20秒明けで近接の代わりに発動・確定炎上、モーション中はスーパーアーマー+被ダメージ半減) / 体重90 / 太った黒魔道士風の魔法系アタッカー。移動速度は標準。ガード・パリィともになし", icon: ICON_CONFESSOR }
+  { kind: "confessor", name: "教導師", cost: ECONOMY_CONFIG.confessorCost, statsLine: "HP140 / 本叩き14(単体・パリィ可能・ガード無効)・メイス20(範囲・出血蓄積+ガードブレイカー)、中距離は蟲魔法12(単体+出血8%、着弾地点に3秒間残留し0.5秒毎に範囲微ダメ+出血、クールタイム18秒)、特殊は抱きつき22(クールタイム20秒明けで近接の代わりに発動・確定炎上、モーション中はスーパーアーマー+被ダメージ半減) / 体重90 / 太った黒魔道士風の魔法系アタッカー。移動速度は標準。ガード・パリィともになし", icon: ICON_CONFESSOR },
+  { kind: "crystalwarrior", name: "結晶戦士", cost: ECONOMY_CONFIG.crystalwarriorCost, statsLine: "HP18(やや低め) / 剣10(単体)→0.3〜0.5秒後に剣の到達点で結晶エフェクト8(単体・2連ヒット) / 体重45 / 移動速度は標準。魔法・結晶・氷属性のダメージを完全無効化し、物理属性のダメージは50%軽減する特殊体質。パリィ不可・ガードなし", icon: ICON_CRYSTALWARRIOR }
 ];
 let formationSlots = new Array(MAX_SLOTS).fill(null); // 各要素: null | "soldier" | "kurowl" | "goblin" | "archer" | "catapult"
 let selectedRosterKind = null;
 let lastMoneyTick = 0;
 let battleActive = false;
 
-const MOTIONS_BY_KIND = { soldier: SOLDIER_MOTIONS, kurowl: KUROWL_MOTIONS, goblin: GOBLIN_MOTIONS, archer: ARCHER_MOTIONS, catapult: CATAPULT_MOTIONS, brute: BRUTE_MOTIONS, chief: CHIEF_MOTIONS, queen: QUEEN_MOTIONS, revenant: REVENANT_MOTIONS, spear: SPEAR_MOTIONS, noirkurowl: NOIRKUROWL_MOTIONS, assassin: ASSASSIN_MOTIONS, elite: ELITE_MOTIONS, halberd: HALBERD_MOTIONS, crowman: CROWMAN_MOTIONS, thrall: THRALL_MOTIONS, cagespider: CAGESPIDER_MOTIONS, pauper: PAUPER_MOTIONS, confessor: CONFESSOR_MOTIONS };
-const CONFIG_BY_KIND = { soldier: SOLDIER_CONFIG, kurowl: KUROWL_CONFIG, goblin: GOBLIN_CONFIG, archer: ARCHER_CONFIG, catapult: CATAPULT_CONFIG, brute: BRUTE_CONFIG, chief: CHIEF_CONFIG, queen: QUEEN_CONFIG, revenant: REVENANT_CONFIG, spear: SPEAR_CONFIG, noirkurowl: NOIRKUROWL_CONFIG, assassin: ASSASSIN_CONFIG, elite: ELITE_CONFIG, halberd: HALBERD_CONFIG, crowman: CROWMAN_CONFIG, thrall: THRALL_CONFIG, cagespider: CAGESPIDER_CONFIG, pauper: PAUPER_CONFIG, confessor: CONFESSOR_CONFIG };
-const FRAMES_BY_KIND = { soldier: SOLDIER_FRAMES, kurowl: KUROWL_FRAMES, goblin: GOBLIN_FRAMES, archer: ARCHER_FRAMES, catapult: CATAPULT_FRAMES, brute: BRUTE_FRAMES, chief: CHIEF_FRAMES, queen: QUEEN_FRAMES, revenant: REVENANT_FRAMES, spear: SPEAR_FRAMES, noirkurowl: NOIRKUROWL_FRAMES, assassin: ASSASSIN_FRAMES, elite: ELITE_FRAMES, halberd: HALBERD_FRAMES, crowman: CROWMAN_FRAMES, thrall: THRALL_FRAMES, cagespider: CAGESPIDER_FRAMES, pauper: PAUPER_FRAMES, confessor: CONFESSOR_FRAMES };
-const UNIT_LABEL_BY_KIND = { soldier: "兵士", kurowl: "クロウル", goblin: "ゴブリン", archer: "ゴブリン弓兵", catapult: "ゴブリンカタパルト", brute: "獰猛なゴブリン", chief: "ゴブリン長", queen: "ゴブリンの女王", revenant: "亡者", spear: "槍兵", noirkurowl: "ノワール・クロウル", assassin: "暗殺亡者", elite: "精鋭の亡者兵士", halberd: "斧槍亡者", crowman: "鴉人", thrall: "奴隷亡者", cagespider: "籠蜘蛛", pauper: "貧困亡者", confessor: "教導師" };
+const MOTIONS_BY_KIND = { soldier: SOLDIER_MOTIONS, kurowl: KUROWL_MOTIONS, goblin: GOBLIN_MOTIONS, archer: ARCHER_MOTIONS, catapult: CATAPULT_MOTIONS, brute: BRUTE_MOTIONS, chief: CHIEF_MOTIONS, queen: QUEEN_MOTIONS, revenant: REVENANT_MOTIONS, spear: SPEAR_MOTIONS, noirkurowl: NOIRKUROWL_MOTIONS, assassin: ASSASSIN_MOTIONS, elite: ELITE_MOTIONS, halberd: HALBERD_MOTIONS, crowman: CROWMAN_MOTIONS, thrall: THRALL_MOTIONS, cagespider: CAGESPIDER_MOTIONS, pauper: PAUPER_MOTIONS, confessor: CONFESSOR_MOTIONS, crystalwarrior: CRYSTALWARRIOR_MOTIONS };
+const CONFIG_BY_KIND = { soldier: SOLDIER_CONFIG, kurowl: KUROWL_CONFIG, goblin: GOBLIN_CONFIG, archer: ARCHER_CONFIG, catapult: CATAPULT_CONFIG, brute: BRUTE_CONFIG, chief: CHIEF_CONFIG, queen: QUEEN_CONFIG, revenant: REVENANT_CONFIG, spear: SPEAR_CONFIG, noirkurowl: NOIRKUROWL_CONFIG, assassin: ASSASSIN_CONFIG, elite: ELITE_CONFIG, halberd: HALBERD_CONFIG, crowman: CROWMAN_CONFIG, thrall: THRALL_CONFIG, cagespider: CAGESPIDER_CONFIG, pauper: PAUPER_CONFIG, confessor: CONFESSOR_CONFIG, crystalwarrior: CRYSTALWARRIOR_CONFIG };
+const FRAMES_BY_KIND = { soldier: SOLDIER_FRAMES, kurowl: KUROWL_FRAMES, goblin: GOBLIN_FRAMES, archer: ARCHER_FRAMES, catapult: CATAPULT_FRAMES, brute: BRUTE_FRAMES, chief: CHIEF_FRAMES, queen: QUEEN_FRAMES, revenant: REVENANT_FRAMES, spear: SPEAR_FRAMES, noirkurowl: NOIRKUROWL_FRAMES, assassin: ASSASSIN_FRAMES, elite: ELITE_FRAMES, halberd: HALBERD_FRAMES, crowman: CROWMAN_FRAMES, thrall: THRALL_FRAMES, cagespider: CAGESPIDER_FRAMES, pauper: PAUPER_FRAMES, confessor: CONFESSOR_FRAMES, crystalwarrior: CRYSTALWARRIOR_FRAMES };
+const UNIT_LABEL_BY_KIND = { soldier: "兵士", kurowl: "クロウル", goblin: "ゴブリン", archer: "ゴブリン弓兵", catapult: "ゴブリンカタパルト", brute: "獰猛なゴブリン", chief: "ゴブリン長", queen: "ゴブリンの女王", revenant: "亡者", spear: "槍兵", noirkurowl: "ノワール・クロウル", assassin: "暗殺亡者", elite: "精鋭の亡者兵士", halberd: "斧槍亡者", crowman: "鴉人", thrall: "奴隷亡者", cagespider: "籠蜘蛛", pauper: "貧困亡者", confessor: "教導師", crystalwarrior: "結晶戦士" };
 
 // =====================================================================
 // 突撃システム(新):ダウン/起き上がりモーションの補完
@@ -2793,6 +2865,9 @@ function motionLabel(kind, key) {
   if (kind === "confessor") {
     return { idle: "待機", walk: "歩行", attack: "近接コンボ(本叩き→メイス)", flinch: "怯み", down: "ダウン", midrange: "蟲魔法", special: "特殊攻撃(抱きついて焼く)" }[key] || key;
   }
+  if (kind === "crystalwarrior") {
+    return { idle: "待機", walk: "歩行", attack: "結晶剣", flinch: "怯み", down: "ダウン" }[key] || key;
+  }
   return { idle: "待機", walk: "歩行", flinch: "怯み", knockback: "吹き飛ばし", melee: "近接攻撃", midrange: "中距離攻撃", charge: "突進" }[key] || key;
 }
 
@@ -2815,7 +2890,7 @@ function isEngagedMotion(kind, key) {
 // ユニット(兵士・クロウル共通)のDOM生成
 // =====================================================================
 function createUnitDom(kind) {
-  const unitClass = kind === "kurowl" ? "kurowl-unit" : kind === "catapult" ? "catapult-unit" : kind === "noirkurowl" ? "noirkurowl-unit" : kind === "queen" ? "soldier-unit queen-unit" : kind === "halberd" ? "soldier-unit halberd-unit" : kind === "crowman" ? "soldier-unit crowman-unit" : kind === "thrall" ? "soldier-unit thrall-unit" : kind === "cagespider" ? "soldier-unit cagespider-unit" : kind === "confessor" ? "soldier-unit confessor-unit" : "soldier-unit";
+  const unitClass = kind === "kurowl" ? "kurowl-unit" : kind === "catapult" ? "catapult-unit" : kind === "noirkurowl" ? "noirkurowl-unit" : kind === "queen" ? "soldier-unit queen-unit" : kind === "halberd" ? "soldier-unit halberd-unit" : kind === "crowman" ? "soldier-unit crowman-unit" : kind === "thrall" ? "soldier-unit thrall-unit" : kind === "cagespider" ? "soldier-unit cagespider-unit" : kind === "confessor" ? "soldier-unit confessor-unit" : kind === "crystalwarrior" ? "soldier-unit crystalwarrior-unit" : "soldier-unit";
   const hpWrapClass = kind === "kurowl" ? "kurowl-hp" : kind === "catapult" ? "catapult-hp" : kind === "noirkurowl" ? "noirkurowl-hp" : "soldier-hp";
   const hpFillClass = kind === "kurowl" ? "kurowl-hp-fill" : kind === "catapult" ? "catapult-hp-fill" : kind === "noirkurowl" ? "noirkurowl-hp-fill" : "soldier-hp-fill";
 
@@ -2848,7 +2923,7 @@ function createUnitDom(kind) {
 // 対応するkindのものに更新する
 function applyUnitDomKindClasses(u) {
   const kind = u.kind;
-  const unitClass = kind === "kurowl" ? "kurowl-unit" : kind === "catapult" ? "catapult-unit" : kind === "noirkurowl" ? "noirkurowl-unit" : kind === "queen" ? "soldier-unit queen-unit" : kind === "halberd" ? "soldier-unit halberd-unit" : kind === "crowman" ? "soldier-unit crowman-unit" : kind === "thrall" ? "soldier-unit thrall-unit" : kind === "cagespider" ? "soldier-unit cagespider-unit" : kind === "confessor" ? "soldier-unit confessor-unit" : "soldier-unit";
+  const unitClass = kind === "kurowl" ? "kurowl-unit" : kind === "catapult" ? "catapult-unit" : kind === "noirkurowl" ? "noirkurowl-unit" : kind === "queen" ? "soldier-unit queen-unit" : kind === "halberd" ? "soldier-unit halberd-unit" : kind === "crowman" ? "soldier-unit crowman-unit" : kind === "thrall" ? "soldier-unit thrall-unit" : kind === "cagespider" ? "soldier-unit cagespider-unit" : kind === "confessor" ? "soldier-unit confessor-unit" : kind === "crystalwarrior" ? "soldier-unit crystalwarrior-unit" : "soldier-unit";
   const hpWrapClass = kind === "kurowl" ? "kurowl-hp" : kind === "catapult" ? "catapult-hp" : kind === "noirkurowl" ? "noirkurowl-hp" : "soldier-hp";
   const hpFillClass = kind === "kurowl" ? "kurowl-hp-fill" : kind === "catapult" ? "catapult-hp-fill" : kind === "noirkurowl" ? "noirkurowl-hp-fill" : "soldier-hp-fill";
   u.el.unit.className = unitClass;
@@ -2920,7 +2995,7 @@ function createUnit(kind, side, startXOverride) {
     guardBreakerHitsTaken: 0, // 精鋭の亡者兵士:硬い鉄の盾がこれまでに受けたガードブレイカーの回数
     el
   };
-  const targetArr = kind === "kurowl" ? kurowls : kind === "goblin" ? goblins : kind === "archer" ? archers : kind === "catapult" ? catapults : kind === "brute" ? brutes : kind === "chief" ? chiefs : kind === "queen" ? queens : kind === "revenant" ? revenants : kind === "spear" ? spears : kind === "noirkurowl" ? noirkurowls : kind === "assassin" ? assassins : kind === "elite" ? elites : kind === "halberd" ? halberdRevenants : kind === "crowman" ? crowmen : kind === "thrall" ? thralls : kind === "cagespider" ? cagespiders : kind === "pauper" ? paupers : kind === "confessor" ? confessors : soldiers;
+  const targetArr = kind === "kurowl" ? kurowls : kind === "goblin" ? goblins : kind === "archer" ? archers : kind === "catapult" ? catapults : kind === "brute" ? brutes : kind === "chief" ? chiefs : kind === "queen" ? queens : kind === "revenant" ? revenants : kind === "spear" ? spears : kind === "noirkurowl" ? noirkurowls : kind === "assassin" ? assassins : kind === "elite" ? elites : kind === "halberd" ? halberdRevenants : kind === "crowman" ? crowmen : kind === "thrall" ? thralls : kind === "cagespider" ? cagespiders : kind === "pauper" ? paupers : kind === "confessor" ? confessors : kind === "crystalwarrior" ? crystalwarriors : soldiers;
   targetArr.push(u);
   el.unit.style.display = "block";
   setUnitMotion(u, "walk");
@@ -2949,7 +3024,7 @@ function updateCastleUI(castle, fillEl, textEl) {
 // 共通ヘルパー
 // =====================================================================
 function allUnits() {
-  return soldiers.concat(kurowls, goblins, archers, catapults, brutes, chiefs, queens, revenants, spears, noirkurowls, assassins, elites, halberdRevenants, crowmen, thralls, cagespiders, paupers, confessors);
+  return soldiers.concat(kurowls, goblins, archers, catapults, brutes, chiefs, queens, revenants, spears, noirkurowls, assassins, elites, halberdRevenants, crowmen, thralls, cagespiders, paupers, confessors, crystalwarriors);
 }
 
 function dist(a, b) {
@@ -3215,6 +3290,10 @@ function evaluateUnitState(u, now) {
     } else {
       setUnitMotion(u, "walk");
     }
+  } else if (u.kind === "crystalwarrior") {
+    const cfg = CONFIG_BY_KIND[u.kind];
+    const inMelee = d <= cfg.meleeRange;
+    setUnitMotion(u, inMelee ? "attack" : "walk");
   } else if (u.kind === "crowman") {
     const cfg = CONFIG_BY_KIND[u.kind];
     if (u.secondForm) {
@@ -3256,9 +3335,40 @@ function damageCastle(castle, dmg, sourceLabel) {
   }
 }
 
-function damageUnit(u, dmg, sourceLabel, attacker) {
+function damageUnit(u, dmg, sourceLabel, attacker, dmgType) {
   if (u.dead) return;
+  dmgType = dmgType || "physical";
   const label = `${UNIT_LABEL_BY_KIND[u.kind]}#${u.id}`;
+
+  // 結晶戦士:魔法・結晶・氷属性のダメージを完全に無効化し、物理属性は50%軽減する
+  if (u.kind === "crystalwarrior") {
+    if (dmgType === "magic" || dmgType === "crystal" || dmgType === "ice") {
+      logMsg(`${sourceLabel} → ${label}は魔法・結晶・氷属性を完全に無効化した!(ダメージなし)`);
+      return;
+    }
+    const cfg = CONFIG_BY_KIND[u.kind];
+    const actualDmg = Math.round(dmg * (1 - cfg.physicalDamageReduction));
+    u.hp = Math.max(0, u.hp - actualDmg);
+    logMsg(`${sourceLabel} → ${label}に<b>${actualDmg}</b>ダメージ(物理攻撃を50%軽減、残り${u.hp.toFixed(0)})`);
+    if (u.hp <= 0) {
+      u.dead = true;
+      u.isDown = false;
+      u.deadAt = performance.now();
+      u.lockedMotion = null;
+      setUnitMotion(u, "down");
+      u.removeAt = u.deadAt + motionDuration(CRYSTALWARRIOR_MOTIONS.down);
+      playUnitVoice(u, "death");
+      logMsg(`${label}が倒れた。`);
+    } else if (u.isDown) {
+      logMsg(`${label}はダウン中のため怯まず、そのまま倒れ続けている。`);
+    } else {
+      u.lockedMotion = "flinch";
+      u.lockedUntil = performance.now() + motionDuration(CRYSTALWARRIOR_MOTIONS.flinch);
+      setUnitMotion(u, "flinch");
+      playUnitVoice(u, "pain");
+    }
+    return;
+  }
 
   // ノワール・クロウルの咆哮バフ中: 被ダメージをカットする(全キャラ共通の仕組み)
   if (u.damageCutUntil && performance.now() < u.damageCutUntil) {
@@ -4194,9 +4304,9 @@ function spawnQueenSummonUnits(pending) {
   logMsg(`ゴブリンの女王#${pending.queenId}の魔法陣からゴブリンたちが出現した。`);
 }
 
-function applyDamageTo(target, dmg, sourceLabel, attacker) {
+function applyDamageTo(target, dmg, sourceLabel, attacker, dmgType) {
   if (target.isCastle) damageCastle(target, dmg, sourceLabel);
-  else damageUnit(target, dmg, sourceLabel, attacker);
+  else damageUnit(target, dmg, sourceLabel, attacker, dmgType);
 }
 
 // =====================================================================
@@ -4958,6 +5068,55 @@ function tickConfessorBugZones(now) {
 }
 
 // =====================================================================
+// 結晶戦士:剣ヒットの0.3〜0.5秒後、剣を振った到達点(座標)に結晶エフェクトが発生し、
+// その時点でその座標付近にいる敵1体に単体ヒット(属性:結晶。魔法・結晶・氷耐性を持つ相手には無効)
+// =====================================================================
+function scheduleCrystalWarriorEffect(x, team, attacker) {
+  crystalwarriorEffects.push({
+    x,
+    team,
+    attacker,
+    triggerAt: performance.now() + CRYSTALWARRIOR_CONFIG.crystalEffectDelayMs,
+    resolved: false
+  });
+}
+
+function tickCrystalWarriorEffects(now) {
+  for (const e of crystalwarriorEffects) {
+    if (e.resolved || now < e.triggerAt) continue;
+    e.resolved = true;
+    if (e.attacker && e.attacker.dead) continue; // 発動前に本人が倒れた場合は不発
+    // 視覚エフェクト(結晶バースト)を一瞬表示する
+    const el = document.createElement("div");
+    el.className = "impact-unit";
+    const img = document.createElement("img");
+    img.src = CRYSTALWARRIOR_FRAMES.crystal_effect_1;
+    el.appendChild(img);
+    els.field.appendChild(el);
+    el.style.left = `${fieldScreenX(e.x)}px`;
+    let frameIdx = 0;
+    const animTimer = setInterval(() => {
+      frameIdx++;
+      if (frameIdx >= CRYSTALWARRIOR_EFFECT_FRAMES.length) {
+        clearInterval(animTimer);
+        el.remove();
+        return;
+      }
+      img.src = CRYSTALWARRIOR_FRAMES[CRYSTALWARRIOR_EFFECT_FRAMES[frameIdx]];
+    }, 90);
+    // その座標付近にいる、攻撃者から見て敵陣営のユニットを1体だけ探して単体ヒットさせる
+    const label = `結晶戦士の結晶エフェクト`;
+    for (const unit of allUnits()) {
+      if (unit.dead || unit.team === e.team) continue;
+      if (Math.abs(unit.xPx - e.x) > CRYSTALWARRIOR_CONFIG.crystalEffectRadius) continue;
+      applyDamageTo(unit, CRYSTALWARRIOR_CONFIG.crystalEffectDamage, label, e.attacker, "crystal");
+      break;
+    }
+  }
+  crystalwarriorEffects = crystalwarriorEffects.filter(e => !e.resolved);
+}
+
+// =====================================================================
 // 奴隷亡者の吹き矢(中距離攻撃の投擲物・特殊効果なしの単体ダメージのみ)
 // =====================================================================
 function spawnThrallDart(u, target, label) {
@@ -5279,7 +5438,7 @@ function applyProneSizing(u) {
 }
 
 function tickDeadUnitAnimation(u, now) {
-  const motion = u.kind === "catapult" ? MOTIONS_BY_KIND[u.kind].destroy : (u.kind === "queen" || u.kind === "revenant" || u.kind === "assassin" || u.kind === "elite" || u.kind === "halberd" || u.kind === "crowman" || u.kind === "thrall" || u.kind === "cagespider" || u.kind === "pauper" || u.kind === "confessor") ? MOTIONS_BY_KIND[u.kind].down : MOTIONS_BY_KIND[u.kind].knockback;
+  const motion = u.kind === "catapult" ? MOTIONS_BY_KIND[u.kind].destroy : (u.kind === "queen" || u.kind === "revenant" || u.kind === "assassin" || u.kind === "elite" || u.kind === "halberd" || u.kind === "crowman" || u.kind === "thrall" || u.kind === "cagespider" || u.kind === "pauper" || u.kind === "confessor" || u.kind === "crystalwarrior") ? MOTIONS_BY_KIND[u.kind].down : MOTIONS_BY_KIND[u.kind].knockback;
   const frameDt = Math.max(0, now - u.lastFrameTime);
   const curDuration = (motion.frameDurations ? motion.frameDurations[u.frameIndex] : null) || motion.msPerFrame;
 
@@ -5528,6 +5687,9 @@ function tickUnit(u, now) {
       } else if (u.kind === "confessor" && u.motionKey === "special") {
         dmg = CONFESSOR_CONFIG.specialDamage;
         label = `教導師#${u.id}の特殊攻撃(抱きついて焼く)`;
+      } else if (u.kind === "crystalwarrior" && u.motionKey === "attack") {
+        dmg = CRYSTALWARRIOR_CONFIG.swordDamage;
+        label = `結晶戦士#${u.id}の${CRYSTALWARRIOR_CONFIG.attackLabel}`;
       } else if (u.kind === "crowman" && u.motionKey === "attack2") {
         // hitFrames: [3,4,5,6,7] → 凶暴化形態の5連続交差斬り(各ヒットで出血蓄積+4%)
         dmg = CROWMAN_CONFIG.meleeHitDamage2;
@@ -5592,6 +5754,14 @@ function tickUnit(u, now) {
           spawnConfessorInsectBolt(u, hitTarget, label, false);
         } else if (u.kind === "confessor" && u.motionKey === "special") {
           spawnConfessorInsectBolt(u, hitTarget, label, true);
+        } else if (u.kind === "crystalwarrior" && u.motionKey === "attack") {
+          // 剣ヒット(単体・物理)。コンボ中に対象が離れていた場合、間合い外なら空振りにする
+          if (dist(u, hitTarget) <= CRYSTALWARRIOR_CONFIG.meleeRange + 15) {
+            applyDamageTo(hitTarget, dmg, label, u);
+            // 剣を振った到達点(自分の向いている方向に間合い分進んだ位置)に、0.3〜0.5秒後発生の結晶エフェクトを予約
+            const reachX = u.xPx + u.facing * CRYSTALWARRIOR_CONFIG.meleeRange;
+            scheduleCrystalWarriorEffect(reachX, u.team, u);
+          }
         } else if (u.kind === "crowman" && (u.motionKey === "attack" || u.motionKey === "attack2")) {
           // コンボ中に対象が離れていた場合、間合い外なら空振りにする
           const range = u.motionKey === "attack2" ? CROWMAN_CONFIG.meleeRange2 : CROWMAN_CONFIG.meleeRange;
@@ -5873,6 +6043,7 @@ function tick(now) {
       tickBurnDots(now);
       tickConfessorBolts(now);
       tickConfessorBugZones(now);
+      tickCrystalWarriorEffects(now);
 
       // 敵ユニットを倒した際、出撃コストの一部(KILL_REWARD_RATIO)を即座に獲得する
       for (const u of allUnits()) {
@@ -5969,6 +6140,7 @@ function spawnUnit(kind, side) {
   if (kind === "cagespider") playUnitVoice(u, "warCry");
   if (kind === "pauper") playUnitVoice(u, "warCry");
   if (kind === "confessor") playUnitVoice(u, "warCry");
+  if (kind === "crystalwarrior") playUnitVoice(u, "warCry");
 }
 
 function clearAllUnits() {
@@ -5996,6 +6168,8 @@ function clearAllUnits() {
   confessorBolts = [];
   for (const z of confessorBugZones) z.el.remove();
   confessorBugZones = [];
+  crystalwarriors = [];
+  crystalwarriorEffects = [];
   for (const p of projectiles) p.el.remove();
   projectiles = [];
   for (const e of impactEffects) e.el.remove();
@@ -6118,6 +6292,8 @@ function applyLoadoutToButtons() {
   els.btnSpawnPauperRight.style.display = loadout.pauper ? "" : "none";
   els.btnSpawnConfessorLeft.style.display = loadout.confessor ? "" : "none";
   els.btnSpawnConfessorRight.style.display = loadout.confessor ? "" : "none";
+  els.btnSpawnCrystalwarriorLeft.style.display = loadout.crystalwarrior ? "" : "none";
+  els.btnSpawnCrystalwarriorRight.style.display = loadout.crystalwarrior ? "" : "none";
 }
 
 function startBattle() {
@@ -6140,7 +6316,8 @@ function startBattle() {
   loadout.cagespider = formationSlots.includes("cagespider");
   loadout.pauper = formationSlots.includes("pauper");
   loadout.confessor = formationSlots.includes("confessor");
-  if (!loadout.soldier && !loadout.kurowl && !loadout.goblin && !loadout.archer && !loadout.catapult && !loadout.brute && !loadout.chief && !loadout.queen && !loadout.revenant && !loadout.spear && !loadout.noirkurowl && !loadout.assassin && !loadout.elite && !loadout.halberd && !loadout.crowman && !loadout.thrall && !loadout.cagespider && !loadout.pauper && !loadout.confessor) {
+  loadout.crystalwarrior = formationSlots.includes("crystalwarrior");
+  if (!loadout.soldier && !loadout.kurowl && !loadout.goblin && !loadout.archer && !loadout.catapult && !loadout.brute && !loadout.chief && !loadout.queen && !loadout.revenant && !loadout.spear && !loadout.noirkurowl && !loadout.assassin && !loadout.elite && !loadout.halberd && !loadout.crowman && !loadout.thrall && !loadout.cagespider && !loadout.pauper && !loadout.confessor && !loadout.crystalwarrior) {
     els.formationWarning.style.display = "block";
     return;
   }
@@ -6231,6 +6408,8 @@ els.btnSpawnPauperLeft.addEventListener("click", () => spawnUnit("pauper", "left
 els.btnSpawnPauperRight.addEventListener("click", () => spawnUnit("pauper", "right"));
 els.btnSpawnConfessorLeft.addEventListener("click", () => spawnUnit("confessor", "left"));
 els.btnSpawnConfessorRight.addEventListener("click", () => spawnUnit("confessor", "right"));
+els.btnSpawnCrystalwarriorLeft.addEventListener("click", () => spawnUnit("crystalwarrior", "left"));
+els.btnSpawnCrystalwarriorRight.addEventListener("click", () => spawnUnit("crystalwarrior", "right"));
 els.btnReset.addEventListener("click", reset);
 els.btnStartBattle.addEventListener("click", startBattle);
 
